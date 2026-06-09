@@ -1,29 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-import useAuth from "@/features/auth/hooks/useAuth";
-import { getUserById, updateProfile } from "@/services/profileService";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";   // ← use hook, not raw context
+import { getUserById, updateUserProfile } from "@/services/profileService";
 
-function useProfile() {
-  const { user } = useAuth();
+const useProfile = () => {
+  const { user, updateUser } = useAuth();           // ← updateUser from context
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const fetchProfile = useCallback(async () => {
-    if (!user?.id) {
-      setProfile(null);
-      return;
-    }
-
+    if (!user?.id) return;
     setLoading(true);
     setError(null);
-
     try {
       const data = await getUserById(user.id);
       setProfile(data);
     } catch (err) {
-      setError(err.message || "Failed to fetch profile");
+      setError(err.response?.data?.message || "Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -33,39 +28,24 @@ function useProfile() {
     fetchProfile();
   }, [fetchProfile]);
 
-  const saveProfile = async (profileData) => {
-    if (!user?.id) return null;
-
-    setSaving(true);
+  const updateProfile = async (profileData) => {
+    setLoading(true);
     setError(null);
-
+    setSuccess(false);
     try {
-      const updated = await updateProfile(user.id, profileData);
+      const updated = await updateUserProfile(user.id, profileData);
       setProfile(updated);
-
-      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-      if (storedUser) {
-        const mergedUser = { ...storedUser, ...updated };
-        localStorage.setItem("user", JSON.stringify(mergedUser));
-      }
-
-      return updated;
+      // Sync firstName + lastName into AuthContext + localStorage
+      updateUser({ firstName: updated.firstName, lastName: updated.lastName });
+      setSuccess(true);
     } catch (err) {
-      setError(err.message || "Failed to update profile");
-      throw err;
+      setError(err.response?.data?.message || "Failed to update profile");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  return {
-    profile,
-    loading,
-    saving,
-    error,
-    refetchProfile: fetchProfile,
-    saveProfile,
-  };
-}
+  return { profile, loading, error, success, updateProfile, fetchProfile };
+};
 
 export default useProfile;

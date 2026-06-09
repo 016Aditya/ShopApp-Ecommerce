@@ -30,7 +30,7 @@ export const useOrders = () => {
   return { orders, loading, error, fetchOrders };
 };
 
-// ─── Single order by ID ────────────────────────────────────────────────────
+// ─── Single order ──────────────────────────────────────────────────────────
 export const useOrder = (id) => {
   const [order, setOrder]     = useState(null);
   const [loading, setLoading] = useState(false);
@@ -58,24 +58,19 @@ export const useOrder = (id) => {
 
 // ─── Place order ───────────────────────────────────────────────────────────
 export const usePlaceOrder = () => {
-  const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
 
-  const placeOrder = async ({ productIds, quantity, address }) => {
+  const placeOrder = async (orderData) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await createOrder({
-        userId: user.id,
-        productIds,
-        quantity,
-        address,
-      });
-      return data; // caller navigates on success
+      const data = await createOrder(orderData);
+      return data; // returns saved order
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to place order");
-      return null;
+      const msg = err.response?.data?.message || "Failed to place order";
+      setError(msg);
+      throw new Error(msg);
     } finally {
       setLoading(false);
     }

@@ -5,9 +5,9 @@ import { getStoredUser, setStoredUser, removeStoredUser } from "@/utils/storage"
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => getStoredUser());
+  const [user, setUser]       = useState(() => getStoredUser());
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
 
   const handleLogin = useCallback(async (credentials) => {
     setLoading(true);
@@ -40,20 +40,30 @@ export function AuthProvider({ children }) {
   }, []);
 
   const handleLogout = useCallback(() => {
-    logout();               // clears localStorage
+    logout();
     removeStoredUser();
     setUser(null);
   }, []);
 
+  // ✅ ADD: expose updateUser so profile changes sync everywhere
+  const updateUser = useCallback((partial) => {
+    setUser((prev) => {
+      const updated = { ...prev, ...partial };
+      setStoredUser(updated);          // keep localStorage in sync too
+      return updated;
+    });
+  }, []);
+
   const value = {
     user,
+    updateUser,                        // ✅ NEW — used by useProfile
     isLoggedIn: !!user,
     isAdmin: user?.role === "ADMIN",
     loading,
     error,
-    login: handleLogin,
+    login:    handleLogin,
     register: handleRegister,
-    logout: handleLogout,
+    logout:   handleLogout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

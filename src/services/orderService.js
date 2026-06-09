@@ -1,11 +1,10 @@
 import api from "@/api/api";
 import { API_ENDPOINTS } from "@/api/apiEndpoints";
 
-// POST /api/orders
+// POST /api/orders — body: { userId, quantity, address, productIds[] }
 export const createOrder = async (orderData) => {
   const { data } = await api.post(API_ENDPOINTS.ORDERS, orderData);
   return data;
-  // orderData shape: { userId, quantity, address: { line1, city, state, zipCode, country }, productIds: [] }
 };
 
 // GET /api/orders/user/:userId
@@ -20,7 +19,7 @@ export const getOrderById = async (id) => {
   return data;
 };
 
-// PATCH /api/orders/:id/status
+// PATCH /api/orders/:id/status — body: { status }
 export const updateOrderStatus = async (id, status) => {
   const { data } = await api.patch(`${API_ENDPOINTS.ORDERS}/${id}/status`, { status });
   return data;

@@ -5,7 +5,7 @@ import { CartProvider } from "@/features/cart/context/CartContext";
 const Providers = ({ children }) => (
   <BrowserRouter>
     <AuthProvider>
-      <CartProvider>       {/* ← must be INSIDE AuthProvider so it can read user */}
+      <CartProvider>
         {children}
       </CartProvider>
     </AuthProvider>
