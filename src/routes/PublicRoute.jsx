@@ -1,11 +1,16 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { PATHS } from "@/routes/paths";
-import useAuth from "@/features/auth/hooks/useAuth";
+import { useContext } from "react";
+import AuthContext from "@/context/AuthContext";
+import PATHS from "./paths";
 
-function PublicRoute() {
-  const { isAuthenticated } = useAuth();
+const PublicRoute = () => {
+  const { user, loading } = useContext(AuthContext);
 
-  return isAuthenticated ? <Navigate to={PATHS.HOME} replace /> : <Outlet />;
-}
+  if (loading) return null;
+
+  return user
+    ? <Navigate to={PATHS.HOME} replace />
+    : <Outlet />;
+};
 
 export default PublicRoute;

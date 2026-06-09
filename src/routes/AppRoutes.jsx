@@ -1,43 +1,67 @@
 import { Routes, Route } from "react-router-dom";
-import { PATHS } from "@/routes/paths";
-import PrivateRoute from "@/routes/PrivateRoute";
-import PublicRoute from "@/routes/PublicRoute";
-import NotFound from "@/errors/NotFound";
+import PATHS from "./paths";
+import PrivateRoute from "./PrivateRoute";
+import PublicRoute from "./PublicRoute";
 
-import Home from "@/features/products/pages/Home";
-import Shop from "@/features/products/pages/Shop";
-import ProductDetail from "@/features/products/pages/ProductDetail";
+// Layouts
+import PageWrapper from "@/components/layout/PageWrapper";
+
+// Auth pages
 import Login from "@/features/auth/pages/Login";
 import Register from "@/features/auth/pages/Register";
 import OAuth2Success from "@/features/auth/pages/OAuth2Success";
-import Cart from "@/features/cart/pages/Cart";
-import Checkout from "@/features/orders/pages/Checkout";
-import Orders from "@/features/orders/pages/Orders";
-import Profile from "@/features/profile/pages/Profile";
 
-function AppRoutes() {
+// Product pages (public)
+import ProductsPage from "@/features/products/pages/ProductsPage";
+import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
+
+// Protected pages
+import CartPage from "@/features/cart/pages/CartPage";
+import CheckoutPage from "@/features/orders/pages/CheckoutPage";
+import OrdersPage from "@/features/orders/pages/OrdersPage";
+import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
+import ProfilePage from "@/features/profile/pages/ProfilePage";
+
+// Errors
+import NotFound from "@/errors/NotFound";
+
+const AppRoutes = () => {
   return (
     <Routes>
-      <Route path={PATHS.HOME} element={<Home />} />
-      <Route path={PATHS.SHOP} element={<Shop />} />
-      <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetail />} />
-      <Route path={PATHS.CART} element={<Cart />} />
 
-      <Route element={<PublicRoute />}>
-        <Route path={PATHS.LOGIN} element={<Login />} />
-        <Route path={PATHS.REGISTER} element={<Register />} />
-      </Route>
-
-      <Route element={<PrivateRoute />}>
-        <Route path={PATHS.CHECKOUT} element={<Checkout />} />
-        <Route path={PATHS.ORDERS} element={<Orders />} />
-        <Route path={PATHS.PROFILE} element={<Profile />} />
-      </Route>
-
+      {/* OAuth2 callback — no layout wrapper */}
       <Route path={PATHS.OAUTH2_SUCCESS} element={<OAuth2Success />} />
-      <Route path="*" element={<NotFound />} />
+
+      {/* All other routes share the PageWrapper (Navbar + Footer) */}
+      <Route element={<PageWrapper />}>
+
+        {/* Public-only routes — redirect to home if already logged in */}
+        <Route element={<PublicRoute />}>
+          <Route path={PATHS.LOGIN}    element={<Login />} />
+          <Route path={PATHS.REGISTER} element={<Register />} />
+        </Route>
+
+        {/* Open routes — accessible by anyone */}
+        <Route path={PATHS.HOME}           element={<ProductsPage />} />
+        <Route path={PATHS.PRODUCTS}       element={<ProductsPage />} />
+        <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+
+        {/* Protected routes — redirect to login if not logged in */}
+        <Route element={<PrivateRoute />}>
+          <Route path={PATHS.CART}         element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT}     element={<CheckoutPage />} />
+          <Route path={PATHS.ORDERS}       element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
+          <Route path={PATHS.PROFILE}      element={<ProfilePage />} />
+        </Route>
+
+        {/* 404 */}
+        <Route path={PATHS.NOT_FOUND} element={<NotFound />} />
+
+      </Route>
+
     </Routes>
   );
-}
+};
 
 export default AppRoutes;

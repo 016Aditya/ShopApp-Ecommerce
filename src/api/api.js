@@ -1,0 +1,76 @@
+import axios from "axios";
+import { API_BASE_URL } from "@/utils/constants";
+import { getStoredUser, removeStoredUser } from "@/utils/storage";
+
+// ─── Axios instance ───────────────────────────────────────────────────────────
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// ─── Request interceptor ──────────────────────────────────────────────────────
+api.interceptors.request.use(
+  (config) => {
+    const user = getStoredUser();
+
+    if (user?.id) {
+      config.headers["X-User-Id"] = user.id;
+    }
+
+    // Ready for JWT — attach token if present
+    if (user?.token) {
+      config.headers.Authorization = `Bearer ${user.token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ─── Response interceptor ─────────────────────────────────────────────────────
+api.interceptors.response.use(
+  (response) => response,
+
+  (error) => {
+    const status = error?.response?.status;
+
+    // 401 — session invalid, clear storage and redirect
+    if (status === 401) {
+      removeStoredUser();
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+    }
+
+    // 403 — not enough permissions
+    if (status === 403) {
+      console.warn("Access denied:", error.response?.data);
+    }
+
+    // 404 — resource not found (product, order, user)
+    if (status === 404) {
+      console.warn("Resource not found:", error.response?.data);
+    }
+
+    // 500+ — server error
+    if (status >= 500) {
+      console.error("Server error:", error.response?.data);
+    }
+
+    // Normalise error message from Spring Boot GlobalExceptionHandler
+    const serverMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Something went wrong";
+
+    error.message = serverMessage;
+
+    return Promise.reject(error);
+  }
+);
+
+export default api;

@@ -1,5 +1,0 @@
-function Home() {
-  return <div className="p-6 text-2xl font-semibold">Home Page</div>;
-}
-
-export default Home;

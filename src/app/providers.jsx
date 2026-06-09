@@ -1,14 +1,15 @@
-import ErrorBoundary from "@/errors/ErrorBoundary";
-import { AuthProvider } from "@/features/auth/context/AuthContext";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/features/cart/context/CartContext";
 
-function Providers({ children }) {
-  return (
-    <ErrorBoundary>
-      <AuthProvider>
+const Providers = ({ children }) => (
+  <BrowserRouter>
+    <AuthProvider>
+      <CartProvider>       {/* ← must be INSIDE AuthProvider so it can read user */}
         {children}
-      </AuthProvider>
-    </ErrorBoundary>
-  );
-}
+      </CartProvider>
+    </AuthProvider>
+  </BrowserRouter>
+);
 
 export default Providers;

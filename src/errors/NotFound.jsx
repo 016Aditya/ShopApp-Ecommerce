@@ -1,23 +1,29 @@
 import { Link } from "react-router-dom";
+import Button from "@/components/common/Button";
+import PageLayout from "@/components/layout/PageLayout";
 import { PATHS } from "@/routes/paths";
 
 function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-      <h1 className="mb-2 text-6xl font-bold text-gray-800">404</h1>
-      <p className="mb-2 text-2xl font-semibold text-gray-600">
-        Page Not Found
-      </p>
-      <p className="mb-8 text-gray-400">
-        The page you are looking for does not exist.
-      </p>
-      <Link
-        to={PATHS.HOME}
-        className="rounded-lg bg-blue-600 px-6 py-2 text-white transition hover:bg-blue-700"
-      >
-        Go to Home
-      </Link>
-    </div>
+    <PageLayout
+      title="404 - Page Not Found"
+      description="The page you are looking for does not exist or may have been moved."
+    >
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <p className="text-sm text-slate-500">
+          Try going back to the home page or continue shopping.
+        </p>
+
+        <div className="mt-6 flex justify-center gap-3">
+          <Link to={PATHS.HOME}>
+            <Button>Go Home</Button>
+          </Link>
+          <Link to={PATHS.SHOP}>
+            <Button variant="secondary">Browse Shop</Button>
+          </Link>
+        </div>
+      </div>
+    </PageLayout>
   );
 }
 

@@ -1,45 +1,66 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback } from "react";
+import { login, register, logout } from "@/services/authService";
+import { getStoredUser, setStoredUser, removeStoredUser } from "@/utils/storage";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
-    // Shared security states across the app
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => getStoredUser());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        // Bootstrapping phase: check if user token exists
-        const token = localStorage.getItem('token');
-        
-        if (token) {
-            // Future phase: Parse JWT payload or call backend validation profile endpoint
-            // setUser(parsedUser);
-            setLoading(false);
-        } else {
-            // PROTOTYPING FALLBACK: Inject a temporary mock user matching UserDto.Response
-            // This lets you develop Cart/Orders smoothly right now without real auth filters!
-            setUser({
-                id: "test_user_mongodb_123",
-                firstName: "Guest",
-                lastName: "Developer",
-                email: "test@domain.com",
-                role: "USER"
-            });
-            setLoading(false);
-        }
-    }, []);
+  const handleLogin = useCallback(async (credentials) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await login(credentials);
+      setStoredUser(data);
+      setUser(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
-        window.location.href = '/login';
-    };
+  const handleRegister = useCallback(async (userData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await register(userData);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    return (
-        <AuthContext.Provider value={{ user, setUser, logout, isAuthenticated: !!user, loading }}>
-            {!loading && children}
-        </AuthContext.Provider>
-    );
-};
+  const handleLogout = useCallback(() => {
+    logout();               // clears localStorage
+    removeStoredUser();
+    setUser(null);
+  }, []);
 
-export const useAuth = () => useContext(AuthContext);
+  const value = {
+    user,
+    isLoggedIn: !!user,
+    isAdmin: user?.role === "ADMIN",
+    loading,
+    error,
+    login: handleLogin,
+    register: handleRegister,
+    logout: handleLogout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used inside <AuthProvider>");
+  return context;
+}

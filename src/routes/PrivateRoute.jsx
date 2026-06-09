@@ -1,11 +1,17 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { PATHS } from "@/routes/paths";
-import useAuth from "@/features/auth/hooks/useAuth";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import AuthContext from "@/context/AuthContext";
+import PATHS from "./paths";
 
-function PrivateRoute() {
-  const { isAuthenticated } = useAuth();
+const PrivateRoute = () => {
+  const { user, loading } = useContext(AuthContext);
+  const location = useLocation();
 
-  return isAuthenticated ? <Outlet /> : <Navigate to={PATHS.LOGIN} replace />;
-}
+  if (loading) return null; // or a full-page spinner
+
+  return user
+    ? <Outlet />
+    : <Navigate to={PATHS.LOGIN} state={{ from: location }} replace />;
+};
 
 export default PrivateRoute;

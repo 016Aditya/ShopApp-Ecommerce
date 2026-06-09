@@ -1,12 +1,7 @@
-import Providers from "@/app/providers";
-import AppRouter from "@/app/router";
+import AppRoutes from "@/routes/AppRoutes";
 
-function App() {
-  return (
-    <Providers>
-      <AppRouter />
-    </Providers>
-  );
-}
+const App = () => {
+  return <AppRoutes />;
+};
 
 export default App;

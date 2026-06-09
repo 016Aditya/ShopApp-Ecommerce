@@ -1,12 +1,14 @@
-import api from "@/services/api";
-import { API_ENDPOINTS } from "@/services/apiEndpoints";
+import api from "@/api/api";
+import { API_ENDPOINTS } from "@/api/apiEndpoints";
 
+// GET /api/cart/:userId
 export const getCart = async (userId) => {
   const { data } = await api.get(`${API_ENDPOINTS.CART}/${userId}`);
-  return data;
+  return data; // { id, userId, items: [{productId, quantity, unitPrice}], cartTotal }
 };
 
-export const addItemToCart = async (userId, productId, quantity = 1) => {
+// POST /api/cart/:userId/add  — body: { productId, quantity }
+export const addItemToCart = async (userId, productId, quantity) => {
   const { data } = await api.post(`${API_ENDPOINTS.CART}/${userId}/add`, {
     productId,
     quantity,
@@ -14,7 +16,8 @@ export const addItemToCart = async (userId, productId, quantity = 1) => {
   return data;
 };
 
-export const updateCartItemQuantity = async (userId, productId, quantity) => {
+// PUT /api/cart/:userId/items  — body: { productId, quantity }
+export const updateCartItem = async (userId, productId, quantity) => {
   const { data } = await api.put(`${API_ENDPOINTS.CART}/${userId}/items`, {
     productId,
     quantity,
@@ -22,12 +25,15 @@ export const updateCartItemQuantity = async (userId, productId, quantity) => {
   return data;
 };
 
-export const removeCartItem = async (userId, productId) => {
-  const { data } = await api.delete(`${API_ENDPOINTS.CART}/${userId}/items/${productId}`);
+// DELETE /api/cart/:userId/items/:productId
+export const removeItemFromCart = async (userId, productId) => {
+  const { data } = await api.delete(
+    `${API_ENDPOINTS.CART}/${userId}/items/${productId}`
+  );
   return data;
 };
 
+// DELETE /api/cart/:userId/clear
 export const clearCart = async (userId) => {
-  const { data } = await api.delete(`${API_ENDPOINTS.CART}/${userId}/clear`);
-  return data;
+  await api.delete(`${API_ENDPOINTS.CART}/${userId}/clear`);
 };
