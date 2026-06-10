@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useContext } from "react";
-import AuthContext from "@/context/AuthContext";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { getOrdersByUser, getOrderById, createOrder } from "@/services/orderService";
 
-// ─── All orders for logged-in user ────────────────────────────────────────
+// ── All orders for logged-in user ──────────────────────────────────────────
+
 export const useOrders = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
@@ -30,7 +31,8 @@ export const useOrders = () => {
   return { orders, loading, error, fetchOrders };
 };
 
-// ─── Single order ──────────────────────────────────────────────────────────
+// ── Single order ──────────────────────────────────────────────────────
+
 export const useOrder = (id) => {
   const [order, setOrder]     = useState(null);
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,8 @@ export const useOrder = (id) => {
   return { order, loading, error };
 };
 
-// ─── Place order ───────────────────────────────────────────────────────────
+// ── Place order ───────────────────────────────────────────────────────
+
 export const usePlaceOrder = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
@@ -66,7 +69,7 @@ export const usePlaceOrder = () => {
     setError(null);
     try {
       const data = await createOrder(orderData);
-      return data; // returns saved order
+      return data;
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to place order";
       setError(msg);
