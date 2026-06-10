@@ -1,11 +1,11 @@
-import { useState, useContext } from "react";
-import AuthContext from "@/context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { updateUserProfile } from "@/services/profileService";
 
 const PasswordForm = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
-  const [form, setForm]     = useState({ password: "", confirm: "" });
+  const [form, setForm]       = useState({ password: "", confirm: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
   const [success, setSuccess] = useState(false);
