@@ -54,20 +54,20 @@ function Navbar() {
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex flex-1">
-            <div className="flex w-full overflow-hidden rounded-sm">
+            <div className="flex w-full overflow-hidden rounded-sm ring-2 ring-[#ff9900] focus-within:ring-[#ff9900]">
               <input
                 type="text"
                 placeholder="Search products, brands and more..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 px-4 py-2 text-sm text-slate-800 outline-none"
+                className="flex-1 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none"
               />
               <button
                 type="submit"
                 className="flex items-center justify-center bg-[#ff9900] px-4 hover:bg-[#e88a00] transition"
                 aria-label="Search"
               >
-                <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 text-gray-900" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" />
                 </svg>
