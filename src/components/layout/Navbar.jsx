@@ -28,7 +28,7 @@ function Navbar() {
             Home
           </Link>
 
-          <Link to={PATHS.SHOP} className="hover:text-blue-600">
+          <Link to={PATHS.PRODUCTS} className="hover:text-blue-600">
             Shop
           </Link>
 
