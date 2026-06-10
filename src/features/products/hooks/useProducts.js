@@ -3,20 +3,21 @@ import {
   getAllProducts,
   getProductById,
   getProductsByCategory,
+  getProductsByCategoryAndSubcategory,
   searchProducts,
 } from "@/services/productService";
 
-// ─── All products + search + category filter ──────────────────────────────
+// ─── All products + filters ────────────────────────────────────────────────
 export const useProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
 
-  const fetchAll = useCallback(async () => {
+  const run = useCallback(async (apiFn) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllProducts();   // ← no { data } — service returns array directly
+      const data = await apiFn();
       setProducts(data);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load products");
@@ -25,37 +26,41 @@ export const useProducts = () => {
     }
   }, []);
 
-  const fetchByCategory = useCallback(async (category) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getProductsByCategory(category);
-      setProducts(data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load category");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchAll = useCallback(
+    () => run(getAllProducts),
+    [run]
+  );
 
-  const fetchBySearch = useCallback(async (keyword) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await searchProducts(keyword);
-      setProducts(data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Search failed");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchByCategory = useCallback(
+    (category) => run(() => getProductsByCategory(category)),
+    [run]
+  );
 
+  const fetchByCategoryAndSubcategory = useCallback(
+    (category, subcategory) =>
+      run(() => getProductsByCategoryAndSubcategory(category, subcategory)),
+    [run]
+  );
+
+  const fetchBySearch = useCallback(
+    (keyword) => run(() => searchProducts(keyword)),
+    [run]
+  );
+
+  // Load all on mount
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
-  return { products, loading, error, fetchAll, fetchByCategory, fetchBySearch };
+  return {
+    products,
+    loading,
+    error,
+    fetchAll,
+    fetchByCategory,
+    fetchByCategoryAndSubcategory,
+    fetchBySearch,
+  };
 };
 
 // ─── Single product ────────────────────────────────────────────────────────
@@ -66,21 +71,24 @@ export const useProduct = (id) => {
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
 
     const fetch = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getProductById(id);  // ← no { data } — service returns object directly
-        setProduct(data);
+        const data = await getProductById(id);
+        if (!cancelled) setProduct(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Product not found");
+        if (!cancelled)
+          setError(err.response?.data?.message || "Product not found");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetch();
+    return () => { cancelled = true; };
   }, [id]);
 
   return { product, loading, error };

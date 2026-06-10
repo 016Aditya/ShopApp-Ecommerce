@@ -1,16 +1,31 @@
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import PATHS, { buildPath } from "@/routes/paths";
 import CartContext from "@/features/cart/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { formatCurrency } from "@/utils/currency";
 
 const ProductCard = ({ product, compact = false }) => {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
   const { addToCart } = useContext(CartContext);
+  const { user }   = useAuth();
+  const [added, setAdded] = useState(false);
+  const [busy, setBusy]   = useState(false);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
-    addToCart(product.id, 1);
+    if (!user) {
+      navigate(PATHS.LOGIN);
+      return;
+    }
+    setBusy(true);
+    try {
+      await addToCart(product.id, 1);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    } finally {
+      setBusy(false);
+    }
   };
 
   if (compact) {
@@ -20,16 +35,25 @@ const ProductCard = ({ product, compact = false }) => {
         onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+        onKeyDown={(e) =>
+          e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))
+        }
       >
         <div className="flex h-32 w-full items-center justify-center rounded bg-slate-50 mb-2 overflow-hidden">
           {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain" loading="lazy" />
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="h-full w-full object-contain"
+              loading="lazy"
+            />
           ) : (
             <span className="text-4xl">🛍️</span>
           )}
         </div>
-        <p className="text-xs font-semibold text-slate-800 text-center line-clamp-2 group-hover:text-[#2874f0]">{product.name}</p>
+        <p className="text-xs font-semibold text-slate-800 text-center line-clamp-2 group-hover:text-[#2874f0]">
+          {product.name}
+        </p>
         <p className="mt-1 text-sm font-bold text-slate-900">{formatCurrency(product.price)}</p>
       </div>
     );
@@ -41,7 +65,9 @@ const ProductCard = ({ product, compact = false }) => {
       onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+      onKeyDown={(e) =>
+        e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))
+      }
     >
       {/* Image */}
       <div className="flex h-44 items-center justify-center bg-slate-50 overflow-hidden">
@@ -72,19 +98,33 @@ const ProductCard = ({ product, compact = false }) => {
         </div>
         <p className="mt-1 text-base font-bold text-slate-900">{formatCurrency(product.price)}</p>
         <p className="text-xs text-green-600 font-semibold">Free Delivery</p>
-        <span className="w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
-          {product.category}
-        </span>
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
+            {product.category}
+          </span>
+          {product.subcategory && (
+            <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+              {product.subcategory}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Footer */}
       <div className="px-3 pb-3">
         <button
-          className="w-full rounded-sm bg-[#ff9f00] py-2 text-sm font-bold text-white transition hover:bg-[#e08e00] active:scale-95"
+          className={`w-full rounded-sm py-2 text-sm font-bold text-white transition active:scale-95 ${
+            added
+              ? "bg-green-600"
+              : busy
+              ? "bg-[#ff9f00]/70 cursor-not-allowed"
+              : "bg-[#ff9f00] hover:bg-[#e08e00]"
+          }`}
           onClick={handleAddToCart}
+          disabled={busy}
           aria-label={`Add ${product.name} to cart`}
         >
-          ADD TO CART
+          {added ? "✓ Added!" : busy ? "Adding..." : "ADD TO CART"}
         </button>
       </div>
     </div>
