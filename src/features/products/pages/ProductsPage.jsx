@@ -13,31 +13,32 @@ const ProductsPage = () => {
     fetchBySearch(keyword);
   };
 
-  const handleClearSearch = () => {
-    fetchAll();
-  };
+  const handleClearSearch = () => fetchAll();
 
   const handleCategorySelect = (category) => {
     setActiveCategory(category);
-    if (category === "All") {
-      fetchAll();
-    } else {
-      fetchByCategory(category);
-    }
+    category === "All" ? fetchAll() : fetchByCategory(category);
   };
 
   return (
-    <div className="page products-page">
-      <div className="products-page__toolbar">
+    <div className="container-app py-8">
+      {/* Toolbar */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <ProductSearch onSearch={handleSearch} onClear={handleClearSearch} />
-        <ProductFilter
-          activeCategory={activeCategory}
-          onSelect={handleCategorySelect}
-        />
+        <ProductFilter activeCategory={activeCategory} onSelect={handleCategorySelect} />
       </div>
 
-      {loading && <p className="loading-text">Loading products...</p>}
-      {error && <p className="error-text">{error}</p>}
+      {/* States */}
+      {loading && (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-2xl bg-slate-100 h-64" />
+          ))}
+        </div>
+      )}
+      {error && (
+        <p className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</p>
+      )}
       {!loading && !error && <ProductGrid products={products} />}
     </div>
   );
