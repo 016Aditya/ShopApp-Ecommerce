@@ -6,13 +6,13 @@ const SLIDES = [
   {
     id: 1,
     title: "Shop Fashion",
-    subtitle: "Under ₹999",
+    subtitle: "Under \u20b9999",
     tag: "TOP BRANDS | LATEST TRENDS",
     bg: "from-blue-50 to-indigo-100",
     accent: "#2874f0",
-    emoji: "👗",
+    emoji: "\ud83d\udc57",
     cta: "Shop Now",
-    link: `${PATHS.PRODUCTS}?category=Clothing`,
+    category: "Clothing",
   },
   {
     id: 2,
@@ -21,21 +21,21 @@ const SLIDES = [
     tag: "MOBILES | LAPTOPS | GADGETS",
     bg: "from-slate-800 to-slate-900",
     accent: "#ff9f00",
-    emoji: "📱",
+    emoji: "\ud83d\udcf1",
     cta: "Explore Now",
-    link: `${PATHS.PRODUCTS}?category=Electronics`,
+    category: "Electronics",
     dark: true,
   },
   {
     id: 3,
     title: "Books & More",
-    subtitle: "Starting ₹99",
+    subtitle: "Starting \u20b999",
     tag: "BESTSELLERS | NEW ARRIVALS",
     bg: "from-orange-50 to-amber-100",
     accent: "#e07d00",
-    emoji: "📚",
+    emoji: "\ud83d\udcda",
     cta: "Browse All",
-    link: `${PATHS.PRODUCTS}?category=Books`,
+    category: "Books",
   },
   {
     id: 4,
@@ -44,9 +44,9 @@ const SLIDES = [
     tag: "FURNITURE | DECOR | KITCHEN",
     bg: "from-green-50 to-emerald-100",
     accent: "#26a541",
-    emoji: "🏠",
+    emoji: "\ud83c\udfe0",
     cta: "Shop Home",
-    link: `${PATHS.PRODUCTS}?category=Home`,
+    category: "Home",
   },
 ];
 
@@ -63,8 +63,12 @@ function HeroBanner() {
 
   const slide = SLIDES[current];
 
-  const handleBannerClick = () => {
-    navigate(slide.link);
+  // Navigate using object form so React Router correctly sets the search param
+  const goToCategory = () => {
+    navigate({
+      pathname: PATHS.PRODUCTS,
+      search: `?category=${slide.category}`,
+    });
   };
 
   const handlePrev = (e) => {
@@ -84,14 +88,14 @@ function HeroBanner() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* ── Entire banner is clickable ── */}
+      {/* Entire banner clickable */}
       <div
         className={`bg-gradient-to-r ${slide.bg} transition-all duration-700 cursor-pointer`}
-        onClick={handleBannerClick}
+        onClick={goToCategory}
         role="link"
         tabIndex={0}
-        aria-label={`Go to ${slide.title}`}
-        onKeyDown={(e) => e.key === "Enter" && handleBannerClick()}
+        aria-label={`Shop ${slide.category}`}
+        onKeyDown={(e) => e.key === "Enter" && goToCategory()}
       >
         <div className="container-app flex items-center justify-between py-10 md:py-14">
           {/* Left */}
@@ -119,7 +123,7 @@ function HeroBanner() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(slide.link);
+                goToCategory();
               }}
               className="mt-3 w-fit rounded-sm px-8 py-2.5 text-sm font-bold text-white shadow transition hover:opacity-90"
               style={{ backgroundColor: slide.accent }}
@@ -141,13 +145,7 @@ function HeroBanner() {
         className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition z-10"
         aria-label="Previous"
       >
-        <svg
-          className="h-5 w-5 text-slate-700"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
       </button>
@@ -158,13 +156,7 @@ function HeroBanner() {
         className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition z-10"
         aria-label="Next"
       >
-        <svg
-          className="h-5 w-5 text-slate-700"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
         </svg>
       </button>
