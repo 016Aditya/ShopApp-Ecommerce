@@ -57,11 +57,11 @@ const AppRoutes = () => {
 
         {/* Protected routes — redirect to login if not logged in */}
         <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART}}          element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT}       element={<CheckoutPage />} />
-          <Route path={PATHS.ORDERS}         element={<OrdersPage />} />
-          <Route path={PATHS.ORDER_DETAIL}   element={<OrderDetailPage />} />
-          <Route path={PATHS.PROFILE}        element={<ProfilePage />} />
+          <Route path={PATHS.CART}         element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT}     element={<CheckoutPage />} />
+          <Route path={PATHS.ORDERS}       element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
+          <Route path={PATHS.PROFILE}      element={<ProfilePage />} />
         </Route>
 
         {/* 404 */}
