@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import PATHS from "@/routes/paths";
 
-// Banner slides: label, subtitle, discount, emoji, category query
+// ─── Banner slides ─────────────────────────────────────────────────────────────
+// Each slide is fully clickable and goes to the correct category (or subcategory)
 const BANNERS = [
   {
     id: 1,
@@ -10,101 +12,179 @@ const BANNERS = [
     sub: "Up to 60% Off",
     emoji: "📱",
     bg: "from-[#0f1923] to-[#1a3352]",
+    textColor: "text-white",
+    subColor: "text-yellow-300",
+    tagColor: "text-[#ff9900]",
+    btnClass: "bg-[#ff9900] text-slate-900 hover:bg-[#e08800]",
     category: "Electronics",
+    subcategory: null,
   },
   {
     id: 2,
-    tag: "SHIRTS | JEANS | DRESSES",
-    title: "Fashion Fiesta",
-    sub: "Min 40% Off on Top Brands",
+    tag: "TOP BRANDS | LATEST TRENDS",
+    title: "Shop Fashion",
+    sub: "Under \u20b9999",
     emoji: "👗",
-    bg: "from-[#1a0a2e] to-[#3b1f5e]",
+    bg: "from-[#dbeafe] to-[#eff6ff]",
+    textColor: "text-slate-900",
+    subColor: "text-slate-700",
+    tagColor: "text-blue-600",
+    btnClass: "bg-blue-600 text-white hover:bg-blue-700",
     category: "Clothing",
+    subcategory: null,
   },
   {
     id: 3,
     tag: "TEXTBOOKS | STATIONERY",
     title: "Books & More",
-    sub: "Starting at ₹99",
+    sub: "Starting at \u20b999",
     emoji: "📚",
     bg: "from-[#0a1f0a] to-[#1a4a1a]",
+    textColor: "text-white",
+    subColor: "text-green-300",
+    tagColor: "text-green-400",
+    btnClass: "bg-green-500 text-white hover:bg-green-600",
     category: "Books",
+    subcategory: null,
   },
   {
     id: 4,
-    tag: "APPLIANCES | DÉCOR",
+    tag: "APPLIANCES | D\u00c9COR",
     title: "Home & Kitchen",
     sub: "Up to 50% Off",
     emoji: "🏠",
     bg: "from-[#1f1000] to-[#4a2800]",
+    textColor: "text-white",
+    subColor: "text-orange-300",
+    tagColor: "text-orange-400",
+    btnClass: "bg-orange-500 text-white hover:bg-orange-600",
     category: "Home",
+    subcategory: null,
   },
+];
+
+// ─── Clothing subcategory quick-access row ─────────────────────────────────────
+const CLOTHING_SUBS = [
+  { label: "Shirt",  emoji: "👕" },
+  { label: "Jeans",  emoji: "👖" },
+  { label: "Dress",  emoji: "👗" },
+  { label: "Shoes",  emoji: "👟" },
+  { label: "Jacket", emoji: "🧥" },
+  { label: "Kurta",  emoji: "🧣" },
+];
+
+// ─── Category quick-links ──────────────────────────────────────────────────────
+const CATEGORY_CARDS = [
+  { label: "Electronics", emoji: "💻", bg: "from-[#0f1923] to-[#1a3352]", text: "text-white" },
+  { label: "Clothing",    emoji: "👗", bg: "from-[#dbeafe] to-[#eff6ff]",  text: "text-slate-900" },
+  { label: "Books",       emoji: "📚", bg: "from-[#0a1f0a] to-[#1a4a1a]",  text: "text-white" },
+  { label: "Home",        emoji: "🏠", bg: "from-[#1f1000] to-[#4a2800]",  text: "text-white" },
+  { label: "Sports",      emoji: "⚽", bg: "from-[#1a0f2e] to-[#2d1f5c]",  text: "text-white" },
 ];
 
 function Home() {
   return (
-    <div>
-      {/* ── Hero Banner Carousel (CSS-only) ─────────────────────────────── */}
+    <div className="min-h-screen bg-[#f1f3f6]">
+
+      {/* ── Hero Banner ──────────────────────────────────────────────────────── */}
       <BannerCarousel />
 
-      {/* ── Category Quick Links ─────────────────────────────────────────── */}
-      <section className="bg-white py-6 border-b">
+      {/* ── Clothing subcategory strip (visible only when Fashion banner is shown) ─ */}
+      {/* Always visible as a fashion section */}
+      <section className="bg-white py-5 border-b shadow-sm">
         <div className="container-app">
-          <h2 className="mb-4 text-lg font-bold text-slate-800">Shop by Category</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {BANNERS.map((b) => (
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-800">Shop by Fashion</h2>
+            <Link
+              to={`${PATHS.PRODUCTS}?category=Clothing`}
+              className="text-xs font-semibold text-blue-600 hover:underline"
+            >
+              View All →
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {CLOTHING_SUBS.map((s) => (
               <Link
-                key={b.id}
-                to={`${PATHS.PRODUCTS}?category=${b.category}`}
-                className={`group relative flex h-28 items-end overflow-hidden rounded-lg bg-gradient-to-br ${b.bg} p-4 transition hover:shadow-lg`}
+                key={s.label}
+                to={`${PATHS.PRODUCTS}?category=Clothing&subcategory=${s.label}`}
+                className="flex flex-col items-center gap-1.5 rounded-lg bg-slate-50 py-3 px-2 text-center transition hover:bg-blue-50 hover:shadow"
               >
-                <span className="absolute right-3 top-3 text-4xl opacity-70 group-hover:scale-110 transition-transform">
-                  {b.emoji}
-                </span>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-yellow-400">
-                    {b.tag}
-                  </p>
-                  <p className="text-sm font-bold text-white">{b.title}</p>
-                  <p className="text-xs text-slate-300">{b.sub}</p>
-                </div>
+                <span className="text-3xl">{s.emoji}</span>
+                <span className="text-xs font-semibold text-slate-700">{s.label}</span>
               </Link>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ── Category Quick Links ────────────────────────────────────────────── */}
+      <section className="bg-white py-6 border-b">
+        <div className="container-app">
+          <h2 className="mb-4 text-base font-bold text-slate-800">Shop by Category</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {CATEGORY_CARDS.map((c) => (
+              <Link
+                key={c.label}
+                to={`${PATHS.PRODUCTS}?category=${c.label}`}
+                className={`group relative flex h-24 items-end overflow-hidden rounded-lg bg-gradient-to-br ${c.bg} p-3 transition hover:shadow-lg`}
+              >
+                <span className="absolute right-2 top-2 text-4xl opacity-70 group-hover:scale-110 transition-transform">
+                  {c.emoji}
+                </span>
+                <span className={`text-sm font-bold ${c.text}`}>{c.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
 
-// ── Simple 4-slide auto-rotating banner ───────────────────────────────────
-import { useState, useEffect } from "react";
-
+// ─── Banner Carousel ──────────────────────────────────────────────────────────
 function BannerCarousel() {
   const [active, setActive] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const t = setInterval(() => setActive((a) => (a + 1) % BANNERS.length), 4000);
+    const t = setInterval(() => setActive((a) => (a + 1) % BANNERS.length), 4500);
     return () => clearInterval(t);
   }, []);
 
   const b = BANNERS[active];
 
+  // Build the destination URL
+  const dest = b.subcategory
+    ? `${PATHS.PRODUCTS}?category=${b.category}&subcategory=${b.subcategory}`
+    : `${PATHS.PRODUCTS}?category=${b.category}`;
+
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-r ${b.bg} transition-all duration-700`}>
+    <div
+      className={`relative overflow-hidden bg-gradient-to-r ${b.bg} cursor-pointer transition-all duration-700`}
+      onClick={() => navigate(dest)}          {/* ← entire banner is clickable */}
+      role="link"
+      aria-label={`Go to ${b.title}`}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && navigate(dest)}
+    >
       <div className="container-app flex items-center justify-between py-14 md:py-20">
         <div className="max-w-md space-y-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#ff9900]">
+          <p className={`text-xs font-bold uppercase tracking-widest ${b.tagColor}`}>
             {b.tag}
           </p>
-          <h1 className="text-4xl font-extrabold text-white md:text-5xl">{b.title}</h1>
-          <p className="text-xl font-semibold text-yellow-300">{b.sub}</p>
-          <Link
-            to={`${PATHS.PRODUCTS}?category=${b.category}`}
-            className="mt-2 inline-block rounded-sm bg-[#ff9900] px-7 py-2.5 text-sm font-bold text-slate-900 shadow hover:bg-[#e08800] transition"
+          <h1 className={`text-4xl font-extrabold md:text-5xl ${b.textColor}`}>
+            {b.title}
+          </h1>
+          <p className={`text-xl font-semibold ${b.subColor}`}>{b.sub}</p>
+
+          {/* Stop-propagation so the button click doesn't double-fire with the div */}
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(dest); }}
+            className={`mt-2 inline-block rounded-sm px-7 py-2.5 text-sm font-bold shadow transition ${b.btnClass}`}
           >
-            Explore Now
-          </Link>
+            Shop Now
+          </button>
         </div>
         <span className="hidden text-[120px] md:block select-none">{b.emoji}</span>
       </div>
@@ -114,10 +194,10 @@ function BannerCarousel() {
         {BANNERS.map((_, i) => (
           <button
             key={i}
-            onClick={() => setActive(i)}
+            onClick={(e) => { e.stopPropagation(); setActive(i); }}
             aria-label={`Slide ${i + 1}`}
             className={`h-2 rounded-full transition-all ${
-              i === active ? "w-6 bg-[#ff9900]" : "w-2 bg-white/40 hover:bg-white/60"
+              i === active ? "w-6 bg-current opacity-90" : "w-2 bg-current opacity-30 hover:opacity-60"
             }`}
           />
         ))}
@@ -125,15 +205,15 @@ function BannerCarousel() {
 
       {/* Arrows */}
       <button
-        onClick={() => setActive((a) => (a - 1 + BANNERS.length) % BANNERS.length)}
-        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white hover:bg-black/50 transition"
+        onClick={(e) => { e.stopPropagation(); setActive((a) => (a - 1 + BANNERS.length) % BANNERS.length); }}
+        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white hover:bg-black/40 transition text-lg leading-none"
         aria-label="Previous"
       >
         &#8249;
       </button>
       <button
-        onClick={() => setActive((a) => (a + 1) % BANNERS.length)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white hover:bg-black/50 transition"
+        onClick={(e) => { e.stopPropagation(); setActive((a) => (a + 1) % BANNERS.length); }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white hover:bg-black/40 transition text-lg leading-none"
         aria-label="Next"
       >
         &#8250;
