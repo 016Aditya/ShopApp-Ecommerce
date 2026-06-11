@@ -16,6 +16,9 @@ const PATHS = {
   ORDER_DETAIL: "/orders/:id",
   PROFILE: "/profile",
 
+  // Info
+  CUSTOMER_SERVICE: "/customer-service",
+
   // Utility
   NOT_FOUND: "*",
 };
@@ -23,8 +26,4 @@ const PATHS = {
 // Helper to build dynamic paths e.g. buildPath(PATHS.PRODUCT_DETAIL, "42")
 export const buildPath = (path, id) => path.replace(":id", id);
 
-// Named export so both styles work:
-//   import PATHS from "@/routes/paths"          (default)
-//   import { PATHS } from "@/routes/paths"      (named)
-export { PATHS };
 export default PATHS;

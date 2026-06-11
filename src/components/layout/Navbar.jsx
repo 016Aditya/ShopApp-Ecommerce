@@ -16,20 +16,15 @@ const CLOTHING_SUBS = [
 ];
 
 const NAV_LINKS = [
-  { label: "Today's Deals", path: PATHS.PRODUCTS, dropdown: null },
-  { label: "Mobiles",        path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`, dropdown: null },
-  {
-    label: "Fashion",
-    path: `${PATHS.PRODUCTS}?category=Clothing`,
-    // dropdown is rendered inline below
-    dropdown: CLOTHING_SUBS,
-  },
-  { label: "Electronics",   path: `${PATHS.PRODUCTS}?category=Electronics`, dropdown: null },
-  { label: "Home & Kitchen",path: `${PATHS.PRODUCTS}?category=Home`, dropdown: null },
-  { label: "Books",          path: `${PATHS.PRODUCTS}?category=Books`, dropdown: null },
-  { label: "Sports",         path: `${PATHS.PRODUCTS}?category=Sports`, dropdown: null },
-  { label: "New Releases",   path: PATHS.PRODUCTS, dropdown: null },
-  { label: "Customer Service", path: PATHS.PRODUCTS, dropdown: null },
+  { label: "Today's Deals",   path: PATHS.PRODUCTS,                                          dropdown: null },
+  { label: "Mobiles",          path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`, dropdown: null },
+  { label: "Fashion",          path: `${PATHS.PRODUCTS}?category=Clothing`,                  dropdown: CLOTHING_SUBS },
+  { label: "Electronics",      path: `${PATHS.PRODUCTS}?category=Electronics`,               dropdown: null },
+  { label: "Home & Kitchen",   path: `${PATHS.PRODUCTS}?category=Home`,                      dropdown: null },
+  { label: "Books",             path: `${PATHS.PRODUCTS}?category=Books`,                    dropdown: null },
+  { label: "Sports",            path: `${PATHS.PRODUCTS}?category=Sports`,                   dropdown: null },
+  { label: "New Releases",      path: PATHS.PRODUCTS,                                         dropdown: null },
+  { label: "Customer Service",  path: PATHS.CUSTOMER_SERVICE,                                 dropdown: null },
 ];
 
 function Navbar() {
@@ -98,7 +93,7 @@ function Navbar() {
               <span className="text-sm font-bold text-white">Account ▾</span>
               <div className="absolute top-full right-0 z-50 hidden w-48 rounded bg-white shadow-xl group-hover:block">
                 <Link to={PATHS.PROFILE} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Profile</Link>
-                <Link to={PATHS.ORDERS} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">My Orders</Link>
+                <Link to={PATHS.ORDERS}  className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">My Orders</Link>
                 <button onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Sign Out</button>
               </div>
             </div>
