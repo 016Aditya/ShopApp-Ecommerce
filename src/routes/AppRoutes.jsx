@@ -11,6 +11,9 @@ import Login from "@/features/auth/pages/Login";
 import Register from "@/features/auth/pages/Register";
 import OAuth2Success from "@/features/auth/pages/OAuth2Success";
 
+// Home page (banners + featured products + categories)
+import Home from "@/features/products/pages/Home";
+
 // Product pages (public)
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
@@ -44,19 +47,21 @@ const AppRoutes = () => {
           <Route path={PATHS.REGISTER} element={<Register />} />
         </Route>
 
+        {/* ── HOME — banners + categories + featured products ── */}
+        <Route path={PATHS.HOME} element={<Home />} />
+
         {/* Open routes — accessible by anyone */}
-        <Route path={PATHS.HOME}             element={<ProductsPage />} />
         <Route path={PATHS.PRODUCTS}         element={<ProductsPage />} />
         <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetailPage />} />
         <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} />
 
         {/* Protected routes — redirect to login if not logged in */}
         <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART}         element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT}     element={<CheckoutPage />} />
-          <Route path={PATHS.ORDERS}       element={<OrdersPage />} />
-          <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
-          <Route path={PATHS.PROFILE}      element={<ProfilePage />} />
+          <Route path={PATHS.CART}}          element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT}       element={<CheckoutPage />} />
+          <Route path={PATHS.ORDERS}         element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL}   element={<OrderDetailPage />} />
+          <Route path={PATHS.PROFILE}        element={<ProfilePage />} />
         </Route>
 
         {/* 404 */}
