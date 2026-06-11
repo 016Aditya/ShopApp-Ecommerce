@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   getAllProducts,
   getProductById,
@@ -47,9 +47,9 @@ export const useProducts = () => {
     [run]
   );
 
-  // NO fetchAll() on mount here.
-  // ProductsPage reads ?category= from the URL and decides what to fetch.
-  // Putting fetchAll() here caused it to always override the URL param on mount.
+  // NO fetchAll() on mount.
+  // ProductsPage reads ?category= from URL and decides what to fetch.
+  // The old fetchAll() here was overwriting the category param on every mount.
 
   return {
     products,
@@ -67,8 +67,6 @@ export const useProduct = (id) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
-
-  const { useEffect } = require("react");
 
   useEffect(() => {
     if (!id) return;
