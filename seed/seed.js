@@ -9,6 +9,10 @@
 //
 //  Make sure your Spring Boot backend is running on port 8080.
 //  If your port is different, update BASE_URL below.
+//
+//  IMAGE SOURCES (100% reliable, never expire):
+//    • fakestoreapi.com  — real ecommerce product images
+//    • picsum.photos     — stable seeded placeholder images
 // =============================================================
 
 const axios = require("axios");
@@ -27,7 +31,7 @@ const products = [
     stock: 50,
     rating: 4.7,
     description: "Latest flagship with built-in S Pen, 200MP camera, and Snapdragon 8 Elite.",
-    imageUrl: "https://m.media-amazon.com/images/I/71SqDuCGXEL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/81QpkIctqPL._AC_SX679_.jpg",
   },
   {
     name: "iPhone 16 Pro Max 256GB",
@@ -38,7 +42,7 @@ const products = [
     stock: 35,
     rating: 4.8,
     description: "Apple Intelligence, A18 Pro chip, 5x optical zoom, titanium design.",
-    imageUrl: "https://m.media-amazon.com/images/I/81fxjeu8fdL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71pWzhdJNwL._AC_UL640_FMwebp_QL65_.webp",
   },
   {
     name: "OnePlus 13 256GB/16GB",
@@ -49,7 +53,7 @@ const products = [
     stock: 60,
     rating: 4.5,
     description: "Snapdragon 8 Elite, Hasselblad cameras, 100W SUPERVOOC charging.",
-    imageUrl: "https://m.media-amazon.com/images/I/61U7sK+BKWL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg",
   },
 
   // ── ELECTRONICS ─ Laptop ─────────────────────────────────────────
@@ -62,7 +66,7 @@ const products = [
     stock: 25,
     rating: 4.8,
     description: "Fanless design, 18-hour battery, M3 chip, Liquid Retina display.",
-    imageUrl: "https://m.media-amazon.com/images/I/71vFKBpKakL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/61mtL65D4cL._AC_SX679_.jpg",
   },
   {
     name: "Dell XPS 15 Core i9 RTX 4060",
@@ -73,7 +77,7 @@ const products = [
     stock: 15,
     rating: 4.6,
     description: "4K OLED display, 32GB RAM, 1TB SSD, premium build quality.",
-    imageUrl: "https://m.media-amazon.com/images/I/71fO95MBEZL.jpg",
+    imageUrl: "https://picsum.photos/seed/dell-xps/400/400",
   },
   {
     name: "HP Pavilion 15 Ryzen 5 8GB/512GB",
@@ -84,7 +88,7 @@ const products = [
     stock: 40,
     rating: 4.3,
     description: "AMD Ryzen 5 7530U, Full HD IPS display, Windows 11 Home.",
-    imageUrl: "https://m.media-amazon.com/images/I/61RoxyVJBRL.jpg",
+    imageUrl: "https://picsum.photos/seed/hp-pavilion/400/400",
   },
 
   // ── ELECTRONICS ─ Headphones ─────────────────────────────────────
@@ -97,7 +101,7 @@ const products = [
     stock: 80,
     rating: 4.8,
     description: "Industry-leading noise cancellation, 30-hour battery, multipoint connect.",
-    imageUrl: "https://m.media-amazon.com/images/I/61lbSEPuMjL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg",
   },
   {
     name: "Boat Rockerz 450 Pro Wireless",
@@ -108,7 +112,7 @@ const products = [
     stock: 200,
     rating: 4.1,
     description: "40-hour playback, ASAP charge, ENx mic, signature sound.",
-    imageUrl: "https://m.media-amazon.com/images/I/61S54FMfNqL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_FMwebp_QL65_.webp",
   },
 
   // ── ELECTRONICS ─ TV ─────────────────────────────────────────────
@@ -121,7 +125,7 @@ const products = [
     stock: 12,
     rating: 4.7,
     description: "OLED evo panel, 120Hz, Dolby Vision & Atmos, webOS 23.",
-    imageUrl: "https://m.media-amazon.com/images/I/81HQKXP4-1L.jpg",
+    imageUrl: "https://picsum.photos/seed/lg-oled-tv/400/400",
   },
   {
     name: "Mi 43\" 4K UHD Android TV",
@@ -132,7 +136,7 @@ const products = [
     stock: 30,
     rating: 4.2,
     description: "4K Ultra HD, Android 11, far-field voice control, Dolby Audio.",
-    imageUrl: "https://m.media-amazon.com/images/I/71B4IOnWIkL.jpg",
+    imageUrl: "https://picsum.photos/seed/mi-tv/400/400",
   },
 
   // ── CLOTHING ─ Shirt ─────────────────────────────────────────────
@@ -145,7 +149,7 @@ const products = [
     stock: 120,
     rating: 4.3,
     description: "100% cotton, wrinkle-resistant, available in 6 colors.",
-    imageUrl: "https://m.media-amazon.com/images/I/71d7rfSl4IL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",
   },
   {
     name: "Van Heusen Checked Casual Shirt",
@@ -156,7 +160,7 @@ const products = [
     stock: 150,
     rating: 4.1,
     description: "Regular fit, pure cotton, machine washable.",
-    imageUrl: "https://m.media-amazon.com/images/I/81YJiEMxhFL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71YXzeOuslL._AC_UY879_.jpg",
   },
 
   // ── CLOTHING ─ Jeans ─────────────────────────────────────────────
@@ -169,7 +173,7 @@ const products = [
     stock: 80,
     rating: 4.5,
     description: "Slim through hip and thigh, stretch denim, classic 5-pocket style.",
-    imageUrl: "https://m.media-amazon.com/images/I/91i02ILsZFL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71z3kpMAYsL._AC_UY879_.jpg",
   },
   {
     name: "Pepe Jeans Straight Fit Men's Jeans",
@@ -180,7 +184,7 @@ const products = [
     stock: 100,
     rating: 4.0,
     description: "Straight fit, mid-rise, 98% cotton, zip fly.",
-    imageUrl: "https://m.media-amazon.com/images/I/61sIoFbCShL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71HblAHs1xL._AC_UY879_-2.jpg",
   },
 
   // ── CLOTHING ─ Shoes ─────────────────────────────────────────────
@@ -193,7 +197,7 @@ const products = [
     stock: 60,
     rating: 4.6,
     description: "Max Air unit, React foam, all-day comfort and bold style.",
-    imageUrl: "https://m.media-amazon.com/images/I/61XUhrAbbOL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/71pWzhdJNwL._AC_UL640_FMwebp_QL65_.webp",
   },
   {
     name: "Adidas Ultraboost 22 Running Shoes",
@@ -204,7 +208,7 @@ const products = [
     stock: 45,
     rating: 4.7,
     description: "BOOST midsole, Primeknit+ upper, Continental rubber outsole.",
-    imageUrl: "https://m.media-amazon.com/images/I/71E9PXSMKCL.jpg",
+    imageUrl: "https://picsum.photos/seed/adidas-ultraboost/400/400",
   },
 
   // ── CLOTHING ─ Dress ─────────────────────────────────────────────
@@ -217,7 +221,7 @@ const products = [
     stock: 70,
     rating: 4.2,
     description: "Floral print, V-neck, midi length, viscose fabric.",
-    imageUrl: "https://m.media-amazon.com/images/I/71r9IQKIOHL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/51UDEzMJVpL._AC_UL640_FMwebp_QL65_.webp",
   },
 
   // ── CLOTHING ─ Jacket ────────────────────────────────────────────
@@ -230,7 +234,7 @@ const products = [
     stock: 30,
     rating: 4.6,
     description: "Water-repellent, ThermoBall insulation, packs into its own pocket.",
-    imageUrl: "https://m.media-amazon.com/images/I/71vxHgwrCML.jpg",
+    imageUrl: "https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_.jpg",
   },
 
   // ── CLOTHING ─ Kurta ─────────────────────────────────────────────
@@ -243,7 +247,7 @@ const products = [
     stock: 55,
     rating: 4.4,
     description: "Art silk, mandarin collar, festive wear, comes with churidar.",
-    imageUrl: "https://m.media-amazon.com/images/I/71UOYT1vxDL.jpg",
+    imageUrl: "https://fakestoreapi.com/img/81XH0e8fefL._AC_UY879_-2.jpg",
   },
 
   // ── BOOKS ─ Novel ────────────────────────────────────────────────
@@ -256,7 +260,7 @@ const products = [
     stock: 300,
     rating: 4.9,
     description: "The proven system to build good habits and break bad ones.",
-    imageUrl: "https://m.media-amazon.com/images/I/513Y5o-DYtL.jpg",
+    imageUrl: "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg",
   },
   {
     name: "The Alchemist by Paulo Coelho",
@@ -267,7 +271,7 @@ const products = [
     stock: 250,
     rating: 4.7,
     description: "A magical story about following your dream and listening to your heart.",
-    imageUrl: "https://m.media-amazon.com/images/I/51Z0nLAfLmL.jpg",
+    imageUrl: "https://covers.openlibrary.org/b/isbn/9780062315007-L.jpg",
   },
   {
     name: "Rich Dad Poor Dad by Robert Kiyosaki",
@@ -278,7 +282,7 @@ const products = [
     stock: 200,
     rating: 4.6,
     description: "What the rich teach their kids about money that the poor and middle class do not.",
-    imageUrl: "https://m.media-amazon.com/images/I/51Zp4YPFKHL.jpg",
+    imageUrl: "https://covers.openlibrary.org/b/isbn/9781612680194-L.jpg",
   },
 
   // ── BOOKS ─ Textbook ─────────────────────────────────────────────
@@ -291,7 +295,7 @@ const products = [
     stock: 80,
     rating: 4.8,
     description: "The bible of algorithms — comprehensive coverage of data structures and algorithms.",
-    imageUrl: "https://m.media-amazon.com/images/I/61Pgdn8Ys-L.jpg",
+    imageUrl: "https://covers.openlibrary.org/b/isbn/9780262033848-L.jpg",
   },
   {
     name: "Java: The Complete Reference 12th Edition",
@@ -302,7 +306,7 @@ const products = [
     stock: 120,
     rating: 4.5,
     description: "Complete coverage of Java 17+, ideal for beginners and professionals.",
-    imageUrl: "https://m.media-amazon.com/images/I/51gMUkAq1WL.jpg",
+    imageUrl: "https://covers.openlibrary.org/b/isbn/9781260440232-L.jpg",
   },
 
   // ── BOOKS ─ Stationery ───────────────────────────────────────────
@@ -315,7 +319,7 @@ const products = [
     stock: 500,
     rating: 4.3,
     description: "A4 size, 172 pages each, ruled, smooth writing experience.",
-    imageUrl: "https://m.media-amazon.com/images/I/81fUb5xJTLL.jpg",
+    imageUrl: "https://picsum.photos/seed/classmate-notebook/400/400",
   },
 
   // ── BOOKS ─ Comics ───────────────────────────────────────────────
@@ -328,7 +332,7 @@ const products = [
     stock: 90,
     rating: 4.6,
     description: "Classic Indian mythology and history comics, great for kids.",
-    imageUrl: "https://m.media-amazon.com/images/I/81XVkBuYO0L.jpg",
+    imageUrl: "https://picsum.photos/seed/amar-chitra-katha/400/400",
   },
 
   // ── HOME ─ Furniture ─────────────────────────────────────────────
@@ -341,7 +345,7 @@ const products = [
     stock: 40,
     rating: 4.1,
     description: "Weather-resistant, foldable for easy storage, ideal for indoor/outdoor.",
-    imageUrl: "https://m.media-amazon.com/images/I/71MgbTPZBXL.jpg",
+    imageUrl: "https://picsum.photos/seed/nilkamal-table/400/400",
   },
   {
     name: "Wakefit Height Adjustable Study Desk",
@@ -352,7 +356,7 @@ const products = [
     stock: 25,
     rating: 4.4,
     description: "Electric height adjustment, cable management tray, anti-scratch surface.",
-    imageUrl: "https://m.media-amazon.com/images/I/71t2Xex2RpL.jpg",
+    imageUrl: "https://picsum.photos/seed/wakefit-desk/400/400",
   },
 
   // ── HOME ─ Kitchen ───────────────────────────────────────────────
@@ -365,7 +369,7 @@ const products = [
     stock: 100,
     rating: 4.4,
     description: "750W motor, 3 stainless steel jars, anti-drip coupler, 5-year warranty.",
-    imageUrl: "https://m.media-amazon.com/images/I/71Sty-2WWKL.jpg",
+    imageUrl: "https://picsum.photos/seed/prestige-mixer/400/400",
   },
   {
     name: "Instant Pot Duo 7-in-1 Electric Pressure Cooker",
@@ -376,7 +380,7 @@ const products = [
     stock: 35,
     rating: 4.6,
     description: "Pressure cooker, slow cooker, rice cooker, steamer, saut\u00e9, warmer.",
-    imageUrl: "https://m.media-amazon.com/images/I/71V1C2GpSNL.jpg",
+    imageUrl: "https://picsum.photos/seed/instant-pot/400/400",
   },
 
   // ── HOME ─ Decor ──────────────────────────────────────────────────
@@ -389,7 +393,7 @@ const products = [
     stock: 150,
     rating: 4.0,
     description: "Silent sweep movement, metal hands, MDF frame, 12 inch diameter.",
-    imageUrl: "https://m.media-amazon.com/images/I/71vGFiTDXVL.jpg",
+    imageUrl: "https://picsum.photos/seed/wall-clock/400/400",
   },
   {
     name: "Pepperfry Ceramic Pot Planter Set of 3",
@@ -400,7 +404,7 @@ const products = [
     stock: 60,
     rating: 4.3,
     description: "Hand-painted ceramic, drainage hole, modern minimalist design.",
-    imageUrl: "https://m.media-amazon.com/images/I/61+1BBHH7QL.jpg",
+    imageUrl: "https://picsum.photos/seed/ceramic-planter/400/400",
   },
 
   // ── SPORTS ─ Cricket ─────────────────────────────────────────────
@@ -413,7 +417,7 @@ const products = [
     stock: 70,
     rating: 4.3,
     description: "Grade 1 Kashmir willow, full size, ideal for turf and tape ball.",
-    imageUrl: "https://m.media-amazon.com/images/I/71XmL+w+JsL.jpg",
+    imageUrl: "https://picsum.photos/seed/cricket-bat/400/400",
   },
   {
     name: "SG Test Cricket Ball Red Pack of 3",
@@ -424,7 +428,7 @@ const products = [
     stock: 200,
     rating: 4.5,
     description: "Premium quality, hand-stitched seam, 5.5 oz, tournament grade.",
-    imageUrl: "https://m.media-amazon.com/images/I/51YUHZ7rHAL.jpg",
+    imageUrl: "https://picsum.photos/seed/cricket-ball/400/400",
   },
 
   // ── SPORTS ─ Football ────────────────────────────────────────────
@@ -437,7 +441,7 @@ const products = [
     stock: 120,
     rating: 4.2,
     description: "32-panel design, machine stitched, butyl bladder, all-weather use.",
-    imageUrl: "https://m.media-amazon.com/images/I/61YP2RfpC5L.jpg",
+    imageUrl: "https://picsum.photos/seed/nivia-football/400/400",
   },
 
   // ── SPORTS ─ Fitness ─────────────────────────────────────────────
@@ -450,7 +454,7 @@ const products = [
     stock: 300,
     rating: 4.4,
     description: "5 resistance levels, latex-free, includes carrying bag and door anchor.",
-    imageUrl: "https://m.media-amazon.com/images/I/71JWKpjIe3L.jpg",
+    imageUrl: "https://picsum.photos/seed/resistance-bands/400/400",
   },
   {
     name: "Kore PVC Dumbbells 10KG Pair",
@@ -461,7 +465,7 @@ const products = [
     stock: 90,
     rating: 4.3,
     description: "PVC coated, anti-slip grip, fixed weight, ideal for home workouts.",
-    imageUrl: "https://m.media-amazon.com/images/I/71lJGVGzMBL.jpg",
+    imageUrl: "https://picsum.photos/seed/dumbbells/400/400",
   },
   {
     name: "Strauss Yoga Mat Anti-Slip 6mm",
@@ -472,7 +476,7 @@ const products = [
     stock: 180,
     rating: 4.2,
     description: "6mm thick, non-slip surface, moisture resistant, includes carry strap.",
-    imageUrl: "https://m.media-amazon.com/images/I/61fvMp8SSVL.jpg",
+    imageUrl: "https://picsum.photos/seed/yoga-mat/400/400",
   },
 ];
 
