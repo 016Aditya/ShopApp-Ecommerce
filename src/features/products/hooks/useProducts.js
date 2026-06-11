@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   getAllProducts,
   getProductById,
@@ -7,7 +7,7 @@ import {
   searchProducts,
 } from "@/services/productService";
 
-// ─── All products + filters ────────────────────────────────────────────────
+// ─── All products + filters ────────────────────────────────────────────
 export const useProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(false);
@@ -47,10 +47,9 @@ export const useProducts = () => {
     [run]
   );
 
-  // Load all on mount
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+  // NO fetchAll() on mount here.
+  // ProductsPage reads ?category= from the URL and decides what to fetch.
+  // Putting fetchAll() here caused it to always override the URL param on mount.
 
   return {
     products,
@@ -63,11 +62,13 @@ export const useProducts = () => {
   };
 };
 
-// ─── Single product ────────────────────────────────────────────────────────
+// ─── Single product ──────────────────────────────────────────────────────────
 export const useProduct = (id) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
+
+  const { useEffect } = require("react");
 
   useEffect(() => {
     if (!id) return;
