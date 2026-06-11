@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PATHS from "@/routes/paths";
 
 const SLIDES = [
@@ -52,6 +52,7 @@ const SLIDES = [
 
 function HeroBanner() {
   const [current, setCurrent] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -62,29 +63,71 @@ function HeroBanner() {
 
   const slide = SLIDES[current];
 
+  const handleBannerClick = () => {
+    navigate(slide.link);
+  };
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+  };
+
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setCurrent((prev) => (prev + 1) % SLIDES.length);
+  };
+
+  const handleDot = (e, i) => {
+    e.stopPropagation();
+    setCurrent(i);
+  };
+
   return (
     <div className="relative overflow-hidden">
-      <div className={`bg-gradient-to-r ${slide.bg} transition-all duration-700`}>
+      {/* ── Entire banner is clickable ── */}
+      <div
+        className={`bg-gradient-to-r ${slide.bg} transition-all duration-700 cursor-pointer`}
+        onClick={handleBannerClick}
+        role="link"
+        tabIndex={0}
+        aria-label={`Go to ${slide.title}`}
+        onKeyDown={(e) => e.key === "Enter" && handleBannerClick()}
+      >
         <div className="container-app flex items-center justify-between py-10 md:py-14">
           {/* Left */}
           <div className="flex flex-col gap-3 max-w-md">
-            <span className={`text-xs font-bold tracking-widest`} style={{ color: slide.accent }}>
+            <span
+              className="text-xs font-bold tracking-widest"
+              style={{ color: slide.accent }}
+            >
               {slide.tag}
             </span>
-            <h1 className={`text-4xl md:text-5xl font-extrabold ${slide.dark ? "text-white" : "text-slate-900"}`}>
+            <h1
+              className={`text-4xl md:text-5xl font-extrabold ${
+                slide.dark ? "text-white" : "text-slate-900"
+              }`}
+            >
               {slide.title}
             </h1>
-            <p className={`text-2xl font-bold ${slide.dark ? "text-yellow-400" : "text-slate-700"}`}>
+            <p
+              className={`text-2xl font-bold ${
+                slide.dark ? "text-yellow-400" : "text-slate-700"
+              }`}
+            >
               {slide.subtitle}
             </p>
-            <Link
-              to={slide.link}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(slide.link);
+              }}
               className="mt-3 w-fit rounded-sm px-8 py-2.5 text-sm font-bold text-white shadow transition hover:opacity-90"
               style={{ backgroundColor: slide.accent }}
             >
               {slide.cta}
-            </Link>
+            </button>
           </div>
+
           {/* Right */}
           <div className="text-[120px] md:text-[160px] select-none hidden sm:block">
             {slide.emoji}
@@ -92,28 +135,46 @@ function HeroBanner() {
         </div>
       </div>
 
-      {/* Prev / Next arrows */}
+      {/* Prev arrow */}
       <button
-        onClick={() => setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length)}
-        className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition"
+        onClick={handlePrev}
+        className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition z-10"
         aria-label="Previous"
       >
-        <svg className="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        <svg
+          className="h-5 w-5 text-slate-700"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
       </button>
+
+      {/* Next arrow */}
       <button
-        onClick={() => setCurrent((prev) => (prev + 1) % SLIDES.length)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition"
+        onClick={handleNext}
+        className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition z-10"
         aria-label="Next"
       >
-        <svg className="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        <svg
+          className="h-5 w-5 text-slate-700"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+        </svg>
       </button>
 
       {/* Dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
         {SLIDES.map((_, i) => (
           <button
             key={i}
-            onClick={() => setCurrent(i)}
+            onClick={(e) => handleDot(e, i)}
             className={`h-2 rounded-full transition-all ${
               i === current ? "w-6 bg-[#2874f0]" : "w-2 bg-slate-300"
             }`}
