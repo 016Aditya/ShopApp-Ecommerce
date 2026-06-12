@@ -23,6 +23,7 @@ import CartPage from "@/features/cart/pages/CartPage";
 import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
 import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
+import OrderSuccessPage from "@/features/orders/pages/OrderSuccessPage";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
 
 // Info pages (public)
@@ -57,11 +58,12 @@ const AppRoutes = () => {
 
         {/* Protected routes — redirect to login if not logged in */}
         <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART}         element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT}     element={<CheckoutPage />} />
-          <Route path={PATHS.ORDERS}       element={<OrdersPage />} />
-          <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
-          <Route path={PATHS.PROFILE}      element={<ProfilePage />} />
+          <Route path={PATHS.CART}          element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT}      element={<CheckoutPage />} />
+          <Route path={PATHS.ORDER_SUCCESS} element={<OrderSuccessPage />} />
+          <Route path={PATHS.ORDERS}        element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL}  element={<OrderDetailPage />} />
+          <Route path={PATHS.PROFILE}       element={<ProfilePage />} />
         </Route>
 
         {/* 404 */}
