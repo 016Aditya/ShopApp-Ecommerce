@@ -2,11 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProductsByCategory } from "@/services/productService";
 import PATHS from "@/routes/paths";
+import "../styles/SimilarProducts.css";
 
-/**
- * SimilarProducts — Flipkart-style horizontal scrollable carousel
- * Shows products from same category, excludes current product.
- */
 const SimilarProducts = ({ category, currentProductId }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -27,7 +24,11 @@ const SimilarProducts = ({ category, currentProductId }) => {
   if (!loading && products.length === 0) return null;
 
   const formatPrice = (p) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(p);
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(p);
 
   const discount = (original, current) =>
     original > current ? Math.round(((original - current) / original) * 100) : null;
@@ -38,7 +39,9 @@ const SimilarProducts = ({ category, currentProductId }) => {
         <h2 className="similar-products__title">Similar Products</h2>
         <button
           className="similar-products__view-all"
-          onClick={() => navigate(`${PATHS.PRODUCTS}?category=${encodeURIComponent(category)}`)}
+          onClick={() =>
+            navigate(`${PATHS.PRODUCTS}?category=${encodeURIComponent(category)}`)
+          }
         >
           View All →
         </button>
@@ -48,11 +51,11 @@ const SimilarProducts = ({ category, currentProductId }) => {
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="sim-card sim-card--skeleton">
-                <div className="sim-card__img skeleton" />
+                <div className="sim-card__img skeleton" style={{ height: 160 }} />
                 <div className="sim-card__body">
-                  <div className="skeleton skeleton-text" style={{ width: "85%" }} />
-                  <div className="skeleton skeleton-text" style={{ width: "50%" }} />
-                  <div className="skeleton skeleton-text" style={{ width: "60%" }} />
+                  <div className="skeleton" style={{ height: 13, width: "85%", borderRadius: 4, marginBottom: 6 }} />
+                  <div className="skeleton" style={{ height: 13, width: "50%", borderRadius: 4, marginBottom: 6 }} />
+                  <div className="skeleton" style={{ height: 13, width: "60%", borderRadius: 4 }} />
                 </div>
               </div>
             ))
@@ -68,7 +71,10 @@ const SimilarProducts = ({ category, currentProductId }) => {
                   {off && <span className="sim-card__badge">{off}% OFF</span>}
                   <div className="sim-card__img-wrap">
                     <img
-                      src={p.imageUrl || "https://via.placeholder.com/200x200?text=No+Image"}
+                      src={
+                        p.imageUrl ||
+                        "https://via.placeholder.com/200x200?text=No+Image"
+                      }
                       alt={p.name}
                       className="sim-card__img"
                       loading="lazy"

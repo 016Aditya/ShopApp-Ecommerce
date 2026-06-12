@@ -1,3 +1,4 @@
+import "@/styles/Reviews.css";
 import ReviewCard from "./ReviewCard";
 import ReviewForm from "./ReviewForm";
 import useReviews from "../hooks/useReviews";
@@ -31,10 +32,9 @@ const ReviewList = ({ productId, currentUser }) => {
 
   const avgRating =
     reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : null;
 
-  // Build rating distribution 5→1
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: reviews.filter((r) => r.rating === star).length,
@@ -42,7 +42,6 @@ const ReviewList = ({ productId, currentUser }) => {
 
   return (
     <section className="review-section" aria-label="Customer reviews">
-      {/* ── Header with summary ─────────────────────────────── */}
       <h2 className="review-section__title">Customer Reviews</h2>
 
       {reviews.length > 0 && (
@@ -51,9 +50,7 @@ const ReviewList = ({ productId, currentUser }) => {
             <span className="review-summary__avg">{avgRating.toFixed(1)}</span>
             <div className="review-summary__stars">
               {[1,2,3,4,5].map((s) => (
-                <span key={s} style={{ color: s <= Math.round(avgRating) ? "#e77600" : "#ddd", fontSize: "1.4rem" }}>
-                  ★
-                </span>
+                <span key={s} style={{ color: s <= Math.round(avgRating) ? "#e77600" : "#ddd", fontSize: "1.4rem" }}>★</span>
               ))}
             </div>
             <span className="review-summary__total">
@@ -68,7 +65,6 @@ const ReviewList = ({ productId, currentUser }) => {
         </div>
       )}
 
-      {/* ── Write / login prompt ─────────────────────────────── */}
       {currentUser ? (
         !userReview && (
           <ReviewForm
@@ -86,7 +82,6 @@ const ReviewList = ({ productId, currentUser }) => {
         </div>
       )}
 
-      {/* ── States ───────────────────────────────────────────── */}
       {loading && (
         <div className="review-loading">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -99,9 +94,7 @@ const ReviewList = ({ productId, currentUser }) => {
         </div>
       )}
 
-      {!loading && error && (
-        <p className="review-error">Could not load reviews: {error}</p>
-      )}
+      {!loading && error && <p className="review-error">Could not load reviews: {error}</p>}
 
       {!loading && !error && reviews.length === 0 && (
         <div className="review-empty">
