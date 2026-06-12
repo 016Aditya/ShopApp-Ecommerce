@@ -1,13 +1,12 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useContext } from "react";
-import AuthContext from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import PATHS from "./paths";
 
 const PrivateRoute = () => {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return null; // or a full-page spinner
+  if (loading) return null;
 
   return user
     ? <Outlet />

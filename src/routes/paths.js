@@ -4,10 +4,13 @@ const PATHS = {
   LOGIN: "/login",
   REGISTER: "/register",
   OAUTH2_SUCCESS: "/oauth2/success",
-
+  
   // Products (public)
   PRODUCTS: "/products",
   PRODUCT_DETAIL: "/products/:id",
+
+  // Info Pages (public)
+  CUSTOMER_SERVICE: "/customer-service", // 👈 ADDED THIS FOR YOUR NAVBAR
 
   // Protected
   CART: "/cart",
@@ -23,4 +26,5 @@ const PATHS = {
 // Helper to build dynamic paths e.g. buildPath(PATHS.PRODUCT_DETAIL, "42")
 export const buildPath = (path, id) => path.replace(":id", id);
 
+export { PATHS };
 export default PATHS;

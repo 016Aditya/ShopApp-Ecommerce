@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
-import AuthContext from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   getCart,
   addItemToCart,
@@ -12,9 +12,9 @@ const CartContext = createContext(null);
 export default CartContext;
 
 export const CartProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
-  const [cart, setCart]       = useState(null);   // full cart object from backend
+  const [cart, setCart]       = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
 
@@ -42,7 +42,7 @@ export const CartProvider = ({ children }) => {
     if (user?.id) {
       fetchCart();
     } else {
-      setCart(null); // clear cart on logout
+      setCart(null);
     }
   }, [user?.id, fetchCart]);
 
@@ -62,7 +62,6 @@ export const CartProvider = ({ children }) => {
     try {
       const data = await updateCartItem(user.id, productId, quantity);
       setCart(data);
-      // backend removes item automatically when quantity <= 0
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update item");
     }

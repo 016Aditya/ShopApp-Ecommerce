@@ -11,9 +11,13 @@ import Login from "@/features/auth/pages/Login";
 import Register from "@/features/auth/pages/Register";
 import OAuth2Success from "@/features/auth/pages/OAuth2Success";
 
-// Product pages (public)
+// Core pages (public)
+import HomePage from "@/features/home/pages/HomePage"; // 👈 RESTORED
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
+
+// Info pages (public)
+import CustomerServicePage from "@/features/customerService/pages/CustomerServicePage"; // 👈 ADDED
 
 // Protected pages
 import CartPage from "@/features/cart/pages/CartPage";
@@ -28,7 +32,6 @@ import NotFound from "@/errors/NotFound";
 const AppRoutes = () => {
   return (
     <Routes>
-
       {/* OAuth2 callback — no layout wrapper */}
       <Route path={PATHS.OAUTH2_SUCCESS} element={<OAuth2Success />} />
 
@@ -42,9 +45,10 @@ const AppRoutes = () => {
         </Route>
 
         {/* Open routes — accessible by anyone */}
-        <Route path={PATHS.HOME}           element={<ProductsPage />} />
-        <Route path={PATHS.PRODUCTS}       element={<ProductsPage />} />
-        <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+        <Route path={PATHS.HOME}             element={<HomePage />} /> {/* 👈 FIXED */}
+        <Route path={PATHS.PRODUCTS}         element={<ProductsPage />} />
+        <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetailPage />} />
+        <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} /> {/* 👈 ADDED */}
 
         {/* Protected routes — redirect to login if not logged in */}
         <Route element={<PrivateRoute />}>
@@ -59,7 +63,6 @@ const AppRoutes = () => {
         <Route path={PATHS.NOT_FOUND} element={<NotFound />} />
 
       </Route>
-
     </Routes>
   );
 };
