@@ -7,6 +7,7 @@ import ProductImageGallery from "../components/ProductImageGallery";
 import ProductInfo from "../components/ProductInfo";
 import PurchaseCard from "../components/PurchaseCard";
 import ReviewList from "@/features/reviews/components/ReviewList";
+import SimilarProducts from "../components/SimilarProducts";
 import PATHS from "@/routes/paths";
 import "../styles/ProductDetail.css";
 
@@ -24,23 +25,17 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!user) {
-      navigate(PATHS.LOGIN);
-      return;
-    }
+    if (!user) { navigate(PATHS.LOGIN); return; }
     try {
       await addToCart(product.id, 1);
-      showToast("Added to cart!");
+      showToast("Added to cart! 🛒");
     } catch {
       showToast("Failed to add to cart.", "error");
     }
   };
 
   const handleBuyNow = async () => {
-    if (!user) {
-      navigate(PATHS.LOGIN);
-      return;
-    }
+    if (!user) { navigate(PATHS.LOGIN); return; }
     try {
       await addToCart(product.id, 1);
       navigate(PATHS.CART);
@@ -49,7 +44,6 @@ const ProductDetailPage = () => {
     }
   };
 
-  /* ── Loading skeleton ─────────────────────────────────────────────── */
   if (loading) {
     return (
       <div className="pdp-page">
@@ -67,19 +61,14 @@ const ProductDetailPage = () => {
     );
   }
 
-  /* ── Error state ──────────────────────────────────────────────────── */
   if (error) {
     return (
       <div className="pdp-page">
-        <button className="pdp-back" onClick={() => navigate(PATHS.PRODUCTS)}>
-          ← Back to Products
-        </button>
+        <button className="pdp-back" onClick={() => navigate(PATHS.PRODUCTS)}>← Back to Products</button>
         <div className="pdp-error">
           <span className="pdp-error__icon">⚠️</span>
           <p>{error}</p>
-          <button className="btn btn--primary" onClick={() => navigate(PATHS.PRODUCTS)}>
-            Browse Products
-          </button>
+          <button className="btn btn--primary" onClick={() => navigate(PATHS.PRODUCTS)}>Browse Products</button>
         </div>
       </div>
     );
@@ -89,39 +78,26 @@ const ProductDetailPage = () => {
 
   return (
     <div className="pdp-page">
-      {/* Back link */}
-      <button className="pdp-back" onClick={() => navigate(PATHS.PRODUCTS)}>
-        ← Back to Products
-      </button>
+      <button className="pdp-back" onClick={() => navigate(PATHS.PRODUCTS)}>← Back to Products</button>
 
-      {/* Breadcrumb */}
       <nav className="pdp-breadcrumb" aria-label="breadcrumb">
         <span>Home</span>
         <span className="pdp-breadcrumb__sep">›</span>
         <span>{product.category}</span>
         {product.subcategory && (
-          <>
-            <span className="pdp-breadcrumb__sep">›</span>
-            <span>{product.subcategory}</span>
-          </>
+          <><span className="pdp-breadcrumb__sep">›</span><span>{product.subcategory}</span></>
         )}
         <span className="pdp-breadcrumb__sep">›</span>
         <span className="pdp-breadcrumb__current">{product.name}</span>
       </nav>
 
-      {/* 3-column layout */}
       <div className="pdp-grid">
-        {/* LEFT — Image Gallery */}
         <div className="pdp-grid__images">
           <ProductImageGallery imageUrl={product.imageUrl} name={product.name} />
         </div>
-
-        {/* CENTER — Product Info */}
         <div className="pdp-grid__info">
           <ProductInfo product={product} />
         </div>
-
-        {/* RIGHT — Purchase Card */}
         <div className="pdp-grid__card">
           <PurchaseCard
             product={product}
@@ -131,12 +107,19 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
+      {/* Similar Products */}
+      {product.category && (
+        <SimilarProducts
+          category={product.category}
+          currentProductId={product.id}
+        />
+      )}
+
       {/* Reviews */}
       <div className="pdp-reviews">
         <ReviewList productId={id} currentUser={user ?? null} />
       </div>
 
-      {/* Toast */}
       {toast && (
         <div className={`pdp-toast pdp-toast--${toast.type}`} role="alert">
           {toast.type === "success" ? "✓" : "✗"} {toast.msg}
