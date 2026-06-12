@@ -22,8 +22,8 @@ function Footer() {
             <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">About</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">About ShopApp</Link></li>
-              <li><a href="#" className="hover:text-white transition">Careers</a></li>
-              <li><a href="#" className="hover:text-white transition">Press</a></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Careers</Link></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Press</Link></li>
             </ul>
           </div>
 
@@ -31,10 +31,10 @@ function Footer() {
           <div>
             <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">Help</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition">Payments</a></li>
-              <li><a href="#" className="hover:text-white transition">Shipping</a></li>
-              <li><a href="#" className="hover:text-white transition">Returns</a></li>
-              <li><a href="#" className="hover:text-white transition">FAQ</a></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Payments</Link></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Shipping</Link></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Returns</Link></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">FAQ</Link></li>
             </ul>
           </div>
 
@@ -42,9 +42,9 @@ function Footer() {
           <div>
             <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">Policy</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-white transition">Return Policy</a></li>
-              <li><a href="#" className="hover:text-white transition">Terms of Use</a></li>
-              <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Return Policy</Link></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Terms of Use</Link></li>
+              <li><Link to={PATHS.CUSTOMER_SERVICE} className="hover:text-white transition">Privacy Policy</Link></li>
             </ul>
           </div>
 
