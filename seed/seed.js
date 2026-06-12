@@ -56,16 +56,16 @@ const products = [
     imageUrl: "https://fakestoreapi.com/img/61IBBVJvSDL._AC_SY879_.jpg",
   },
   {
-  name: "Moto Edge 60 Pro 256GB/6GB",
-  category: "Electronics",
-  subcategory: "Mobile",
-  brand: "Motorola",
-  price: 29999,
-  imageUrl: "https://rukminim2.flixcart.com/image/480/640/xif0q/mobile/u/b/t/-original-imahgqnzzc6cgggb.jpeg?q=90",
-  description: "Latest Moto flagship",
-  stock: 80,
-  rating: 4.3,
-},
+    name: "Moto Edge 60 Pro 256GB/6GB",
+    category: "Electronics",
+    subcategory: "Mobile",
+    brand: "Motorola",
+    price: 29999,
+    imageUrl: "https://rukminim2.flixcart.com/image/480/640/xif0q/mobile/u/b/t/-original-imahgqnzzc6cgggb.jpeg?q=90",
+    description: "Latest Moto flagship",
+    stock: 80,
+    rating: 4.3,
+  },
 
   // ── ELECTRONICS ─ Laptop ─────────────────────────────────────────
   {

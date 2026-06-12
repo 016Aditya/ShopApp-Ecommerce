@@ -4,32 +4,26 @@ import PATHS from "@/routes/paths";
 import useCart from "@/features/cart/hooks/useCart";
 import useAuth from "@/features/auth/hooks/useAuth";
 
-// ─── Clothing subcategory dropdown entries ────────────────────────────────────
 const CLOTHING_SUBS = [
   { label: "All Fashion", sub: null },
-  { label: "Shirt",  sub: "Shirt"  },
-  { label: "Jeans",  sub: "Jeans"  },
-  { label: "Dress",  sub: "Dress"  },
-  { label: "Shoes",  sub: "Shoes"  },
+  { label: "Shirt", sub: "Shirt" },
+  { label: "Jeans", sub: "Jeans" },
+  { label: "Dress", sub: "Dress" },
+  { label: "Shoes", sub: "Shoes" },
   { label: "Jacket", sub: "Jacket" },
-  { label: "Kurta",  sub: "Kurta"  },
+  { label: "Kurta", sub: "Kurta" },
 ];
 
 const NAV_LINKS = [
   { label: "Today's Deals", path: PATHS.PRODUCTS, dropdown: null },
-  { label: "Mobiles",        path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`, dropdown: null },
-  {
-    label: "Fashion",
-    path: `${PATHS.PRODUCTS}?category=Clothing`,
-    // dropdown is rendered inline below
-    dropdown: CLOTHING_SUBS,
-  },
-  { label: "Electronics",   path: `${PATHS.PRODUCTS}?category=Electronics`, dropdown: null },
-  { label: "Home & Kitchen",path: `${PATHS.PRODUCTS}?category=Home`, dropdown: null },
-  { label: "Books",          path: `${PATHS.PRODUCTS}?category=Books`, dropdown: null },
-  { label: "Sports",         path: `${PATHS.PRODUCTS}?category=Sports`, dropdown: null },
-  { label: "New Releases",   path: PATHS.PRODUCTS, dropdown: null },
-  { label: "Customer Service", path: PATHS.PRODUCTS, dropdown: null },
+  { label: "Mobiles", path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`, dropdown: null },
+  { label: "Fashion", path: `${PATHS.PRODUCTS}?category=Clothing`, dropdown: CLOTHING_SUBS },
+  { label: "Electronics", path: `${PATHS.PRODUCTS}?category=Electronics`, dropdown: null },
+  { label: "Home & Kitchen", path: `${PATHS.PRODUCTS}?category=Home`, dropdown: null },
+  { label: "Books", path: `${PATHS.PRODUCTS}?category=Books`, dropdown: null },
+  { label: "Sports", path: `${PATHS.PRODUCTS}?category=Sports`, dropdown: null },
+  { label: "New Releases", path: PATHS.PRODUCTS, dropdown: null },
+  { label: "Customer Service", path: PATHS.CUSTOMER_SERVICE, dropdown: null },
 ];
 
 function Navbar() {
@@ -52,12 +46,8 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 shadow-md">
-
-      {/* ── Row 1: Logo + Search + Account/Orders/Cart ────────────────────── */}
       <div className="bg-[#131921]">
         <div className="container-app flex h-14 items-center gap-3">
-
-          {/* Logo */}
           <Link
             to={PATHS.HOME}
             className="flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
@@ -68,7 +58,6 @@ function Navbar() {
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
-          {/* Search */}
           <form onSubmit={handleSearch} className="flex flex-1">
             <div className="flex w-full overflow-hidden rounded-sm ring-2 ring-[#ff9900]">
               <input
@@ -91,11 +80,10 @@ function Navbar() {
             </div>
           </form>
 
-          {/* Account */}
           {user ? (
             <div className="group relative flex-shrink-0 flex cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
               <span className="text-[10px] text-slate-300">Hello, {user.name || "User"}</span>
-              <span className="text-sm font-bold text-white">Account ▾</span>
+              <span className="text-sm font-bold text-white">Account</span>
               <div className="absolute top-full right-0 z-50 hidden w-48 rounded bg-white shadow-xl group-hover:block">
                 <Link to={PATHS.PROFILE} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Profile</Link>
                 <Link to={PATHS.ORDERS} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">My Orders</Link>
@@ -108,11 +96,10 @@ function Navbar() {
               className="flex-shrink-0 flex flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
             >
               <span className="text-[10px] text-slate-300">Hello, sign in</span>
-              <span className="text-sm font-bold text-white">Account &amp; Lists ▾</span>
+              <span className="text-sm font-bold text-white">Account &amp; Lists</span>
             </Link>
           )}
 
-          {/* Returns & Orders */}
           <Link
             to={PATHS.ORDERS}
             className="flex-shrink-0 flex flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -121,7 +108,6 @@ function Navbar() {
             <span className="text-sm font-bold text-white">&amp; Orders</span>
           </Link>
 
-          {/* Cart */}
           <Link
             to={PATHS.CART}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -138,15 +124,11 @@ function Navbar() {
             </div>
             <span className="mb-1 text-sm font-bold text-white">Cart</span>
           </Link>
-
         </div>
       </div>
 
-      {/* ── Row 2: Nav links ───────────────────────────────────────────────── */}
       <div className="bg-[#232f3e]">
         <div className="container-app flex items-center overflow-x-auto scrollbar-hide">
-
-          {/* ☰ All */}
           <Link
             to={PATHS.PRODUCTS}
             className="flex flex-shrink-0 items-center gap-1.5 border border-transparent px-3 py-2 text-sm font-bold text-white hover:border-white transition"
@@ -159,7 +141,6 @@ function Navbar() {
 
           {NAV_LINKS.map((link) =>
             link.dropdown ? (
-              /* ── Fashion dropdown ── */
               <div key={link.label} className="group relative flex-shrink-0">
                 <Link
                   to={link.path}
@@ -170,7 +151,6 @@ function Navbar() {
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clipRule="evenodd" />
                   </svg>
                 </Link>
-                {/* Dropdown panel */}
                 <div className="absolute top-full left-0 z-50 hidden min-w-[160px] rounded-b bg-white shadow-xl group-hover:block">
                   {link.dropdown.map((item) => {
                     const href = item.sub
@@ -200,7 +180,6 @@ function Navbar() {
           )}
         </div>
       </div>
-
     </header>
   );
 }

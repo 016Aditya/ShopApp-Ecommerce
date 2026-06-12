@@ -1,7 +1,7 @@
 import api from "@/api/api";
 import { API_ENDPOINTS } from "@/api/apiEndpoints";
 
-// ─── CUSTOMER ENDPOINTS (READ ONLY) ────────────────────────────────────────
+// CUSTOMER ENDPOINTS (READ ONLY)
 
 // GET /api/products
 export const getAllProducts = async () => {
@@ -63,8 +63,7 @@ export const getProductsByPriceRange = async (min, max) => {
   return data;
 };
 
-
-// ─── ADMIN ENDPOINTS (WRITE / UPDATE / DELETE) ─────────────────────────────
+// ADMIN ENDPOINTS (WRITE / UPDATE / DELETE)
 
 // POST /api/products
 export const createProduct = async (productData) => {
@@ -81,7 +80,7 @@ export const updateProduct = async (id, updateData) => {
 // PATCH /api/products/:id/featured?featured=true
 export const toggleFeaturedStatus = async (id, isFeatured) => {
   const { data } = await api.patch(`${API_ENDPOINTS.PRODUCTS}/${id}/featured`, null, {
-    params: { featured: isFeatured }
+    params: { featured: isFeatured },
   });
   return data;
 };

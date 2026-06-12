@@ -1,29 +1,26 @@
 const PATHS = {
-  // Public
   HOME: "/",
   LOGIN: "/login",
   REGISTER: "/register",
   OAUTH2_SUCCESS: "/oauth2/success",
-  
+
   // Products (public)
   PRODUCTS: "/products",
   PRODUCT_DETAIL: "/products/:id",
 
   // Info Pages (public)
-  CUSTOMER_SERVICE: "/customer-service", // 👈 ADDED THIS FOR YOUR NAVBAR
+  CUSTOMER_SERVICE: "/customer-service",
 
   // Protected
   CART: "/cart",
   CHECKOUT: "/checkout",
   ORDERS: "/orders",
   ORDER_DETAIL: "/orders/:id",
+  ORDER_SUCCESS: "/orders/success",
   PROFILE: "/profile",
-
-  // Utility
   NOT_FOUND: "*",
 };
 
-// Helper to build dynamic paths e.g. buildPath(PATHS.PRODUCT_DETAIL, "42")
 export const buildPath = (path, id) => path.replace(":id", id);
 
 export { PATHS };

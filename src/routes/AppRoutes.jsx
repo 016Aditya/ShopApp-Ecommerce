@@ -12,18 +12,17 @@ import Register from "@/features/auth/pages/Register";
 import OAuth2Success from "@/features/auth/pages/OAuth2Success";
 
 // Core pages (public)
-import HomePage from "@/features/home/pages/HomePage"; // 👈 RESTORED
+import HomePage from "@/features/home/pages/HomePage";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
-
-// Info pages (public)
-import CustomerServicePage from "@/features/customerService/pages/CustomerServicePage"; // 👈 ADDED
+import CustomerServicePage from "@/features/customerService/pages/CustomerServicePage";
 
 // Protected pages
 import CartPage from "@/features/cart/pages/CartPage";
 import CheckoutPage from "@/features/orders/pages/CheckoutPage";
 import OrdersPage from "@/features/orders/pages/OrdersPage";
 import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
+import OrderSuccessPage from "@/features/orders/pages/OrderSuccessPage";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
 
 // Errors
@@ -32,36 +31,35 @@ import NotFound from "@/errors/NotFound";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* OAuth2 callback — no layout wrapper */}
+      {/* OAuth2 callback - no layout wrapper */}
       <Route path={PATHS.OAUTH2_SUCCESS} element={<OAuth2Success />} />
 
       {/* All other routes share the PageWrapper (Navbar + Footer) */}
       <Route element={<PageWrapper />}>
-
-        {/* Public-only routes — redirect to home if already logged in */}
+        {/* Public-only routes - redirect to home if already logged in */}
         <Route element={<PublicRoute />}>
-          <Route path={PATHS.LOGIN}    element={<Login />} />
+          <Route path={PATHS.LOGIN} element={<Login />} />
           <Route path={PATHS.REGISTER} element={<Register />} />
         </Route>
 
-        {/* Open routes — accessible by anyone */}
-        <Route path={PATHS.HOME}             element={<HomePage />} /> {/* 👈 FIXED */}
-        <Route path={PATHS.PRODUCTS}         element={<ProductsPage />} />
-        <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetailPage />} />
-        <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} /> {/* 👈 ADDED */}
+        {/* Open routes - accessible by anyone */}
+        <Route path={PATHS.HOME} element={<HomePage />} />
+        <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
+        <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+        <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} />
 
-        {/* Protected routes — redirect to login if not logged in */}
+        {/* Protected routes - redirect to login if not logged in */}
         <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART}         element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT}     element={<CheckoutPage />} />
-          <Route path={PATHS.ORDERS}       element={<OrdersPage />} />
+          <Route path={PATHS.CART} element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />
+          <Route path={PATHS.ORDER_SUCCESS} element={<OrderSuccessPage />} />
+          <Route path={PATHS.ORDERS} element={<OrdersPage />} />
           <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
-          <Route path={PATHS.PROFILE}      element={<ProfilePage />} />
+          <Route path={PATHS.PROFILE} element={<ProfilePage />} />
         </Route>
 
         {/* 404 */}
         <Route path={PATHS.NOT_FOUND} element={<NotFound />} />
-
       </Route>
     </Routes>
   );
