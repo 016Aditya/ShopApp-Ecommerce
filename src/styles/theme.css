@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME CSS VARIABLES
+   Application-wide semantic design tokens.
+   All colours are defined here — NEVER hardcoded inside components.
+
+   Token naming:
+     --bg-primary        Page / app background
+     --bg-secondary      Slightly elevated surface (cards, panels)
+     --bg-tertiary       Deeply inset / nested surface
+     --text-primary      Body text
+     --text-secondary    Muted / supporting text
+     --text-tertiary     Placeholder / faint text
+     --border-color      Default border
+     --border-subtle     Hairline / divider
+     --card-bg           Card surface
+     --navbar-bg         Top navigation bar
+     --footer-bg         Footer background
+     --footer-text       Footer text
+     --input-bg          Form input background
+     --input-border      Form input border
+     --input-focus       Form input focus ring
+     --button-primary    Primary CTA background
+     --button-primary-hover
+     --button-primary-text
+     --badge-bg          Neutral badge / chip
+     --badge-text
+     --overlay-bg        Modal / drawer backdrop
+     --shadow-sm         Soft elevation shadow
+     --shadow-md
+     --shadow-lg
+     --accent            Orange brand accent (preserved in both themes)
+     --accent-hover
+     --accent-text       Text on orange accent background
+     --success-bg
+     --success-text
+     --error-bg
+     --error-text
+     --warning-bg
+     --warning-text
+     --info-bg
+     --info-text
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── LIGHT THEME (default) ─────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Backgrounds */
+  --bg-primary:       #f5f5f5;
+  --bg-secondary:     #ffffff;
+  --bg-tertiary:      #f0f0f0;
+
+  /* Text */
+  --text-primary:     #0f0f11;
+  --text-secondary:   #52525b;
+  --text-tertiary:    #a1a1aa;
+  --text-inverse:     #ffffff;
+
+  /* Borders */
+  --border-color:     #e4e4e7;
+  --border-subtle:    #f4f4f5;
+
+  /* Surfaces */
+  --card-bg:          #ffffff;
+  --navbar-bg:        #131921;
+  --footer-bg:        #232f3e;
+  --footer-text:      #d1d5db;
+
+  /* Form elements */
+  --input-bg:         #ffffff;
+  --input-border:     #d1d5db;
+  --input-focus:      #ff9f00;
+  --input-placeholder:#9ca3af;
+
+  /* Buttons */
+  --button-primary:       #ff9f00;
+  --button-primary-hover: #e08e00;
+  --button-primary-text:  #0f0f11;
+
+  /* Badges */
+  --badge-bg:         #f3f4f6;
+  --badge-text:       #374151;
+
+  /* Overlays & Modals */
+  --overlay-bg:       rgba(0,0,0,0.45);
+  --modal-bg:         #ffffff;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px  rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,0.12);
+
+  /* Brand accent (orange — identical in both themes) */
+  --accent:           #ff9f00;
+  --accent-hover:     #e08e00;
+  --accent-text:      #0f0f11;
+  --accent-subtle:    #fff7ed;
+  --accent-border:    #fed7aa;
+
+  /* Semantic status */
+  --success-bg:   #f0fdf4; --success-text:  #166534; --success-border: #bbf7d0;
+  --error-bg:     #fef2f2; --error-text:    #991b1b; --error-border:   #fecaca;
+  --warning-bg:   #fffbeb; --warning-text:  #92400e; --warning-border: #fde68a;
+  --info-bg:      #eff6ff; --info-text:     #1d4ed8; --info-border:    #bfdbfe;
+
+  /* Navbar secondary bar */
+  --navbar-secondary-bg: #232f3e;
+
+  /* Order / status badge colours */
+  --status-pending-bg:    #fef3c7; --status-pending-text:    #92400e;
+  --status-processing-bg: #dbeafe; --status-processing-text: #1e40af;
+  --status-shipped-bg:    #e0e7ff; --status-shipped-text:    #3730a3;
+  --status-delivered-bg:  #d1fae5; --status-delivered-text:  #065f46;
+  --status-cancelled-bg:  #fee2e2; --status-cancelled-text:  #991b1b;
+}
+
+/* ── DARK THEME ────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --bg-primary:       #0f0f11;
+  --bg-secondary:     #1a1a1f;
+  --bg-tertiary:      #141418;
+
+  /* Text */
+  --text-primary:     #f1f1f3;
+  --text-secondary:   #a1a1aa;
+  --text-tertiary:    #52525b;
+  --text-inverse:     #0f0f11;
+
+  /* Borders */
+  --border-color:     #27272a;
+  --border-subtle:    #18181b;
+
+  /* Surfaces */
+  --card-bg:          #1a1a1f;
+  --navbar-bg:        #0a0a0c;
+  --footer-bg:        #0a0a0c;
+  --footer-text:      #9ca3af;
+
+  /* Form elements */
+  --input-bg:         #1e1e24;
+  --input-border:     #3f3f46;
+  --input-focus:      #ff9f00;
+  --input-placeholder:#52525b;
+
+  /* Buttons */
+  --button-primary:       #ff9f00;
+  --button-primary-hover: #e08e00;
+  --button-primary-text:  #0f0f11;
+
+  /* Badges */
+  --badge-bg:         #27272a;
+  --badge-text:       #d4d4d8;
+
+  /* Overlays & Modals */
+  --overlay-bg:       rgba(0,0,0,0.72);
+  --modal-bg:         #1a1a1f;
+
+  /* Shadows — more pronounced on dark surfaces */
+  --shadow-sm:  0 1px 2px  rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.45);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,0.6);
+
+  /* Brand accent — unchanged */
+  --accent:           #ff9f00;
+  --accent-hover:     #e08e00;
+  --accent-text:      #0f0f11;
+  --accent-subtle:    #1c1207;
+  --accent-border:    #78350f;
+
+  /* Semantic status — dark-adapted */
+  --success-bg:   #052e16; --success-text:  #4ade80; --success-border: #166534;
+  --error-bg:     #450a0a; --error-text:    #f87171; --error-border:   #991b1b;
+  --warning-bg:   #431407; --warning-text:  #fbbf24; --warning-border: #92400e;
+  --info-bg:      #0c1a3d; --info-text:     #60a5fa; --info-border:    #1d4ed8;
+
+  /* Navbar secondary bar */
+  --navbar-secondary-bg: #141418;
+
+  /* Order / status badges — dark-adapted */
+  --status-pending-bg:    #292107; --status-pending-text:    #fbbf24;
+  --status-processing-bg: #0c1a3d; --status-processing-text: #60a5fa;
+  --status-shipped-bg:    #1a1042; --status-shipped-text:    #a5b4fc;
+  --status-delivered-bg:  #022c1a; --status-delivered-text:  #34d399;
+  --status-cancelled-bg:  #450a0a; --status-cancelled-text:  #f87171;
+}
+
+/* ── System preference (no explicit user choice) ───────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg-primary:       #0f0f11;
+    --bg-secondary:     #1a1a1f;
+    --bg-tertiary:      #141418;
+    --text-primary:     #f1f1f3;
+    --text-secondary:   #a1a1aa;
+    --text-tertiary:    #52525b;
+    --text-inverse:     #0f0f11;
+    --border-color:     #27272a;
+    --border-subtle:    #18181b;
+    --card-bg:          #1a1a1f;
+    --navbar-bg:        #0a0a0c;
+    --footer-bg:        #0a0a0c;
+    --footer-text:      #9ca3af;
+    --input-bg:         #1e1e24;
+    --input-border:     #3f3f46;
+    --input-focus:      #ff9f00;
+    --input-placeholder:#52525b;
+    --button-primary:       #ff9f00;
+    --button-primary-hover: #e08e00;
+    --button-primary-text:  #0f0f11;
+    --badge-bg:         #27272a;
+    --badge-text:       #d4d4d8;
+    --overlay-bg:       rgba(0,0,0,0.72);
+    --modal-bg:         #1a1a1f;
+    --shadow-sm:  0 1px 2px  rgba(0,0,0,0.3);
+    --shadow-md:  0 4px 12px rgba(0,0,0,0.45);
+    --shadow-lg:  0 12px 32px rgba(0,0,0,0.6);
+    --accent:           #ff9f00;
+    --accent-hover:     #e08e00;
+    --accent-text:      #0f0f11;
+    --accent-subtle:    #1c1207;
+    --accent-border:    #78350f;
+    --success-bg:   #052e16; --success-text:  #4ade80; --success-border: #166534;
+    --error-bg:     #450a0a; --error-text:    #f87171; --error-border:   #991b1b;
+    --warning-bg:   #431407; --warning-text:  #fbbf24; --warning-border: #92400e;
+    --info-bg:      #0c1a3d; --info-text:     #60a5fa; --info-border:    #1d4ed8;
+    --navbar-secondary-bg: #141418;
+    --status-pending-bg:    #292107; --status-pending-text:    #fbbf24;
+    --status-processing-bg: #0c1a3d; --status-processing-text: #60a5fa;
+    --status-shipped-bg:    #1a1042; --status-shipped-text:    #a5b4fc;
+    --status-delivered-bg:  #022c1a; --status-delivered-text:  #34d399;
+    --status-cancelled-bg:  #450a0a; --status-cancelled-text:  #f87171;
+  }
+}

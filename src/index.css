@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/theme.css";
 
 @layer utilities {
   .container-app {
@@ -6,5 +7,122 @@
     max-width: 1280px;
     margin-inline: auto;
     padding-inline: 1.5rem;
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+}
+
+/* ── Global theme transition layer ────────────────────────────────────────
+   Smooth 300ms transition for all theme-sensitive properties.
+   The [data-theme-transitioning] class is applied by ThemeProvider during
+   the switch so animations only run on actual theme changes, not on page
+   load (avoids the white-flash anti-pattern).
+   ─────────────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color 300ms ease,
+    color 300ms ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Global element theming ───────────────────────────────────────────────
+   These rules piggyback on existing Tailwind classes via CSS-variable
+   overrides so you don't need to touch every component individually.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Cards / panels */
+.bg-white {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary);
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+/* Subtle gray backgrounds */
+.bg-gray-50  { background-color: var(--bg-primary)   !important; }
+.bg-gray-100 { background-color: var(--bg-secondary)  !important; }
+.bg-gray-200 { background-color: var(--bg-tertiary)   !important; }
+
+/* Input fields */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  background-color: var(--input-bg)  !important;
+  color:            var(--text-primary) !important;
+  border-color:     var(--input-border) !important;
+  transition:
+    background-color 300ms ease,
+    color            300ms ease,
+    border-color     300ms ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--input-focus) !important;
+  box-shadow: 0 0 0 3px rgba(255,159,0,0.2) !important;
+}
+
+/* Text colour utility overrides */
+.text-gray-900 { color: var(--text-primary)   !important; }
+.text-gray-800 { color: var(--text-primary)   !important; }
+.text-gray-700 { color: var(--text-secondary) !important; }
+.text-gray-600 { color: var(--text-secondary) !important; }
+.text-gray-500 { color: var(--text-tertiary)  !important; }
+.text-gray-400 { color: var(--text-tertiary)  !important; }
+
+/* Border overrides */
+.border-gray-100,
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--border-color) !important;
+  transition: border-color 300ms ease;
+}
+
+/* Hover state backgrounds */
+.hover\:bg-gray-100:hover { background-color: var(--bg-tertiary) !important; }
+.hover\:bg-gray-50:hover  { background-color: var(--bg-secondary) !important; }
+
+/* Dividers */
+.divide-gray-200 > * + * { border-color: var(--border-color) !important; }
+
+/* Modal / overlay backdrop */
+.bg-black\/50,
+.bg-black\/60 {
+  background-color: var(--overlay-bg) !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .bg-white,
+  input,
+  textarea,
+  select {
+    transition: none !important;
   }
 }

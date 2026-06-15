@@ -3,27 +3,28 @@ import { useState } from "react";
 import PATHS from "@/routes/paths";
 import { useCartStore, useWishlistStore } from "@/store";
 import useAuth from "@/features/auth/hooks/useAuth";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 const CLOTHING_SUBS = [
   { label: "All Fashion", sub: null },
-  { label: "Shirt", sub: "Shirt" },
-  { label: "Jeans", sub: "Jeans" },
-  { label: "Dress", sub: "Dress" },
-  { label: "Shoes", sub: "Shoes" },
-  { label: "Jacket", sub: "Jacket" },
-  { label: "Kurta", sub: "Kurta" },
+  { label: "Shirt",   sub: "Shirt"  },
+  { label: "Jeans",   sub: "Jeans"  },
+  { label: "Dress",   sub: "Dress"  },
+  { label: "Shoes",   sub: "Shoes"  },
+  { label: "Jacket",  sub: "Jacket" },
+  { label: "Kurta",   sub: "Kurta"  },
 ];
 
 const NAV_LINKS = [
-  { label: "Today's Deals", path: PATHS.PRODUCTS, dropdown: null },
-  { label: "Mobiles", path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`, dropdown: null },
-  { label: "Fashion", path: `${PATHS.PRODUCTS}?category=Clothing`, dropdown: CLOTHING_SUBS },
-  { label: "Electronics", path: `${PATHS.PRODUCTS}?category=Electronics`, dropdown: null },
-  { label: "Home & Kitchen", path: `${PATHS.PRODUCTS}?category=Home`, dropdown: null },
-  { label: "Books", path: `${PATHS.PRODUCTS}?category=Books`, dropdown: null },
-  { label: "Sports", path: `${PATHS.PRODUCTS}?category=Sports`, dropdown: null },
-  { label: "New Releases", path: PATHS.PRODUCTS, dropdown: null },
-  { label: "Customer Service", path: PATHS.CUSTOMER_SERVICE, dropdown: null },
+  { label: "Today's Deals",   path: PATHS.PRODUCTS,  dropdown: null },
+  { label: "Mobiles",         path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`, dropdown: null },
+  { label: "Fashion",         path: `${PATHS.PRODUCTS}?category=Clothing`, dropdown: CLOTHING_SUBS },
+  { label: "Electronics",     path: `${PATHS.PRODUCTS}?category=Electronics`, dropdown: null },
+  { label: "Home & Kitchen",  path: `${PATHS.PRODUCTS}?category=Home`,        dropdown: null },
+  { label: "Books",           path: `${PATHS.PRODUCTS}?category=Books`,        dropdown: null },
+  { label: "Sports",          path: `${PATHS.PRODUCTS}?category=Sports`,       dropdown: null },
+  { label: "New Releases",    path: PATHS.PRODUCTS,  dropdown: null },
+  { label: "Customer Service",path: PATHS.CUSTOMER_SERVICE, dropdown: null },
 ];
 
 function Navbar() {
@@ -50,36 +51,44 @@ function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 shadow-md">
-      <div className="bg-[#131921]">
+    <header className="sticky top-0 z-50 shadow-md" style={{ colorScheme: "dark" }}>
+      {/* ── Primary bar ─────────────────────────────────────────────────── */}
+      <div style={{ backgroundColor: "var(--navbar-bg)" }}>
         <div className="container-app flex h-14 items-center gap-3">
+
           {/* Logo */}
           <Link
             to={PATHS.HOME}
             className="flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
           >
             <span className="text-[18px] font-extrabold text-white tracking-tight leading-none">
-              shop<span className="text-[#ff9900]">App</span>
+              shop<span style={{ color: "var(--accent)" }}>App</span>
             </span>
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
           {/* Search */}
           <form onSubmit={handleSearch} className="flex flex-1">
-            <div className="flex w-full overflow-hidden rounded-sm ring-2 ring-[#ff9900]">
+            <div className="flex w-full overflow-hidden rounded-sm" style={{ outline: "2px solid var(--accent)" }}>
               <input
                 type="text"
                 placeholder="Search products, brands and more..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none"
+                className="flex-1 px-4 py-2 text-sm outline-none"
+                style={{
+                  backgroundColor: "#fff",
+                  color: "#0f0f11",
+                  border: "none",
+                }}
               />
               <button
                 type="submit"
-                className="flex items-center justify-center bg-[#ff9900] px-4 hover:bg-[#e88a00] transition"
+                className="flex items-center justify-center px-4 hover:opacity-90 transition"
+                style={{ backgroundColor: "var(--accent)" }}
                 aria-label="Search"
               >
-                <svg className="h-5 w-5 text-gray-900" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <svg className="h-5 w-5" style={{ color: "var(--accent-text)" }} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" />
                 </svg>
@@ -92,11 +101,14 @@ function Navbar() {
             <div className="group relative flex-shrink-0 flex cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
               <span className="text-[10px] text-slate-300">Hello, {user.name || "User"}</span>
               <span className="text-sm font-bold text-white">Account</span>
-              <div className="absolute top-full right-0 z-50 hidden w-48 rounded bg-white shadow-xl group-hover:block">
-                <Link to={PATHS.PROFILE} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Profile</Link>
-                <Link to={PATHS.ORDERS} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">My Orders</Link>
-                <Link to={PATHS.WISHLIST} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Wishlist {wishlistCount > 0 && `(${wishlistCount})`}</Link>
-                <button onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Sign Out</button>
+              <div className="absolute top-full right-0 z-50 hidden w-48 rounded shadow-xl group-hover:block" style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}>
+                <Link to={PATHS.PROFILE}  className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Profile</Link>
+                <Link to={PATHS.ORDERS}   className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>My Orders</Link>
+                <Link to={PATHS.WISHLIST} className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>
+                  Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+                </Link>
+                <hr style={{ borderColor: "var(--border-color)" }} />
+                <button onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Sign Out</button>
               </div>
             </div>
           ) : (
@@ -118,7 +130,7 @@ function Navbar() {
             <span className="text-sm font-bold text-white">&amp; Orders</span>
           </Link>
 
-          {/* Wishlist */}
+          {/* Wishlist icon */}
           <Link
             to={PATHS.WISHLIST}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -128,7 +140,7 @@ function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
               </svg>
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff9900] text-[11px] font-extrabold text-slate-900">
+                <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-extrabold" style={{ backgroundColor: "var(--accent)", color: "var(--accent-text)" }}>
                   {wishlistCount > 99 ? '99+' : wishlistCount}
                 </span>
               )}
@@ -136,7 +148,7 @@ function Navbar() {
             <span className="mb-1 text-sm font-bold text-white">Wishlist</span>
           </Link>
 
-          {/* Cart */}
+          {/* Cart icon */}
           <Link
             to={PATHS.CART}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -146,18 +158,21 @@ function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
               </svg>
               {totalItems > 0 && (
-                <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff9900] text-[11px] font-extrabold text-slate-900">
+                <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-extrabold" style={{ backgroundColor: "var(--accent)", color: "var(--accent-text)" }}>
                   {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}
             </div>
             <span className="mb-1 text-sm font-bold text-white">Cart</span>
           </Link>
+
+          {/* ── Theme Toggle ──────────────────────────────────────────── */}
+          <ThemeToggle />
         </div>
       </div>
 
-      {/* Category bar */}
-      <div className="bg-[#232f3e]">
+      {/* ── Secondary / category bar ────────────────────────────────────── */}
+      <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
         <div className="container-app flex items-center overflow-x-auto scrollbar-hide">
           <Link
             to={PATHS.PRODUCTS}
@@ -181,13 +196,21 @@ function Navbar() {
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clipRule="evenodd" />
                   </svg>
                 </Link>
-                <div className="absolute top-full left-0 z-50 hidden min-w-[160px] rounded-b bg-white shadow-xl group-hover:block">
+                <div
+                  className="absolute top-full left-0 z-50 hidden min-w-[160px] rounded-b shadow-xl group-hover:block"
+                  style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}
+                >
                   {link.dropdown.map((item) => {
                     const href = item.sub
                       ? `${PATHS.PRODUCTS}?category=Clothing&subcategory=${item.sub}`
                       : `${PATHS.PRODUCTS}?category=Clothing`;
                     return (
-                      <Link key={item.label} to={href} className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                      <Link
+                        key={item.label}
+                        to={href}
+                        className="block px-4 py-2 text-sm transition hover:opacity-80"
+                        style={{ color: "var(--text-primary)" }}
+                      >
                         {item.label}
                       </Link>
                     );
