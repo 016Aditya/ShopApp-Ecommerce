@@ -1,10 +1,37 @@
-import { useContext } from "react";
-import CartContext from "../context/CartContext";
+import { useEffect } from "react";
+import { useCartStore } from "@/store";
+import { useAuth } from "@/context/AuthContext";
 
 const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) throw new Error("useCart must be used within CartProvider");
-  return context;
+  const { user } = useAuth();
+  const cartStore = useCartStore();
+
+  // Initialize cart when user logs in
+  useEffect(() => {
+    if (user?.id) {
+      cartStore.initializeCart(user.id);
+    } else {
+      cartStore.initializeCart(null);
+    }
+  }, [user?.id, cartStore]);
+
+  return {
+    items: cartStore.items,
+    cartTotal: cartStore.cartTotal,
+    loading: cartStore.loading,
+    error: cartStore.error,
+    itemCount: cartStore.getItemCount(),
+    totalItems: cartStore.getItemCount(),
+
+    // Actions
+    addToCart: cartStore.addToCart,
+    updateItem: cartStore.updateQuantity,
+    removeItem: cartStore.removeFromCart,
+    emptyCart: cartStore.clearCart,
+
+    // Utilities
+    clearError: cartStore.clearError,
+  };
 };
 
 export default useCart;
