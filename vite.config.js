@@ -13,5 +13,11 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "src"),
     },
+    // Force a single copy of React & ReactDOM across all packages (Zustand v5 fix)
+    dedupe: ["react", "react-dom"],
+  },
+  optimizeDeps: {
+    // Pre-bundle together so Vite doesn't create separate chunks with different React
+    include: ["react", "react-dom", "zustand"],
   },
 });
