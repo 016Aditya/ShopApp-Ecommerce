@@ -1,11 +1,12 @@
 /* ============================================================
    SimilarProducts.css — Flipkart-style horizontal carousel
+   ALL colours use CSS variables — no hardcodes.
    ============================================================ */
 
 .similar-products {
   margin: 36px 0;
   padding-top: 24px;
-  border-top: 2px solid #e7e7e7;
+  border-top: 2px solid var(--border-color);
 }
 
 .similar-products__header {
@@ -18,21 +19,25 @@
 .similar-products__title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f1111;
+  color: var(--text-primary);
 }
 
 .similar-products__view-all {
   background: none;
   border: none;
-  color: #007185;
+  color: var(--info-text);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.similar-products__view-all:hover { background: #e6f7f9; text-decoration: underline; }
+.similar-products__view-all:hover {
+  background: var(--info-bg);
+  color: var(--info-text);
+  text-decoration: underline;
+}
 
 /* ── Horizontal scrollable track ───────────────────────── */
 .similar-products__track {
@@ -43,13 +48,13 @@
   -webkit-overflow-scrolling: touch;
   padding-bottom: 12px;
   scrollbar-width: thin;
-  scrollbar-color: #ddd transparent;
+  scrollbar-color: var(--border-color) transparent;
 }
 .similar-products__track::-webkit-scrollbar {
   height: 6px;
 }
 .similar-products__track::-webkit-scrollbar-thumb {
-  background: #ddd;
+  background: var(--border-color);
   border-radius: 3px;
 }
 
@@ -57,20 +62,20 @@
 .sim-card {
   flex: 0 0 170px;
   scroll-snap-align: start;
-  background: #fff;
-  border: 1px solid #e3e3e3;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0;
   cursor: pointer;
   text-align: left;
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.15s;
+  transition: box-shadow 0.2s, transform 0.15s, background 300ms ease, border-color 300ms ease;
   display: flex;
   flex-direction: column;
 }
 .sim-card:hover {
-  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
@@ -78,8 +83,8 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  background: #e52222;
-  color: #fff;
+  background: var(--error-text);
+  color: var(--bg-primary);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 7px;
@@ -91,12 +96,12 @@
 .sim-card__img-wrap {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #fafafa;
+  background: var(--bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 .sim-card__img {
   width: 100%;
@@ -117,8 +122,8 @@
 
 .sim-card__rating {
   font-size: 0.75rem;
-  background: #388e3c;
-  color: #fff;
+  background: var(--success-text);
+  color: var(--bg-primary);
   padding: 1px 6px;
   border-radius: 3px;
   font-weight: 700;
@@ -129,7 +134,7 @@
 
 .sim-card__name {
   font-size: 0.8125rem;
-  color: #0f1111;
+  color: var(--text-primary);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -141,13 +146,13 @@
 .sim-card__price {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #0f1111;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .sim-card__original {
   font-size: 0.75rem;
-  color: #888;
+  color: var(--text-tertiary);
   text-decoration: line-through;
   margin: 0;
 }

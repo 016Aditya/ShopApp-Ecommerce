@@ -16,9 +16,9 @@ const CartPage = () => {
     return (
       <div className="container-app py-8">
         <div className="space-y-4">
-          <div className="h-32 bg-gray-200 rounded animate-pulse" />
-          <div className="h-32 bg-gray-200 rounded animate-pulse" />
-          <div className="h-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-32 rounded animate-pulse" style={{ background: "var(--bg-tertiary)" }} />
+          <div className="h-32 rounded animate-pulse" style={{ background: "var(--bg-tertiary)" }} />
+          <div className="h-32 rounded animate-pulse" style={{ background: "var(--bg-tertiary)" }} />
         </div>
       </div>
     );
@@ -27,11 +27,18 @@ const CartPage = () => {
   if (error) {
     return (
       <div className="container-app py-8">
-        <div className="rounded-lg bg-red-50 border border-red-200 p-6">
-          <p className="text-red-700 font-semibold">{error}</p>
+        <div
+          className="rounded-lg p-6"
+          style={{
+            background: "var(--error-bg)",
+            border: "1px solid var(--error-border)",
+          }}
+        >
+          <p className="font-semibold" style={{ color: "var(--error-text)" }}>{error}</p>
           <button
             onClick={() => navigate(PATHS.HOME)}
-            className="mt-4 text-red-600 hover:text-red-700 font-medium"
+            className="mt-4 font-medium"
+            style={{ color: "var(--error-text)" }}
           >
             Back to Home
           </button>
@@ -45,15 +52,22 @@ const CartPage = () => {
       <div className="container-app py-16">
         <div className="text-center">
           <div className="mb-6 flex justify-center">
-            <svg className="h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-24 w-24"
+              style={{ color: "var(--text-tertiary)" }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Cart is Empty</h2>
-          <p className="text-gray-600 mb-8">Add some products to get started shopping!</p>
+          <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Your Cart is Empty</h2>
+          <p className="mb-8" style={{ color: "var(--text-secondary)" }}>Add some products to get started shopping!</p>
           <button
             onClick={() => navigate(PATHS.PRODUCTS)}
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition"
+            className="inline-block font-bold py-3 px-8 rounded-lg transition"
+            style={{ background: "var(--button-primary)", color: "var(--button-primary-text)" }}
           >
             Continue Shopping
           </button>
@@ -63,12 +77,12 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
       <div className="container-app py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Shopping Cart</h1>
+          <p style={{ color: "var(--text-secondary)" }}>
             {items.length} {items.length === 1 ? "item" : "items"}
           </p>
         </div>
@@ -77,12 +91,24 @@ const CartPage = () => {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Cart Items Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 className="font-bold text-gray-900">Cart Items</h2>
+            <div
+              className="rounded-lg shadow-sm overflow-hidden"
+              style={{
+                background: "var(--card-bg)",
+                border: "1px solid var(--border-color)",
+              }}
+            >
+              <div
+                className="px-6 py-4"
+                style={{
+                  borderBottom: "1px solid var(--border-color)",
+                  background: "var(--bg-tertiary)",
+                }}
+              >
+                <h2 className="font-bold" style={{ color: "var(--text-primary)" }}>Cart Items</h2>
               </div>
 
-              <div className="divide-y divide-gray-200">
+              <div style={{ borderColor: "var(--border-color)" }} className="divide-y">
                 {items.map((item) => (
                   <div key={item.productId} className="px-6">
                     <CartItem
@@ -90,7 +116,6 @@ const CartPage = () => {
                       onUpdateQuantity={updateItem}
                       onRemove={removeItem}
                       onSaveForLater={() => {
-                        // TODO: Implement save for later functionality
                         console.log("Save for later:", item.productId);
                       }}
                     />
@@ -99,10 +124,17 @@ const CartPage = () => {
               </div>
 
               {/* Continue Shopping Button */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div
+                className="px-6 py-4"
+                style={{
+                  background: "var(--bg-tertiary)",
+                  borderTop: "1px solid var(--border-color)",
+                }}
+              >
                 <button
                   onClick={() => navigate(PATHS.PRODUCTS)}
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                  className="font-medium text-sm transition"
+                  style={{ color: "var(--info-text)" }}
                 >
                   ← Continue Shopping
                 </button>
