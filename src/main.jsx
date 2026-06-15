@@ -4,15 +4,13 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./app/App";
 import { AuthProvider } from "@/context/AuthContext";
-import { CartProvider } from "@/features/cart/context/CartContext";
+// CartProvider removed — cart state is managed by Zustand (cartStore)
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <CartProvider>
-          <App />
-        </CartProvider>
+        <App />
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

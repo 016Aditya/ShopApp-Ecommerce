@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PATHS from "@/routes/paths";
-import useCart from "@/features/cart/hooks/useCart";
+import { useCartStore } from "@/store";
 import useAuth from "@/features/auth/hooks/useAuth";
 
 const CLOTHING_SUBS = [
@@ -27,7 +27,11 @@ const NAV_LINKS = [
 ];
 
 function Navbar() {
-  const { totalItems } = useCart();
+  // ✅ Read cart count directly from store — no useCart() hook,
+  // no initializeCart side-effect firing from Navbar
+  const items = useCartStore((s) => s.items);
+  const totalItems = items.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -41,6 +45,8 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
+    // Clear cart state on logout
+    useCartStore.getState().initializeCart(null);
     navigate(PATHS.LOGIN);
   };
 
@@ -118,7 +124,7 @@ function Navbar() {
               </svg>
               {totalItems > 0 && (
                 <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff9900] text-[11px] font-extrabold text-slate-900">
-                  {totalItems}
+                  {totalItems > 99 ? "99+" : totalItems}
                 </span>
               )}
             </div>

@@ -24,6 +24,11 @@ export const useCartStore = create(
           return;
         }
 
+        // ✅ Guard: skip fetch if cart is already loaded for this user
+        const { userId: currentUserId, items, loading } = get();
+        if (currentUserId === userId && items.length > 0) return;
+        if (loading) return; // prevent concurrent fetches
+
         set({ userId, loading: true, error: null });
         try {
           const data = await getCart(userId);
@@ -44,7 +49,6 @@ export const useCartStore = create(
       addToCart: async (productId, quantity = 1) => {
         const { userId } = get();
         if (!userId) return;
-
         set({ loading: true, error: null });
         try {
           const data = await addItemToCart(userId, productId, quantity);
@@ -65,7 +69,6 @@ export const useCartStore = create(
       updateQuantity: async (productId, quantity) => {
         const { userId } = get();
         if (!userId) return;
-
         set({ loading: true, error: null });
         try {
           const data = await updateCartItem(userId, productId, quantity);
@@ -86,7 +89,6 @@ export const useCartStore = create(
       removeFromCart: async (productId) => {
         const { userId } = get();
         if (!userId) return;
-
         set({ loading: true, error: null });
         try {
           const data = await removeItemFromCart(userId, productId);
@@ -107,15 +109,10 @@ export const useCartStore = create(
       clearCart: async () => {
         const { userId } = get();
         if (!userId) return;
-
         set({ loading: true, error: null });
         try {
           await clearCart(userId);
-          set({
-            items: [],
-            cartTotal: 0,
-            loading: false,
-          });
+          set({ items: [], cartTotal: 0, loading: false });
         } catch (err) {
           set({
             error: err.response?.data?.message || 'Failed to clear cart',
@@ -124,9 +121,24 @@ export const useCartStore = create(
         }
       },
 
-      // ── Derived state ─────────────────────────────────────────────────
-      getItemCount: () => {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
+      // ── Force refresh (explicit user action only) ─────────────────────
+      refreshCart: async () => {
+        const { userId } = get();
+        if (!userId) return;
+        set({ loading: true, error: null });
+        try {
+          const data = await getCart(userId);
+          set({
+            items: data.items || [],
+            cartTotal: data.cartTotal || 0,
+            loading: false,
+          });
+        } catch (err) {
+          set({
+            error: err.response?.data?.message || 'Failed to refresh cart',
+            loading: false,
+          });
+        }
       },
 
       // ── Reset error ───────────────────────────────────────────────────
@@ -137,6 +149,7 @@ export const useCartStore = create(
       partialize: (state) => ({
         items: state.items,
         cartTotal: state.cartTotal,
+        userId: state.userId,
       }),
     }
   )
