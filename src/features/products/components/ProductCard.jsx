@@ -1,15 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import PATHS, { buildPath } from "@/routes/paths";
-import CartContext from "@/features/cart/context/CartContext";
+import { useCartStore } from "@/store";
 import { useAuth } from "@/context/AuthContext";
 import { formatCurrency } from "@/utils/currency";
 import RatingBadge from "@/components/common/RatingBadge";
 
 const ProductCard = ({ product, compact = false }) => {
-  const navigate   = useNavigate();
-  const { addToCart } = useContext(CartContext);
-  const { user }   = useAuth();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [added, setAdded] = useState(false);
   const [busy, setBusy]   = useState(false);
 
@@ -21,7 +20,7 @@ const ProductCard = ({ product, compact = false }) => {
     }
     setBusy(true);
     try {
-      await addToCart(product.id, 1);
+      await useCartStore.getState().addToCart(product.id, 1);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     } finally {
@@ -29,7 +28,6 @@ const ProductCard = ({ product, compact = false }) => {
     }
   };
 
-  // Calculate discount if applicable
   const discount = product.originalPrice && product.originalPrice > product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
@@ -66,8 +64,8 @@ const ProductCard = ({ product, compact = false }) => {
           {product.name}
         </p>
         <div className="mt-1 w-full">
-          <RatingBadge 
-            rating={product.averageRating || 0} 
+          <RatingBadge
+            rating={product.averageRating || 0}
             count={product.reviewCount || 0}
             showCount={false}
           />
@@ -113,11 +111,11 @@ const ProductCard = ({ product, compact = false }) => {
         <h3 className="line-clamp-2 text-sm font-medium text-slate-800 group-hover:text-[#2874f0] transition">
           {product.name}
         </h3>
-        
+
         {/* Rating */}
         <div className="mt-0.5">
-          <RatingBadge 
-            rating={product.averageRating || 0} 
+          <RatingBadge
+            rating={product.averageRating || 0}
             count={product.reviewCount || 0}
           />
         </div>
@@ -139,6 +137,7 @@ const ProductCard = ({ product, compact = false }) => {
         {product.inStock === false && (
           <p className="text-xs text-red-600 font-semibold">Out of Stock</p>
         )}
+
         <div className="flex items-center gap-1 flex-wrap">
           <span className="w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
             {product.category}
@@ -162,10 +161,10 @@ const ProductCard = ({ product, compact = false }) => {
               : "bg-[#ff9f00] hover:bg-[#e08e00]"
           }`}
           onClick={handleAddToCart}
-          disabled={busy}
+          disabled={busy || product.inStock === false}
           aria-label={`Add ${product.name} to cart`}
         >
-          {added ? "✓ Added!" : busy ? "Adding..." : "ADD TO CART"}
+          {added ? "✓ Added!" : busy ? "Adding..." : product.inStock === false ? "OUT OF STOCK" : "ADD TO CART"}
         </button>
       </div>
     </div>
