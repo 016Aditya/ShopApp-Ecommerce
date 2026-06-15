@@ -4,33 +4,43 @@ import { useAuth } from "@/context/AuthContext";
 
 const useCart = () => {
   const { user } = useAuth();
-  const cartStore = useCartStore();
 
-  // Initialize cart when user logs in
+  // Select each piece of state individually so Zustand only re-renders
+  // this hook when those specific slices change.
+  const items       = useCartStore((s) => s.items);
+  const cartTotal   = useCartStore((s) => s.cartTotal);
+  const loading     = useCartStore((s) => s.loading);
+  const error       = useCartStore((s) => s.error);
+  const initializeCart  = useCartStore((s) => s.initializeCart);
+  const addToCart       = useCartStore((s) => s.addToCart);
+  const updateQuantity  = useCartStore((s) => s.updateQuantity);
+  const removeFromCart  = useCartStore((s) => s.removeFromCart);
+  const clearCart       = useCartStore((s) => s.clearCart);
+  const clearError      = useCartStore((s) => s.clearError);
+
+  // Derive item count from the items array — no store method call needed.
+  const itemCount = items.reduce((sum, item) => sum + (item.quantity ?? 0), 0);
+
   useEffect(() => {
-    if (user?.id) {
-      cartStore.initializeCart(user.id);
-    } else {
-      cartStore.initializeCart(null);
-    }
-  }, [user?.id, cartStore]);
+    initializeCart(user?.id ?? null);
+  }, [user?.id, initializeCart]);
 
   return {
-    items: cartStore.items,
-    cartTotal: cartStore.cartTotal,
-    loading: cartStore.loading,
-    error: cartStore.error,
-    itemCount: cartStore.getItemCount(),
-    totalItems: cartStore.getItemCount(),
+    items,
+    cartTotal,
+    loading,
+    error,
+    itemCount,
+    totalItems: itemCount,
 
     // Actions
-    addToCart: cartStore.addToCart,
-    updateItem: cartStore.updateQuantity,
-    removeItem: cartStore.removeFromCart,
-    emptyCart: cartStore.clearCart,
+    addToCart,
+    updateItem: updateQuantity,
+    removeItem: removeFromCart,
+    emptyCart: clearCart,
 
     // Utilities
-    clearError: cartStore.clearError,
+    clearError,
   };
 };
 
