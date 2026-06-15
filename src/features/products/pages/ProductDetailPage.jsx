@@ -1,8 +1,8 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProduct } from "../hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
-import CartContext from "@/features/cart/context/CartContext";
+import { useCartStore } from "@/store";
 import ProductImageGallery from "../components/ProductImageGallery";
 import ProductInfo from "../components/ProductInfo";
 import PurchaseCard from "../components/PurchaseCard";
@@ -15,7 +15,6 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { product, loading, error } = useProduct(id);
-  const { addToCart } = useContext(CartContext);
   const { user } = useAuth();
   const [toast, setToast] = useState(null);
 
@@ -27,7 +26,8 @@ const ProductDetailPage = () => {
   const handleAddToCart = async () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
     try {
-      await addToCart(product.id, 1);
+      // Pass full product object so cartStore can snapshot name/image/price
+      await useCartStore.getState().addToCart(product, 1);
       showToast("Added to cart! 🛒");
     } catch {
       showToast("Failed to add to cart.", "error");
@@ -37,7 +37,7 @@ const ProductDetailPage = () => {
   const handleBuyNow = async () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
     try {
-      await addToCart(product.id, 1);
+      await useCartStore.getState().addToCart(product, 1);
       navigate(PATHS.CART);
     } catch {
       showToast("Failed. Please try again.", "error");
@@ -107,7 +107,6 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
-      {/* Similar Products */}
       {product.category && (
         <SimilarProducts
           category={product.category}
@@ -115,7 +114,6 @@ const ProductDetailPage = () => {
         />
       )}
 
-      {/* Reviews */}
       <div className="pdp-reviews">
         <ReviewList productId={id} currentUser={user ?? null} />
       </div>

@@ -16,6 +16,7 @@ import HomePage from "@/features/home/pages/HomePage";
 import ProductsPage from "@/features/products/pages/ProductsPage";
 import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
 import CustomerServicePage from "@/features/customerService/pages/CustomerServicePage";
+import WishlistPage from "@/features/wishlist/pages/WishlistPage";
 
 // Protected pages
 import CartPage from "@/features/cart/pages/CartPage";
@@ -36,19 +37,20 @@ const AppRoutes = () => {
 
       {/* All other routes share the PageWrapper (Navbar + Footer) */}
       <Route element={<PageWrapper />}>
-        {/* Public-only routes - redirect to home if already logged in */}
+        {/* Public-only routes */}
         <Route element={<PublicRoute />}>
           <Route path={PATHS.LOGIN} element={<Login />} />
           <Route path={PATHS.REGISTER} element={<Register />} />
         </Route>
 
-        {/* Open routes - accessible by anyone */}
+        {/* Open routes */}
         <Route path={PATHS.HOME} element={<HomePage />} />
         <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
         <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
         <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} />
+        <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
 
-        {/* Protected routes - redirect to login if not logged in */}
+        {/* Protected routes */}
         <Route element={<PrivateRoute />}>
           <Route path={PATHS.CART} element={<CartPage />} />
           <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />

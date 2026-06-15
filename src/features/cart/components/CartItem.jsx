@@ -1,31 +1,49 @@
 import useCart from "../hooks/useCart";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { formatCurrency } from "@/utils/currency";
 
 const CartItem = ({ item }) => {
   const { updateItem, removeItem } = useCart();
+  const addToWishlist = useWishlistStore((s) => s.addToWishlist);
 
+  // Backend CartItem shape: { productId, quantity, unitPrice }
+  // Enriched shape (from cartStore): adds productName, imageUrl, brand, category
   const {
     productId,
     productName,
     brand,
     category,
-    price,
+    unitPrice,   // ← correct backend field (was wrongly mapped to 'price')
     quantity,
-    image,
+    imageUrl,    // ← correct field (was 'image')
   } = item;
 
-  const subtotal = price * quantity;
+  const price    = unitPrice ?? 0;
+  const subtotal = price * (quantity ?? 1);
+
+  const handleSaveForLater = () => {
+    addToWishlist({
+      productId,
+      productName,
+      imageUrl,
+      brand,
+      category,
+      unitPrice: price,
+    });
+    removeItem(productId);
+  };
 
   return (
     <div className="flex gap-4 border-b border-gray-200 py-4 sm:gap-6 sm:py-6">
       {/* Product Image */}
       <div className="flex-shrink-0">
         <div className="h-24 w-24 bg-gray-100 rounded border border-gray-200 flex items-center justify-center overflow-hidden sm:h-32 sm:w-32">
-          {image ? (
+          {imageUrl ? (
             <img
-              src={image}
-              alt={productName}
+              src={imageUrl}
+              alt={productName || 'Product'}
               className="h-full w-full object-cover"
+              loading="lazy"
             />
           ) : (
             <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,23 +70,20 @@ const CartItem = ({ item }) => {
             )}
           </div>
 
-          {/* Product Name */}
+          {/* Product Name — never show raw ID */}
           <h3 className="text-base font-semibold text-gray-900 leading-tight mb-2 line-clamp-2">
-            {productName || `Product ${productId}`}
+            {productName || 'Loading product...'}
           </h3>
 
           {/* Price */}
           <p className="text-lg font-bold text-gray-900 mb-3">
             {formatCurrency(price)}
-            <span className="text-xs font-normal text-gray-600 ml-2">
-              per item
-            </span>
+            <span className="text-xs font-normal text-gray-600 ml-2">per item</span>
           </p>
         </div>
 
-        {/* Quantity Controls and Actions */}
+        {/* Quantity Controls */}
         <div className="flex items-center justify-between">
-          {/* Quantity Selector */}
           <div className="flex items-center border border-gray-300 rounded-lg">
             <button
               onClick={() => updateItem(productId, Math.max(1, quantity - 1))}
@@ -90,18 +105,16 @@ const CartItem = ({ item }) => {
             </button>
           </div>
 
-          {/* Subtotal */}
           <div className="text-right">
             <p className="text-sm text-gray-600">Subtotal</p>
-            <p className="text-lg font-bold text-gray-900">
-              {formatCurrency(subtotal)}
-            </p>
+            <p className="text-lg font-bold text-gray-900">{formatCurrency(subtotal)}</p>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="mt-3 flex gap-3">
           <button
+            onClick={handleSaveForLater}
             className="text-sm text-blue-600 hover:text-blue-700 font-medium transition"
           >
             Save for Later

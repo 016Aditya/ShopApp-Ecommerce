@@ -8,6 +8,31 @@ import {
   clearCart,
 } from '@/services/cartService';
 
+// ── Cart item shape (enriched) ──────────────────────────────────────────────
+// Backend CartItem only stores: { productId, quantity, unitPrice }
+// We enrich at add-time by snapshotting the product object so the
+// cart UI can display name / image / brand / category without extra API calls.
+//
+// Stored shape:
+//   { productId, quantity, unitPrice, productName, imageUrl, brand, category }
+
+const enrichItem = (apiItem, productSnapshot) => ({
+  productId:   apiItem.productId,
+  quantity:    apiItem.quantity,
+  unitPrice:   apiItem.unitPrice ?? productSnapshot?.price ?? 0,
+  productName: productSnapshot?.name       ?? apiItem.productName ?? '',
+  imageUrl:    productSnapshot?.imageUrl   ?? apiItem.imageUrl    ?? '',
+  brand:       productSnapshot?.brand      ?? apiItem.brand       ?? '',
+  category:    productSnapshot?.category   ?? apiItem.category    ?? '',
+});
+
+// Merge raw API items with any previously enriched data already in the store
+const mergeItems = (apiItems = [], existingItems = []) =>
+  apiItems.map((apiItem) => {
+    const existing = existingItems.find((e) => e.productId === apiItem.productId);
+    return enrichItem(apiItem, existing);
+  });
+
 export const useCartStore = create(
   persist(
     (set, get) => ({
@@ -24,16 +49,17 @@ export const useCartStore = create(
           return;
         }
 
-        // ✅ Guard: skip fetch if cart is already loaded for this user
+        // Guard: skip fetch if already loaded for this user
         const { userId: currentUserId, items, loading } = get();
         if (currentUserId === userId && items.length > 0) return;
-        if (loading) return; // prevent concurrent fetches
+        if (loading) return;
 
         set({ userId, loading: true, error: null });
         try {
           const data = await getCart(userId);
+          const existing = get().items;
           set({
-            items: data.items || [],
+            items: mergeItems(data.items || [], existing),
             cartTotal: data.cartTotal || 0,
             loading: false,
           });
@@ -46,14 +72,26 @@ export const useCartStore = create(
       },
 
       // ── Add item to cart ──────────────────────────────────────────────
-      addToCart: async (productId, quantity = 1) => {
+      // Accepts full product object so we can snapshot display data.
+      // product: { id, name, imageUrl, brand, category, price, ... }
+      addToCart: async (product, quantity = 1) => {
         const { userId } = get();
         if (!userId) return;
+
+        const productId = typeof product === 'string' ? product : product.id;
+        const snapshot  = typeof product === 'string' ? null : product;
+
         set({ loading: true, error: null });
         try {
           const data = await addItemToCart(userId, productId, quantity);
+          const existing = get().items;
+          const merged = mergeItems(data.items || [], [
+            ...existing,
+            // inject snapshot for the newly added item
+            { productId, ...snapshot },
+          ]);
           set({
-            items: data.items || [],
+            items: merged,
             cartTotal: data.cartTotal || 0,
             loading: false,
           });
@@ -72,8 +110,9 @@ export const useCartStore = create(
         set({ loading: true, error: null });
         try {
           const data = await updateCartItem(userId, productId, quantity);
+          const existing = get().items;
           set({
-            items: data.items || [],
+            items: mergeItems(data.items || [], existing),
             cartTotal: data.cartTotal || 0,
             loading: false,
           });
@@ -92,8 +131,9 @@ export const useCartStore = create(
         set({ loading: true, error: null });
         try {
           const data = await removeItemFromCart(userId, productId);
+          const existing = get().items;
           set({
-            items: data.items || [],
+            items: mergeItems(data.items || [], existing),
             cartTotal: data.cartTotal || 0,
             loading: false,
           });
@@ -121,15 +161,16 @@ export const useCartStore = create(
         }
       },
 
-      // ── Force refresh (explicit user action only) ─────────────────────
+      // ── Force refresh ─────────────────────────────────────────────────
       refreshCart: async () => {
         const { userId } = get();
         if (!userId) return;
         set({ loading: true, error: null });
         try {
           const data = await getCart(userId);
+          const existing = get().items;
           set({
-            items: data.items || [],
+            items: mergeItems(data.items || [], existing),
             cartTotal: data.cartTotal || 0,
             loading: false,
           });
@@ -147,7 +188,7 @@ export const useCartStore = create(
     {
       name: 'cart-store',
       partialize: (state) => ({
-        items: state.items,
+        items: state.items,       // enriched items persisted
         cartTotal: state.cartTotal,
         userId: state.userId,
       }),

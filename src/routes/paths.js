@@ -18,6 +18,8 @@ const PATHS = {
   ORDER_DETAIL: "/orders/:id",
   ORDER_SUCCESS: "/orders/success",
   PROFILE: "/profile",
+  WISHLIST: "/wishlist",
+
   NOT_FOUND: "*",
 };
 

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PATHS from "@/routes/paths";
-import { useCartStore } from "@/store";
+import { useCartStore, useWishlistStore } from "@/store";
 import useAuth from "@/features/auth/hooks/useAuth";
 
 const CLOTHING_SUBS = [
@@ -27,10 +27,10 @@ const NAV_LINKS = [
 ];
 
 function Navbar() {
-  // ✅ Read cart count directly from store — no useCart() hook,
-  // no initializeCart side-effect firing from Navbar
-  const items = useCartStore((s) => s.items);
-  const totalItems = items.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
+  const cartItems     = useCartStore((s) => s.items);
+  const wishlistItems = useWishlistStore((s) => s.items);
+  const totalItems    = cartItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
+  const wishlistCount = wishlistItems.length;
 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -45,7 +45,6 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    // Clear cart state on logout
     useCartStore.getState().initializeCart(null);
     navigate(PATHS.LOGIN);
   };
@@ -54,6 +53,7 @@ function Navbar() {
     <header className="sticky top-0 z-50 shadow-md">
       <div className="bg-[#131921]">
         <div className="container-app flex h-14 items-center gap-3">
+          {/* Logo */}
           <Link
             to={PATHS.HOME}
             className="flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
@@ -64,6 +64,7 @@ function Navbar() {
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
+          {/* Search */}
           <form onSubmit={handleSearch} className="flex flex-1">
             <div className="flex w-full overflow-hidden rounded-sm ring-2 ring-[#ff9900]">
               <input
@@ -86,6 +87,7 @@ function Navbar() {
             </div>
           </form>
 
+          {/* Account */}
           {user ? (
             <div className="group relative flex-shrink-0 flex cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
               <span className="text-[10px] text-slate-300">Hello, {user.name || "User"}</span>
@@ -93,6 +95,7 @@ function Navbar() {
               <div className="absolute top-full right-0 z-50 hidden w-48 rounded bg-white shadow-xl group-hover:block">
                 <Link to={PATHS.PROFILE} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Profile</Link>
                 <Link to={PATHS.ORDERS} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">My Orders</Link>
+                <Link to={PATHS.WISHLIST} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Wishlist {wishlistCount > 0 && `(${wishlistCount})`}</Link>
                 <button onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Sign Out</button>
               </div>
             </div>
@@ -106,6 +109,7 @@ function Navbar() {
             </Link>
           )}
 
+          {/* Orders */}
           <Link
             to={PATHS.ORDERS}
             className="flex-shrink-0 flex flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -114,6 +118,25 @@ function Navbar() {
             <span className="text-sm font-bold text-white">&amp; Orders</span>
           </Link>
 
+          {/* Wishlist */}
+          <Link
+            to={PATHS.WISHLIST}
+            className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
+          >
+            <div className="relative">
+              <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff9900] text-[11px] font-extrabold text-slate-900">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
+            </div>
+            <span className="mb-1 text-sm font-bold text-white">Wishlist</span>
+          </Link>
+
+          {/* Cart */}
           <Link
             to={PATHS.CART}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -124,7 +147,7 @@ function Navbar() {
               </svg>
               {totalItems > 0 && (
                 <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff9900] text-[11px] font-extrabold text-slate-900">
-                  {totalItems > 99 ? "99+" : totalItems}
+                  {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}
             </div>
@@ -133,6 +156,7 @@ function Navbar() {
         </div>
       </div>
 
+      {/* Category bar */}
       <div className="bg-[#232f3e]">
         <div className="container-app flex items-center overflow-x-auto scrollbar-hide">
           <Link
@@ -163,11 +187,7 @@ function Navbar() {
                       ? `${PATHS.PRODUCTS}?category=Clothing&subcategory=${item.sub}`
                       : `${PATHS.PRODUCTS}?category=Clothing`;
                     return (
-                      <Link
-                        key={item.label}
-                        to={href}
-                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition"
-                      >
+                      <Link key={item.label} to={href} className="block px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
                         {item.label}
                       </Link>
                     );
