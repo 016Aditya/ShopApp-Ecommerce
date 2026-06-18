@@ -5,11 +5,11 @@ function PageLayout({ title, description, children }) {
         {(title || description) ? (
           <div className="space-y-2">
             {title ? (
-              <h1 className="text-3xl font-bold text-slate-900">{title}</h1>
+              <h1 className="text-3xl font-bold" style={{ color: "var(--text-primary)" }}>{title}</h1>
             ) : null}
 
             {description ? (
-              <p className="max-w-2xl text-sm text-slate-500">{description}</p>
+              <p className="max-w-2xl text-sm" style={{ color: "var(--text-secondary)" }}>{description}</p>
             ) : null}
           </div>
         ) : null}
