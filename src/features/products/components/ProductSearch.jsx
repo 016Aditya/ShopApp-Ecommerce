@@ -1,17 +1,45 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
 
+/**
+ * ProductSearch
+ *
+ * Loop-safe design:
+ *
+ * 1. onSearch / onClear are stored in refs — they are always up-to-date
+ *    but NEVER appear in any useEffect dependency array.  This means a new
+ *    function reference from the parent (even without useCallback) cannot
+ *    re-trigger the search effect.
+ *
+ * 2. The initialValue sync useEffect is removed.  Instead, the parent
+ *    passes key={activeSearch} so React remounts this component cleanly
+ *    whenever the search param changes from outside (category click, Clear
+ *    button, direct URL edit).  No internal state sync = no secondary loop.
+ *
+ * 3. The search useEffect depends only on [debounced] — the single value
+ *    that should trigger a search dispatch.  It will only fire when the
+ *    user's typed, debounced input actually changes.
+ */
 const ProductSearch = ({ onSearch, onClear, initialValue = "" }) => {
   const [input, setInput] = useState(initialValue);
   const debounced = useDebounce(input, 400);
 
-  useEffect(() => {
-    setInput(initialValue);
-  }, [initialValue]);
+  // Store callbacks in refs so they are always fresh without being deps.
+  const onSearchRef = useRef(onSearch);
+  const onClearRef  = useRef(onClear);
+  useEffect(() => { onSearchRef.current = onSearch; }, [onSearch]);
+  useEffect(() => { onClearRef.current  = onClear;  }, [onClear]);
 
+  // Fire search only when the debounced value changes.
+  // onSearch / onClear are accessed via ref — not listed as deps.
   useEffect(() => {
-    debounced.trim() ? onSearch(debounced.trim()) : onClear();
-  }, [debounced, onClear, onSearch]);
+    const trimmed = debounced.trim();
+    if (trimmed) {
+      onSearchRef.current(trimmed);
+    } else {
+      onClearRef.current();
+    }
+  }, [debounced]); // ← only real trigger
 
   return (
     <div className="relative w-full sm:max-w-sm">

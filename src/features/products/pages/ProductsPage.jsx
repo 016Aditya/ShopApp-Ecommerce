@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useProducts } from "../hooks/useProducts";
 import ProductGrid from "../components/ProductGrid";
@@ -18,10 +18,13 @@ const ProductsPage = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const activeCat = searchParams.get("category") ?? "All";
-  const activeSub = searchParams.get("subcategory") ?? null;
-  const activeSearch = searchParams.get("search") ?? "";
+  const activeCat    = searchParams.get("category")    ?? "All";
+  const activeSub    = searchParams.get("subcategory") ?? null;
+  const activeSearch = searchParams.get("search")      ?? "";
 
+  // ── Fetch when URL params change ──────────────────────────────────────
+  // Depend on the serialised string so the effect is stable and only runs
+  // when an actual URL value changes (not on every render).
   useEffect(() => {
     if (activeSearch) {
       fetchBySearch(activeSearch);
@@ -32,27 +35,52 @@ const ProductsPage = () => {
     } else {
       fetchAll();
     }
+    // fetchAll / fetchByCategory etc. are stable useCallback refs from
+    // useProducts — safe to omit from the array; the serialised
+    // searchParams string is the only real trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString()]);
 
-  const handleSearch = (keyword) => {
-    setSearchParams(keyword ? { search: keyword } : {});
-  };
+  // ── Stable handlers ───────────────────────────────────────────────────
+  // Every handler is memoised. Without useCallback these are new function
+  // objects every render, which makes ProductSearch's useEffect (which
+  // stored them in a ref) call onSearch on every render → infinite loop.
 
-  const handleClearSearch = () => setSearchParams({});
+  const handleSearch = useCallback(
+    (keyword) => {
+      // Guard: skip setSearchParams if the URL already has this value.
+      // This is the primary loop-breaker.
+      if (searchParams.get("search") === keyword) return;
+      setSearchParams(keyword ? { search: keyword } : {});
+    },
+    // searchParams object ref changes every render, so read .get() inside
+    // the callback and list searchParams itself as the dep.
+    [searchParams, setSearchParams]
+  );
 
-  const handleCategorySelect = (category) => {
-    setSearchParams(category === "All" ? {} : { category });
-  };
+  const handleClearSearch = useCallback(() => {
+    // Guard: skip if already empty to avoid a no-op navigation.
+    if (!searchParams.toString()) return;
+    setSearchParams({});
+  }, [searchParams, setSearchParams]);
 
-  const handleSubcategorySelect = (sub) => {
-    if (!sub) {
-      setSearchParams(activeCat !== "All" ? { category: activeCat } : {});
-      return;
-    }
+  const handleCategorySelect = useCallback(
+    (category) => {
+      setSearchParams(category === "All" ? {} : { category });
+    },
+    [setSearchParams]
+  );
 
-    setSearchParams({ category: activeCat, subcategory: sub });
-  };
+  const handleSubcategorySelect = useCallback(
+    (sub) => {
+      if (!sub) {
+        setSearchParams(activeCat !== "All" ? { category: activeCat } : {});
+        return;
+      }
+      setSearchParams({ category: activeCat, subcategory: sub });
+    },
+    [activeCat, setSearchParams]
+  );
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
@@ -94,7 +122,17 @@ const ProductsPage = () => {
           }}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/*
+              key={activeSearch} — when the search param changes externally
+              (e.g. user clicks a category or Clear), React unmounts and
+              remounts ProductSearch with the correct initialValue instead
+              of trying to sync it through a useEffect inside the child.
+              This eliminates the secondary loop:
+                initialValue changes → setInput → debounce fires → onSearch
+                → setSearchParams → re-render → initialValue changes → …
+            */}
             <ProductSearch
+              key={activeSearch}
               onSearch={handleSearch}
               onClear={handleClearSearch}
               initialValue={activeSearch}
