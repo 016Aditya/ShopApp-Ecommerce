@@ -1,133 +1,102 @@
-/* ============================================================
-   ThemeToggle.css — Premium animated sun/moon toggle
-   Inspired by GitHub, Vercel, Linear
-   ============================================================ */
-
 .theme-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
+  border: 0;
+  background: transparent;
   border-radius: 9999px;
-  outline: none;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
 .theme-toggle:focus-visible .theme-toggle__track {
-  box-shadow: 0 0 0 3px rgba(255, 159, 0, 0.4);
+  box-shadow: 0 0 0 3px rgba(255, 159, 0, 0.35);
 }
 
-/* ── Track ──────────────────────────────────────────────── */
 .theme-toggle__track {
   position: relative;
-  display: flex;
-  align-items: center;
-  width: 52px;
-  height: 28px;
+  width: 58px;
+  height: 32px;
   border-radius: 9999px;
-  background: #e4e4e7;
-  border: 1.5px solid rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color);
+  background: var(--card-bg-elevated);
   transition:
-    background 300ms ease,
-    border-color 300ms ease,
-    box-shadow 200ms ease;
-  padding: 0 3px;
-}
-
-.theme-toggle--dark .theme-toggle__track {
-  background: #3f3f46;
-  border-color: rgba(255,255,255,0.06);
+    background-color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
 }
 
 .theme-toggle:hover .theme-toggle__track {
-  background: #d4d4d8;
-}
-.theme-toggle--dark:hover .theme-toggle__track {
-  background: #52525b;
+  box-shadow: var(--shadow-sm);
 }
 
-/* ── Thumb ──────────────────────────────────────────────── */
 .theme-toggle__thumb {
   position: absolute;
+  top: 3px;
   left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04);
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   transition:
-    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 300ms ease,
-    box-shadow 200ms ease;
-  z-index: 2;
-  pointer-events: none;
+    transform 260ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease;
 }
 
 .theme-toggle--dark .theme-toggle__thumb {
-  transform: translateX(24px);
-  background: #a1a1aa;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+  transform: translateX(26px);
 }
 
-/* ── Icons ──────────────────────────────────────────────── */
 .theme-toggle__icon {
   position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  line-height: 1;
   transition:
-    opacity 250ms ease,
-    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity 220ms ease,
+    transform 260ms ease;
   pointer-events: none;
 }
 
-/* Sun icon: left side of track */
 .theme-toggle__icon--sun {
-  left: 5px;
-  color: #f59e0b;
+  left: 8px;
   opacity: 1;
-  transform: scale(1) rotate(0deg);
 }
 
-/* Moon icon: right side of track */
 .theme-toggle__icon--moon {
-  right: 5px;
-  color: #94a3b8;
-  opacity: 0;
-  transform: scale(0.6) rotate(-30deg);
+  right: 8px;
+  opacity: 0.65;
 }
 
-/* Dark state: hide sun, show moon */
 .theme-toggle--dark .theme-toggle__icon--sun {
-  opacity: 0;
-  transform: scale(0.6) rotate(30deg);
+  opacity: 0.55;
 }
+
 .theme-toggle--dark .theme-toggle__icon--moon {
   opacity: 1;
-  transform: scale(1) rotate(0deg);
-  color: #c4b5fd;
 }
 
-/* ── Mobile: slightly larger touch target ───────────────── */
 @media (max-width: 640px) {
   .theme-toggle__track {
-    width: 48px;
-    height: 26px;
+    width: 54px;
+    height: 30px;
   }
+
   .theme-toggle__thumb {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
+
   .theme-toggle--dark .theme-toggle__thumb {
-    transform: translateX(22px);
+    transform: translateX(24px);
   }
 }
 
-/* ── Reduced motion ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .theme-toggle__track,
   .theme-toggle__thumb,

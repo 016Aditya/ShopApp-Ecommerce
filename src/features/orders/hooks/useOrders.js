@@ -1,22 +1,26 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getOrdersByUser, getOrderById, createOrder } from "@/services/orderService";
-
-// ── All orders for logged-in user ──────────────────────────────────────────
+import { createOrder, getOrderById, getOrdersByUser } from "@/services/orderService";
+import { normalizeOrder, normalizeOrdersResponse } from "../utils/normalizeOrder";
 
 export const useOrders = () => {
   const { user } = useAuth();
-  const [orders, setOrders]   = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
 
   const fetchOrders = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setOrders([]);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+
     try {
       const data = await getOrdersByUser(user.id);
-      setOrders(data);
+      setOrders(normalizeOrdersResponse(data));
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load orders");
     } finally {
@@ -31,49 +35,51 @@ export const useOrders = () => {
   return { orders, loading, error, fetchOrders };
 };
 
-// ── Single order ──────────────────────────────────────────────────────
-
 export const useOrder = (id) => {
-  const [order, setOrder]     = useState(null);
+  const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!id) return;
-    const fetch = async () => {
+    if (!id) {
+      setOrder(null);
+      return;
+    }
+
+    const fetchOrder = async () => {
       setLoading(true);
       setError(null);
+
       try {
         const data = await getOrderById(id);
-        setOrder(data);
+        setOrder(normalizeOrder(data));
       } catch (err) {
         setError(err.response?.data?.message || "Order not found");
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+
+    fetchOrder();
   }, [id]);
 
   return { order, loading, error };
 };
 
-// ── Place order ───────────────────────────────────────────────────────
-
 export const usePlaceOrder = () => {
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
 
   const placeOrder = async (orderData) => {
     setLoading(true);
     setError(null);
+
     try {
-      const data = await createOrder(orderData);
-      return data;
+      return await createOrder(orderData);
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to place order";
-      setError(msg);
-      throw new Error(msg);
+      const message = err.response?.data?.message || "Failed to place order";
+      setError(message);
+      throw new Error(message, { cause: err });
     } finally {
       setLoading(false);
     }

@@ -1,29 +1,33 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useOrder } from "../hooks/useOrders";
-import { cancelOrder } from "@/services/orderService";
-import OrderStatusBadge from "../components/OrderStatusBadge";
-import OrderTimeline from "../components/OrderTimeline";
-import OrderItemsList from "../components/OrderItemsList";
-import ShippingInfo from "../components/ShippingInfo";
-import OrderSummary from "../components/OrderSummary";
+import { useNavigate, useParams } from "react-router-dom";
 import PATHS from "@/routes/paths";
+import { cancelOrder } from "@/services/orderService";
+import OrderItemsList from "../components/OrderItemsList";
+import OrderStatusBadge from "../components/OrderStatusBadge";
+import OrderSummary from "../components/OrderSummary";
+import OrderTimeline from "../components/OrderTimeline";
+import ShippingInfo from "../components/ShippingInfo";
+import { useOrder } from "../hooks/useOrders";
 import "../styles/Orders.css";
 
 const CANCELLABLE = ["PENDING", "CONFIRMED"];
 
 const OrderDetailPage = () => {
-  const { id }     = useParams();
-  const navigate   = useNavigate();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { order, loading, error } = useOrder(id);
-  const [cancelling,  setCancelling]  = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState(null);
-  const [cancelled,   setCancelled]   = useState(false);
+  const [cancelled, setCancelled] = useState(false);
 
   const handleCancel = async () => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    if (!window.confirm("Are you sure you want to cancel this order?")) {
+      return;
+    }
+
     setCancelling(true);
     setCancelError(null);
+
     try {
       await cancelOrder(id);
       setCancelled(true);
@@ -34,8 +38,7 @@ const OrderDetailPage = () => {
     }
   };
 
-  /* ── Loading ────────────────────────────────────────── */
-  if (loading)
+  if (loading) {
     return (
       <div className="orders-page">
         <div className="order-detail-skeleton">
@@ -45,61 +48,81 @@ const OrderDetailPage = () => {
         </div>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="orders-page">
         <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>
-          ← Back to Orders
+          Back to Orders
         </button>
         <p className="error-text">{error}</p>
       </div>
     );
+  }
 
-  if (!order) return null;
+  if (!order) {
+    return (
+      <div className="orders-page">
+        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>
+          Back to Orders
+        </button>
+        <div className="orders-empty">
+          <h2>Order not found</h2>
+          <p>This order could not be located.</p>
+        </div>
+      </div>
+    );
+  }
 
   const currentStatus = cancelled ? "CANCELLED" : order.status;
-  const canCancel     =
-    CANCELLABLE.includes(currentStatus?.toUpperCase()) && !cancelled;
-  const shortId = order.id?.slice(-8).toUpperCase();
-  const date    = order.createdAt
+  const canCancel = CANCELLABLE.includes(currentStatus?.toUpperCase()) && !cancelled;
+  const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
+  const date = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-IN", {
-        day: "numeric", month: "long", year: "numeric",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       })
-    : "—";
+    : "N/A";
 
   return (
     <div className="orders-page order-detail-page">
       <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>
-        ← Back to Orders
+        Back to Orders
       </button>
 
-      {/* Header */}
       <div className="order-detail__header">
         <div>
-          <h1 className="order-detail__title">Order # {shortId}</h1>
+          <h1 className="order-detail__title">Order #{shortId}</h1>
           <p className="order-detail__date">Placed on {date}</p>
         </div>
         <OrderStatusBadge status={currentStatus} />
       </div>
 
-      {/* Timeline */}
       <div className="order-detail__timeline">
         <OrderTimeline status={currentStatus} />
       </div>
 
-      {/* Main grid */}
       <div className="order-detail__grid">
-        {/* LEFT — items + shipping */}
         <div className="order-detail__left">
           <div className="order-detail__section">
-            <h3 className="order-detail__section-title">Delivery Address</h3>
+            <h3 className="order-detail__section-title">Shipping Address</h3>
             <ShippingInfo address={order.address} />
           </div>
 
           <div className="order-detail__section">
-            <h3 className="order-detail__section-title">Ordered Items</h3>
-            <OrderItemsList items={order.items ?? []} />
+            <h3 className="order-detail__section-title">Products Ordered</h3>
+            <OrderItemsList items={order.items} />
+          </div>
+
+          <div className="order-detail__section">
+            <h3 className="order-detail__section-title">Order Information</h3>
+            <div className="shipping-info">
+              <p className="shipping-info__line">Status: {currentStatus}</p>
+              <p className="shipping-info__line">Items: {order.quantity}</p>
+              <p className="shipping-info__line">Order date: {date}</p>
+            </div>
           </div>
 
           <div className="order-detail__section">
@@ -109,26 +132,18 @@ const OrderDetailPage = () => {
                 onClick={handleCancel}
                 disabled={cancelling}
               >
-                {cancelling ? "Cancelling…" : "Cancel Order"}
+                {cancelling ? "Cancelling..." : "Cancel Order"}
               </button>
             )}
-            {cancelled && (
-              <p className="order-detail__cancelled-msg">
-                ✅ Order has been cancelled.
-              </p>
-            )}
+            {cancelled && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
             {cancelError && <p className="error-text">{cancelError}</p>}
           </div>
         </div>
 
-        {/* RIGHT — price summary */}
         <aside className="order-detail__right">
           <div className="order-detail__section">
-            <h3 className="order-detail__section-title">Price Details</h3>
-            <OrderSummary
-              items={order.items ?? []}
-              cartTotal={order.totalPrice ?? 0}
-            />
+            <h3 className="order-detail__section-title">Pricing Summary</h3>
+            <OrderSummary items={order.items} cartTotal={order.totalPrice} />
           </div>
         </aside>
       </div>

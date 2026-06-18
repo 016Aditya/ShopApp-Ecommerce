@@ -3,10 +3,20 @@ import ProductCard from "./ProductCard";
 const ProductGrid = ({ products }) => {
   if (!products || products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-sm bg-white py-24 text-center shadow-sm">
-        <span className="text-6xl mb-4">🔍</span>
-        <p className="text-lg font-semibold text-slate-600">No products found</p>
-        <p className="mt-1 text-sm text-slate-400">Try a different search or category</p>
+      <div
+        className="flex flex-col items-center justify-center rounded-sm py-24 text-center shadow-sm"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        <span className="mb-4 text-6xl">🔍</span>
+        <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+          No products found
+        </p>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+          Try a different search or category
+        </p>
       </div>
     );
   }

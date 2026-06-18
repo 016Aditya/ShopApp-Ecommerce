@@ -4,7 +4,7 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-[#f1f3f6]">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <HeroBanner />
       <DealSection />
       <FeaturedProducts />

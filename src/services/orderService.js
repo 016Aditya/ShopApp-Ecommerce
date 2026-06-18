@@ -8,11 +8,17 @@ export const createOrder = async (orderData) => {
 
 export const getOrdersByUser = async (userId) => {
   const { data } = await api.get(`${API_ENDPOINTS.ORDERS}/user/${userId}`);
+  if (import.meta.env.DEV) {
+    console.log("Orders API response:", data);
+  }
   return data;
 };
 
 export const getOrderById = async (id) => {
   const { data } = await api.get(`${API_ENDPOINTS.ORDERS}/${id}`);
+  if (import.meta.env.DEV) {
+    console.log("Order detail API response:", data);
+  }
   return data;
 };
 

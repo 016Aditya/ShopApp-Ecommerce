@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useProducts } from "../hooks/useProducts";
 import ProductGrid from "../components/ProductGrid";
@@ -22,7 +22,6 @@ const ProductsPage = () => {
   const activeSub = searchParams.get("subcategory") ?? null;
   const activeSearch = searchParams.get("search") ?? "";
 
-  // Sync URL params → API call whenever params change
   useEffect(() => {
     if (activeSearch) {
       fetchBySearch(activeSearch);
@@ -33,10 +32,9 @@ const ProductsPage = () => {
     } else {
       fetchAll();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString()]);
 
-  // ── Handlers ────────────────────────────────────────────────────────────
   const handleSearch = (keyword) => {
     setSearchParams(keyword ? { search: keyword } : {});
   };
@@ -44,45 +42,57 @@ const ProductsPage = () => {
   const handleClearSearch = () => setSearchParams({});
 
   const handleCategorySelect = (category) => {
-    if (category === "All") {
-      setSearchParams({});
-    } else {
-      setSearchParams({ category });
-    }
+    setSearchParams(category === "All" ? {} : { category });
   };
 
   const handleSubcategorySelect = (sub) => {
     if (!sub) {
-      // "All Electronics" etc — clear subcategory, keep category
       setSearchParams(activeCat !== "All" ? { category: activeCat } : {});
-    } else {
-      setSearchParams({ category: activeCat, subcategory: sub });
+      return;
     }
+
+    setSearchParams({ category: activeCat, subcategory: sub });
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f3f6]">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="container-app py-6">
-
-        {/* ── Active filter badge ───────────────────────────────────────── */}
         {(activeCat !== "All" || activeSearch) && (
-          <div className="mb-3 flex items-center gap-2 rounded-sm bg-blue-50 px-4 py-2 text-sm text-blue-700 shadow-sm">
+          <div
+            className="mb-3 flex items-center gap-2 rounded-sm px-4 py-2 text-sm shadow-sm"
+            style={{
+              backgroundColor: "var(--card-bg-elevated)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-primary)",
+            }}
+          >
             {activeSearch ? (
-              <><span className="font-semibold">Search:</span> &ldquo;{activeSearch}&rdquo;</>
+              <>
+                <span className="font-semibold">Search:</span> &ldquo;{activeSearch}&rdquo;
+              </>
             ) : (
-              <><span className="font-semibold">Category:</span> {activeCat}{activeSub ? ` › ${activeSub}` : ""}</>
+              <>
+                <span className="font-semibold">Category:</span> {activeCat}
+                {activeSub ? ` > ${activeSub}` : ""}
+              </>
             )}
             <button
               onClick={handleClearSearch}
-              className="ml-auto text-xs font-medium text-blue-500 hover:underline"
+              className="ml-auto text-xs font-medium hover:underline"
+              style={{ color: "var(--info-text)" }}
             >
-              Clear ✕
+              Clear x
             </button>
           </div>
         )}
 
-        {/* ── Toolbar ───────────────────────────────────────────────────── */}
-        <div className="mb-4 flex flex-col gap-3 rounded-sm bg-white p-4 shadow-sm">
+        <div
+          className="mb-4 flex flex-col gap-3 rounded-sm p-4 shadow-sm"
+          style={{
+            backgroundColor: "var(--card-bg-elevated)",
+            border: "1px solid var(--border-color)",
+          }}
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <ProductSearch
               onSearch={handleSearch}
@@ -98,26 +108,42 @@ const ProductsPage = () => {
           />
         </div>
 
-        {/* ── Grid / states ─────────────────────────────────────────────── */}
         {loading && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-sm bg-white h-72 shadow-sm" />
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-72 animate-pulse rounded-sm shadow-sm"
+                style={{
+                  backgroundColor: "var(--card-bg)",
+                  border: "1px solid var(--border-color)",
+                }}
+              />
             ))}
           </div>
         )}
+
         {error && (
-          <p className="rounded-sm bg-red-50 p-4 text-sm text-red-600 shadow-sm">{error}</p>
+          <p
+            className="rounded-sm p-4 text-sm shadow-sm"
+            style={{
+              backgroundColor: "var(--error-bg)",
+              color: "var(--error-text)",
+              border: "1px solid var(--error-border)",
+            }}
+          >
+            {error}
+          </p>
         )}
+
         {!loading && !error && (
           <>
-            <p className="mb-3 text-sm text-slate-500">
+            <p className="mb-3 text-sm" style={{ color: "var(--text-secondary)" }}>
               {products.length} product{products.length !== 1 ? "s" : ""} found
             </p>
             <ProductGrid products={products} />
           </>
         )}
-
       </div>
     </div>
   );

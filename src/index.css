@@ -9,12 +9,14 @@
     padding-inline: 1.5rem;
   }
 
-  /* Scrollbar hide utility */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 *,
@@ -23,13 +25,19 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
   transition:
     background-color 300ms ease,
     color 300ms ease;
@@ -37,55 +45,47 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Cards / panels */
 .bg-white {
   background-color: var(--card-bg) !important;
   color: var(--text-primary);
   transition: background-color 300ms ease, color 300ms ease;
 }
 
-/* Subtle gray backgrounds */
-.bg-gray-50  { background-color: var(--bg-primary)   !important; }
-.bg-gray-100 { background-color: var(--bg-secondary)  !important; }
-.bg-gray-200 { background-color: var(--bg-tertiary)   !important; }
+.bg-gray-50 { background-color: var(--bg-primary) !important; }
+.bg-gray-100 { background-color: var(--bg-secondary) !important; }
+.bg-gray-200 { background-color: var(--bg-tertiary) !important; }
 
-/* ── Search bar isolation ──────────────────────────────────────────────────
-   The search bar MUST stay light in both themes for readability.
-   input[data-search-bar] targets ONLY the SearchBar component input.
-   !important is required to override the global input rule below.
-   ─────────────────────────────────────────────────────────────────────── */
 input[data-search-bar="true"] {
-  background-color: #f8fafc !important;
-  color: #111827 !important;
-  border: 1.5px solid #cbd5e1 !important;
+  background-color: var(--card-bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 0.5rem;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
 input[data-search-bar="true"]::placeholder {
-  color: #64748b !important;
+  color: var(--text-secondary) !important;
   opacity: 1;
 }
 
 input[data-search-bar="true"]:focus {
-  background-color: #f8fafc !important;
-  color: #111827 !important;
-  border-color: #2874f0 !important;
-  box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.15) !important;
+  background-color: var(--card-bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-focus) !important;
+  box-shadow: 0 0 0 3px rgba(255, 159, 0, 0.18) !important;
   outline: none;
 }
 
-/* ── All other input fields (theme-aware) ─────────────────────────────── */
 input:not([data-search-bar]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 textarea,
 select {
-  background-color: var(--input-bg)  !important;
-  color:            var(--text-primary) !important;
-  border-color:     var(--input-border) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
   transition:
     background-color 300ms ease,
-    color            300ms ease,
-    border-color     300ms ease;
+    color 300ms ease,
+    border-color 300ms ease;
 }
 
 input:not([data-search-bar])::placeholder,
@@ -98,18 +98,24 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--input-focus) !important;
-  box-shadow: 0 0 0 3px rgba(255,159,0,0.2) !important;
+  box-shadow: 0 0 0 3px rgba(255, 159, 0, 0.2) !important;
 }
 
-/* Text colour utility overrides */
-.text-gray-900 { color: var(--text-primary)   !important; }
-.text-gray-800 { color: var(--text-primary)   !important; }
-.text-gray-700 { color: var(--text-secondary) !important; }
-.text-gray-600 { color: var(--text-secondary) !important; }
-.text-gray-500 { color: var(--text-tertiary)  !important; }
-.text-gray-400 { color: var(--text-tertiary)  !important; }
+.text-gray-900,
+.text-gray-800 {
+  color: var(--text-primary) !important;
+}
 
-/* Border overrides */
+.text-gray-700,
+.text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-500,
+.text-gray-400 {
+  color: var(--text-tertiary) !important;
+}
+
 .border-gray-100,
 .border-gray-200,
 .border-gray-300 {
@@ -117,14 +123,18 @@ select:focus {
   transition: border-color 300ms ease;
 }
 
-/* Hover state backgrounds */
-.hover\:bg-gray-100:hover { background-color: var(--bg-tertiary) !important; }
-.hover\:bg-gray-50:hover  { background-color: var(--bg-secondary) !important; }
+.hover\:bg-gray-100:hover {
+  background-color: var(--bg-tertiary) !important;
+}
 
-/* Dividers */
-.divide-gray-200 > * + * { border-color: var(--border-color) !important; }
+.hover\:bg-gray-50:hover {
+  background-color: var(--bg-secondary) !important;
+}
 
-/* Modal / overlay backdrop */
+.divide-gray-200 > * + * {
+  border-color: var(--border-color) !important;
+}
+
 .bg-black\/50,
 .bg-black\/60 {
   background-color: var(--overlay-bg) !important;

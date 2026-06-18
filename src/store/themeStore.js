@@ -1,30 +1,15 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-/**
- * Detect the OS/browser colour scheme preference.
- * Returns 'dark' | 'light'
- */
-const getSystemTheme = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+const DEFAULT_THEME = "light";
 
-/**
- * Apply the theme to the <html> element so CSS variables cascade
- * to every element on the page without needing a React context re-render.
- */
 const applyTheme = (theme) => {
-  if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', theme);
-    // Keep meta theme-color in sync for mobile browsers
+  if (typeof document !== "undefined") {
+    document.documentElement.setAttribute("data-theme", theme);
+
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute(
-        'content',
-        theme === 'dark' ? '#0f0f11' : '#ffffff'
-      );
+      meta.setAttribute("content", theme === "dark" ? "#0f1115" : "#f4f6f8");
     }
   }
 };
@@ -32,17 +17,14 @@ const applyTheme = (theme) => {
 export const useThemeStore = create(
   persist(
     (set, get) => ({
-      // null means "not yet chosen by user" → fall back to system
       theme: null,
 
-      // Resolved theme always has a concrete value
       get resolvedTheme() {
-        return get().theme ?? getSystemTheme();
+        return get().theme ?? DEFAULT_THEME;
       },
 
       toggleTheme: () => {
-        const next =
-          (get().theme ?? getSystemTheme()) === 'light' ? 'dark' : 'light';
+        const next = (get().theme ?? DEFAULT_THEME) === "light" ? "dark" : "light";
         applyTheme(next);
         set({ theme: next });
       },
@@ -52,27 +34,12 @@ export const useThemeStore = create(
         set({ theme });
       },
 
-      // Call once on app mount to sync DOM with persisted preference
       initTheme: () => {
-        const stored = get().theme;
-        const resolved = stored ?? getSystemTheme();
-        applyTheme(resolved);
-
-        // Listen for OS preference changes only when user hasn't overridden
-        if (typeof window !== 'undefined') {
-          window
-            .matchMedia('(prefers-color-scheme: dark)')
-            .addEventListener('change', (e) => {
-              if (!get().theme) {
-                applyTheme(e.matches ? 'dark' : 'light');
-              }
-            });
-        }
+        applyTheme(get().theme ?? DEFAULT_THEME);
       },
     }),
     {
-      name: 'theme-preference',
-      // Only persist the explicit user choice (null = system default)
+      name: "theme-preference",
       partialize: (state) => ({ theme: state.theme }),
     }
   )
