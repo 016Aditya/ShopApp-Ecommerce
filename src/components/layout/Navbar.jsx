@@ -56,7 +56,7 @@ function Navbar() {
       <div style={{ backgroundColor: "var(--navbar-bg)" }}>
         <div className="container-app flex h-14 items-center gap-3">
 
-          {/* Logo */}
+          {/* Logo — plain Link, no nested interactive elements */}
           <Link
             to={PATHS.HOME}
             className="flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
@@ -67,7 +67,7 @@ function Navbar() {
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
-          {/* Search */}
+          {/* Search — form submit only, no navigate on input change */}
           <form onSubmit={handleSearch} className="flex flex-1">
             <div className="flex w-full overflow-hidden rounded-sm" style={{ outline: "2px solid var(--accent)" }}>
               <input
@@ -76,11 +76,7 @@ function Navbar() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="flex-1 px-4 py-2 text-sm outline-none"
-                style={{
-                  backgroundColor: "#fff",
-                  color: "#0f0f11",
-                  border: "none",
-                }}
+                style={{ backgroundColor: "#fff", color: "#0f0f11", border: "none" }}
               />
               <button
                 type="submit"
@@ -99,7 +95,7 @@ function Navbar() {
           {/* Account */}
           {user ? (
             <div className="group relative flex-shrink-0 flex cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
-              <span className="text-[10px] text-slate-300">Hello, {user.name || "User"}</span>
+              <span className="text-[10px] text-slate-300">Hello, {user.firstName || user.name || "User"}</span>
               <span className="text-sm font-bold text-white">Account</span>
               <div className="absolute top-full right-0 z-50 hidden w-48 rounded shadow-xl group-hover:block" style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}>
                 <Link to={PATHS.PROFILE}  className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Profile</Link>
@@ -108,7 +104,14 @@ function Navbar() {
                   Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
                 </Link>
                 <hr style={{ borderColor: "var(--border-color)" }} />
-                <button onClick={handleLogout} className="block w-full px-4 py-2 text-left text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Sign Out</button>
+                {/* FIX: button inside dropdown div — stopPropagation prevents bubbling to parent div */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+                  className="block w-full px-4 py-2 text-left text-sm hover:opacity-80 transition"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Sign Out
+                </button>
               </div>
             </div>
           ) : (
@@ -166,7 +169,6 @@ function Navbar() {
             <span className="mb-1 text-sm font-bold text-white">Cart</span>
           </Link>
 
-          {/* ── Theme Toggle ──────────────────────────────────────────── */}
           <ThemeToggle />
         </div>
       </div>
@@ -187,41 +189,38 @@ function Navbar() {
           {NAV_LINKS.map((link) =>
             link.dropdown ? (
               <div key={link.label} className="group relative flex-shrink-0">
+                {/* FIX: outer <div> is NOT a Link — dropdown trigger is just a div */}
+                {/* The inner dropdown items are proper Links with stopPropagation */}
                 <Link
                   to={link.path}
-                  className="flex items-center gap-0.5 border border-transparent px-3 py-2 text-sm text-white hover:border-white transition whitespace-nowrap"
+                  className="flex flex-shrink-0 items-center gap-1 border border-transparent px-3 py-2 text-sm font-medium text-white hover:border-white transition"
                 >
                   {link.label}
-                  <svg className="h-3 w-3 opacity-60" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clipRule="evenodd" />
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                   </svg>
                 </Link>
-                <div
-                  className="absolute top-full left-0 z-50 hidden min-w-[160px] rounded-b shadow-xl group-hover:block"
-                  style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}
-                >
-                  {link.dropdown.map((item) => {
-                    const href = item.sub
-                      ? `${PATHS.PRODUCTS}?category=Clothing&subcategory=${item.sub}`
-                      : `${PATHS.PRODUCTS}?category=Clothing`;
-                    return (
-                      <Link
-                        key={item.label}
-                        to={href}
-                        className="block px-4 py-2 text-sm transition hover:opacity-80"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
+                <div className="absolute top-full left-0 z-50 hidden min-w-max rounded shadow-xl group-hover:block" style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}>
+                  {link.dropdown.map((item) => (
+                    <Link
+                      key={item.label}
+                      to={item.sub
+                        ? `${PATHS.PRODUCTS}?category=Clothing&subcategory=${item.sub}`
+                        : `${PATHS.PRODUCTS}?category=Clothing`
+                      }
+                      className="block px-4 py-2 text-sm hover:opacity-80 transition"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                 </div>
               </div>
             ) : (
               <Link
                 key={link.label}
                 to={link.path}
-                className="flex-shrink-0 border border-transparent px-3 py-2 text-sm text-white hover:border-white transition whitespace-nowrap"
+                className="flex-shrink-0 border border-transparent px-3 py-2 text-sm font-medium text-white hover:border-white transition"
               >
                 {link.label}
               </Link>

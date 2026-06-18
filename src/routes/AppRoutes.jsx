@@ -10,6 +10,7 @@ import PageWrapper from "@/components/layout/PageWrapper";
 import Login from "@/features/auth/pages/Login";
 import Register from "@/features/auth/pages/Register";
 import OAuth2Success from "@/features/auth/pages/OAuth2Success";
+import ForgotPassword from "@/features/auth/pages/ForgotPassword";
 
 // Core pages (public)
 import HomePage from "@/features/home/pages/HomePage";
@@ -37,27 +38,30 @@ const AppRoutes = () => {
 
       {/* All other routes share the PageWrapper (Navbar + Footer) */}
       <Route element={<PageWrapper />}>
-        {/* Public-only routes */}
+        {/* Public-only routes (blocked when logged in) */}
         <Route element={<PublicRoute />}>
-          <Route path={PATHS.LOGIN} element={<Login />} />
+          <Route path={PATHS.LOGIN}    element={<Login />} />
           <Route path={PATHS.REGISTER} element={<Register />} />
         </Route>
 
+        {/* Forgot password — always public, not blocked when logged in */}
+        <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
+
         {/* Open routes */}
-        <Route path={PATHS.HOME} element={<HomePage />} />
-        <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
-        <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+        <Route path={PATHS.HOME}             element={<HomePage />} />
+        <Route path={PATHS.PRODUCTS}         element={<ProductsPage />} />
+        <Route path={PATHS.PRODUCT_DETAIL}   element={<ProductDetailPage />} />
         <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} />
-        <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
+        <Route path={PATHS.WISHLIST}         element={<WishlistPage />} />
 
         {/* Protected routes */}
         <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART} element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />
+          <Route path={PATHS.CART}          element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT}      element={<CheckoutPage />} />
           <Route path={PATHS.ORDER_SUCCESS} element={<OrderSuccessPage />} />
-          <Route path={PATHS.ORDERS} element={<OrdersPage />} />
-          <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
-          <Route path={PATHS.PROFILE} element={<ProfilePage />} />
+          <Route path={PATHS.ORDERS}        element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL}  element={<OrderDetailPage />} />
+          <Route path={PATHS.PROFILE}       element={<ProfilePage />} />
         </Route>
 
         {/* 404 */}

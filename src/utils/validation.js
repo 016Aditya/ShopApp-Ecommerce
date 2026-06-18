@@ -1,6 +1,5 @@
 // ─── Field-level validators ───────────────────────────────────────────────────
 // Each function returns null (valid) or an error string (invalid).
-// Matches field names your backend DTOs expect.
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -15,6 +14,12 @@ export function validateLastName(value) {
   if (!value?.trim()) return "Last name is required";
   if (value.trim().length < 2) return "Last name must be at least 2 characters";
   if (value.trim().length > 50) return "Last name must be under 50 characters";
+  return null;
+}
+
+export function validatePhone(value) {
+  if (!value?.trim()) return "Phone number is required";
+  if (!/^[0-9]{10}$/.test(value.trim())) return "Enter a valid 10-digit phone number";
   return null;
 }
 
@@ -117,48 +122,45 @@ export function validateComment(value) {
   return null;
 }
 
-// ─── Form-level validators (validate the whole form object at once) ────────────
+// ─── Form-level validators ────────────────────────────────────────────────────
 
 export function validateRegisterForm(fields) {
   return {
-    firstName: validateFirstName(fields.firstName),
-    lastName: validateLastName(fields.lastName),
-    email: validateEmail(fields.email),
-    password: validatePassword(fields.password),
+    firstName:       validateFirstName(fields.firstName),
+    lastName:        validateLastName(fields.lastName),
+    phone:           validatePhone(fields.phone),
+    email:           validateEmail(fields.email),
+    password:        validatePassword(fields.password),
     confirmPassword: validateConfirmPassword(fields.password, fields.confirmPassword),
   };
 }
 
 export function validateLoginForm(fields) {
   return {
-    email: validateEmail(fields.email),
+    email:    validateEmail(fields.email),
     password: validatePassword(fields.password),
   };
 }
 
 export function validateAddressForm(fields) {
   return {
-    line1: validateAddressLine(fields.line1),
-    city: validateCity(fields.city),
-    state: validateState(fields.state),
-    zip: validateZip(fields.zip),
+    line1:   validateAddressLine(fields.line1),
+    city:    validateCity(fields.city),
+    state:   validateState(fields.state),
+    zip:     validateZip(fields.zip),
     country: validateCountry(fields.country),
   };
 }
 
 export function validateReviewForm(fields) {
   return {
-    rating: validateRating(fields.rating),
+    rating:  validateRating(fields.rating),
     comment: validateComment(fields.comment),
   };
 }
 
 /**
  * Returns true if a validation errors object has no errors.
- * Use this to check if a form is ready to submit.
- *
- * const errors = validateLoginForm(fields);
- * if (isFormValid(errors)) { ... }
  */
 export function isFormValid(errors) {
   return Object.values(errors).every((error) => error === null);

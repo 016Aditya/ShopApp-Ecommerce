@@ -3,6 +3,7 @@ const PATHS = {
   LOGIN: "/login",
   REGISTER: "/register",
   OAUTH2_SUCCESS: "/oauth2/success",
+  FORGOT_PASSWORD: "/forgot-password",
 
   // Products (public)
   PRODUCTS: "/products",
