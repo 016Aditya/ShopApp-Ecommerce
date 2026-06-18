@@ -5,6 +5,31 @@ import ProductGrid from "../components/ProductGrid";
 import ProductSearch from "../components/ProductSearch";
 import ProductFilter from "../components/ProductFilter";
 
+/**
+ * ProductsPage
+ *
+ * Single source of truth: URL search params drive everything.
+ * All navigation handlers are memoised and only update the specific
+ * param(s) they own — no handler ever wipes unrelated params.
+ *
+ * Handler contracts
+ * ─────────────────
+ * handleSearch(keyword)
+ *   Merges ?search=keyword into existing params (preserves category).
+ *   Clears ?subcategory when a new search starts.
+ *   Guard: skips setSearchParams when the URL already has this value.
+ *
+ * handleClearSearch()
+ *   Removes ONLY the ?search param. Category + subcategory are preserved.
+ *   Guard: skips when there is no search param to remove.
+ *
+ * handleCategorySelect(category)
+ *   Replaces the entire param set with just ?category= (or {} for "All").
+ *   A category click always resets search and subcategory — intentional.
+ *
+ * handleSubcategorySelect(sub)
+ *   Keeps ?category= and replaces/removes ?subcategory=.
+ */
 const ProductsPage = () => {
   const {
     products,
@@ -42,30 +67,44 @@ const ProductsPage = () => {
   }, [searchParams.toString()]);
 
   // ── Stable handlers ───────────────────────────────────────────────────
-  // Every handler is memoised. Without useCallback these are new function
-  // objects every render, which makes ProductSearch's useEffect (which
-  // stored them in a ref) call onSearch on every render → infinite loop.
 
   const handleSearch = useCallback(
     (keyword) => {
-      // Guard: skip setSearchParams if the URL already has this value.
-      // This is the primary loop-breaker.
+      // Guard: skip if URL already has this exact search value.
       if (searchParams.get("search") === keyword) return;
-      setSearchParams(keyword ? { search: keyword } : {});
+
+      // Merge search into current params — preserve ?category=.
+      // Clear ?subcategory so the search isn't accidentally scoped.
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (keyword) {
+          next.set("search", keyword);
+          next.delete("subcategory"); // search overrides subcategory
+        } else {
+          next.delete("search");
+        }
+        return next;
+      });
     },
-    // searchParams object ref changes every render, so read .get() inside
-    // the callback and list searchParams itself as the dep.
     [searchParams, setSearchParams]
   );
 
   const handleClearSearch = useCallback(() => {
-    // Guard: skip if already empty to avoid a no-op navigation.
-    if (!searchParams.toString()) return;
-    setSearchParams({});
+    // Guard: skip if there is no search param — avoids a no-op navigation
+    // that would still trigger a re-render cycle.
+    if (!searchParams.has("search")) return;
+
+    // Remove ONLY the search key; preserve category + subcategory.
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("search");
+      return next;
+    });
   }, [searchParams, setSearchParams]);
 
   const handleCategorySelect = useCallback(
     (category) => {
+      // Category click is a deliberate reset — clear search + subcategory.
       setSearchParams(category === "All" ? {} : { category });
     },
     [setSearchParams]
@@ -127,9 +166,9 @@ const ProductsPage = () => {
               (e.g. user clicks a category or Clear), React unmounts and
               remounts ProductSearch with the correct initialValue instead
               of trying to sync it through a useEffect inside the child.
-              This eliminates the secondary loop:
-                initialValue changes → setInput → debounce fires → onSearch
-                → setSearchParams → re-render → initialValue changes → …
+
+              The mountedRef inside ProductSearch ensures this remount does
+              NOT fire onClear automatically — solving the param-wipe loop.
             */}
             <ProductSearch
               key={activeSearch}
