@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { initThemeEarly } from '@/store/themeStore';
 import App from './app/App';
-import Providers from './app/providers';
 import './index.css';
 
 // ── Apply persisted theme synchronously BEFORE first render ──────────────
@@ -11,8 +10,6 @@ initThemeEarly();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Providers>
-      <App />
-    </Providers>
+    <App />
   </React.StrictMode>
 );
