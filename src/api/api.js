@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/utils/constants";
-import { getStoredUser, removeStoredUser } from "@/utils/storage";
+import { useAuthStore } from "@/store/authStore";
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
 const api = axios.create({
@@ -14,15 +14,15 @@ const api = axios.create({
 // ─── Request interceptor ──────────────────────────────────────────────────────
 api.interceptors.request.use(
   (config) => {
-    const user = getStoredUser();
+    // Read directly from Zustand store — works outside React components
+    const { user, token } = useAuthStore.getState();
 
     if (user?.id) {
       config.headers["X-User-Id"] = user.id;
     }
 
-    // Ready for JWT — attach token if present
-    if (user?.token) {
-      config.headers.Authorization = `Bearer ${user.token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
@@ -37,9 +37,9 @@ api.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
 
-    // 401 — session invalid, clear storage and redirect
+    // 401 — session invalid, clear Zustand store and redirect
     if (status === 401) {
-      removeStoredUser();
+      useAuthStore.getState().logout();
       if (!window.location.pathname.includes("/login")) {
         window.location.href = "/login";
       }
