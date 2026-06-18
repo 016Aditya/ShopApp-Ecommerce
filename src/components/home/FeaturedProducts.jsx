@@ -1,216 +1,269 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeaturedProducts } from "@/features/products/hooks/useFeaturedProducts";
-import { useCartStore } from "@/store";
-import { useAuth } from "@/context/AuthContext";
 import { formatCurrency } from "@/utils/currency";
-import RatingBadge from "@/components/common/RatingBadge";
 import PATHS, { buildPath } from "@/routes/paths";
 
-/* ── Skeleton card ──────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
     <div
-      className="flex flex-col rounded-sm border overflow-hidden"
-      style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}
+      className="min-w-[280px] snap-start overflow-hidden rounded-[20px] border md:min-w-0"
+      style={{
+        backgroundColor: "var(--card-bg)",
+        borderColor: "var(--border-color)",
+        boxShadow: "var(--shadow-sm)",
+      }}
     >
       <div
-        className="h-44 w-full animate-pulse"
-        style={{ backgroundColor: "var(--bg-tertiary)" }}
+        className="h-[220px] animate-pulse rounded-[20px] rounded-b-none"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
+        }}
       />
-      <div className="p-3 flex flex-col gap-2">
-        <div className="h-3 rounded animate-pulse" style={{ width: "85%", backgroundColor: "var(--bg-tertiary)" }} />
-        <div className="h-3 rounded animate-pulse" style={{ width: "60%", backgroundColor: "var(--bg-tertiary)" }} />
-        <div className="h-3 rounded animate-pulse" style={{ width: "40%", backgroundColor: "var(--bg-tertiary)" }} />
-        <div className="h-5 rounded animate-pulse mt-1" style={{ width: "50%", backgroundColor: "var(--bg-tertiary)" }} />
-        <div className="h-9 rounded-sm animate-pulse mt-2" style={{ backgroundColor: "var(--bg-tertiary)" }} />
+      <div className="space-y-3 p-5">
+        <div
+          className="h-4 w-3/4 animate-pulse rounded-full"
+          style={{ backgroundColor: "var(--bg-tertiary)" }}
+        />
+        <div
+          className="h-3 w-1/3 animate-pulse rounded-full"
+          style={{ backgroundColor: "var(--bg-tertiary)" }}
+        />
+        <div
+          className="h-5 w-1/2 animate-pulse rounded-full"
+          style={{ backgroundColor: "var(--bg-tertiary)" }}
+        />
+        <div
+          className="h-10 w-full animate-pulse rounded-full"
+          style={{ backgroundColor: "var(--bg-tertiary)" }}
+        />
       </div>
     </div>
   );
 }
 
-/* ── Featured product card ──────────────────────────────────────────────── */
+function FeaturedRating({ rating = 0, count = 0 }) {
+  if (!count || !rating) {
+    return (
+      <span
+        className="inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold"
+        style={{
+          backgroundColor: "var(--badge-bg)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        New Arrival
+      </span>
+    );
+  }
+
+  const roundedRating = Math.round(rating * 10) / 10;
+
+  return (
+    <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+      <span
+        className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold text-white"
+        style={{
+          background: "linear-gradient(135deg, #16a34a, #15803d)",
+          boxShadow: "0 10px 20px rgba(21, 128, 61, 0.24)",
+        }}
+      >
+        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+        {roundedRating.toFixed(1)}
+      </span>
+      <span style={{ color: "var(--text-secondary)" }}>({count})</span>
+    </div>
+  );
+}
+
 function FeaturedCard({ product }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [added, setAdded] = useState(false);
-  const [busy, setBusy]   = useState(false);
 
-  const handleAddToCart = async (e) => {
-    e.stopPropagation();
-    if (!user) { navigate(PATHS.LOGIN); return; }
-    setBusy(true);
-    try {
-      await useCartStore.getState().addToCart(product, 1);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-    } finally {
-      setBusy(false);
-    }
+  const openProduct = () => {
+    navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
   };
 
   return (
-    <div
-      className="group flex flex-col rounded-sm border shadow-sm transition hover:shadow-md cursor-pointer"
-      style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}
-      onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+    <article
+      className="group min-w-[280px] snap-start overflow-hidden rounded-[20px] border shadow-[var(--shadow-md)] transition duration-200 hover:-translate-y-1.5 hover:border-emerald-300 hover:shadow-[var(--shadow-lg)] md:min-w-0"
+      style={{
+        backgroundColor: "var(--card-bg)",
+        borderColor: "var(--border-color)",
+      }}
+      onClick={openProduct}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+      onKeyDown={(event) => event.key === "Enter" && openProduct()}
     >
-      {/* Product Image */}
       <div
-        className="flex h-44 items-center justify-center overflow-hidden"
-        style={{ backgroundColor: "var(--bg-tertiary)" }}
+        className="relative m-3 flex h-[220px] items-center justify-center overflow-hidden rounded-[18px] p-5"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
+        }}
       >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-6 bottom-4 h-8 rounded-full blur-2xl"
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.12)" }}
+        />
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="h-full w-full object-contain p-3 transition group-hover:scale-105"
+            className="relative h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            style={{ mixBlendMode: "var(--featured-image-blend)" }}
             loading="lazy"
-            width={300}
-            height={176}
+            width={360}
+            height={220}
           />
         ) : (
-          <span className="text-6xl">🛍️</span>
+          <span
+            className="relative text-sm font-semibold uppercase tracking-[0.24em]"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            No Image
+          </span>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        {/* Product Name */}
-        <h3
-          className="line-clamp-2 group-hover:text-[#2874f0] transition"
-          style={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "var(--text-primary)" }}
-        >
-          {product.name}
-        </h3>
-
-        {/* Rating */}
-        <div className="mt-0.5">
-          <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} />
+      <div className="flex flex-1 flex-col gap-3 px-5 pb-5 pt-1">
+        <div className="space-y-2">
+          <p
+            className="text-xs font-medium uppercase tracking-[0.18em]"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {product.category || "Featured"}
+          </p>
+          <h3
+            className="line-clamp-2"
+            style={{
+              color: "var(--text-primary)",
+              fontSize: "16px",
+              fontWeight: 600,
+              lineHeight: 1.5,
+            }}
+          >
+            {product.name}
+          </h3>
         </div>
 
-        {/* Price */}
-        <p className="mt-1" style={{ fontSize: "18px", fontWeight: 700, color: "#22c55e" }}>
-          {formatCurrency(product.price)}
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <FeaturedRating rating={product.averageRating} count={product.reviewCount} />
+          <p style={{ color: "#22c55e", fontSize: "22px", fontWeight: 700 }}>
+            {formatCurrency(product.price)}
+          </p>
+        </div>
 
-        {/* Category */}
-        <span
-          className="w-fit rounded-full px-2 py-0.5"
-          style={{ fontSize: "13px", color: "var(--text-secondary)", backgroundColor: "var(--badge-bg)" }}
-        >
-          {product.category}
-        </span>
-      </div>
-
-      {/* Add To Cart */}
-      <div className="px-3 pb-3" onClick={(e) => e.stopPropagation()}>
         <button
-          className={`w-full rounded-sm py-2 text-sm font-bold text-white transition active:scale-95 ${
-            added ? "bg-green-600"
-            : busy ? "bg-[#ff9f00]/70 cursor-not-allowed"
-            : product.inStock === false ? "bg-gray-400 cursor-not-allowed"
-            : "bg-[#ff9f00] hover:bg-[#e08e00]"
-          }`}
-          onClick={handleAddToCart}
-          disabled={busy || product.inStock === false}
-          aria-label={`Add ${product.name} to cart`}
+          type="button"
+          className="mt-auto inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition duration-200 group-hover:translate-x-1"
+          style={{
+            backgroundColor: "var(--bg-tertiary)",
+            color: "var(--text-primary)",
+          }}
+          onClick={(event) => {
+            event.stopPropagation();
+            openProduct();
+          }}
         >
-          {added ? "✓ Added!" : busy ? "Adding..." : product.inStock === false ? "OUT OF STOCK" : "ADD TO CART"}
+          View Details
+          <span aria-hidden="true">→</span>
         </button>
       </div>
-    </div>
+    </article>
   );
 }
 
-/* ── FeaturedProducts section ───────────────────────────────────────────── */
 function FeaturedProducts() {
-  const { products, loading, error, usingFallback } = useFeaturedProducts();
+  const { products, loading, error } = useFeaturedProducts();
   const navigate = useNavigate();
 
   return (
-    <section className="container-app py-6">
-      {/* Section Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-            {usingFallback ? "Latest Products" : "Featured Products"}
-          </h2>
-          {usingFallback && (
-            <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-              Showing our newest arrivals
+    <section className="container-app py-8 md:py-10">
+      <div
+        className="overflow-hidden rounded-[28px] border px-4 py-6 sm:px-6 lg:px-8"
+        style={{
+          background:
+            "linear-gradient(180deg, var(--featured-shell-start) 0%, var(--featured-shell-end) 100%)",
+          borderColor: "var(--border-color)",
+          boxShadow: "var(--shadow-lg)",
+        }}
+      >
+        <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-bold md:text-3xl" style={{ color: "var(--text-primary)" }}>
+              Featured Products
+            </h2>
+            <p className="mt-2 text-sm md:text-base" style={{ color: "var(--text-secondary)" }}>
+              Discover our most popular and trending products.
             </p>
-          )}
-        </div>
-        <button
-          className="text-sm font-medium hover:underline"
-          style={{ color: "#2874f0" }}
-          onClick={() => navigate(PATHS.PRODUCTS)}
-        >
-          View all →
-        </button>
-      </div>
-
-      {/* Loading — skeleton grid */}
-      {loading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      )}
-
-      {/* Error state */}
-      {!loading && error && (
-        <div
-          className="flex flex-col items-center justify-center rounded-sm py-12 text-center"
-          style={{
-            backgroundColor: "var(--error-bg)",
-            border: "1px solid var(--error-border)",
-          }}
-        >
-          <span className="text-4xl mb-3">⚠️</span>
-          <p className="font-semibold" style={{ color: "var(--error-text)" }}>
-            Could not load products
-          </p>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-            {error}
-          </p>
+          </div>
           <button
-            className="mt-4 rounded-sm px-6 py-2 text-sm font-bold text-white bg-[#ff9f00] hover:bg-[#e08e00] transition"
-            onClick={() => window.location.reload()}
+            type="button"
+            className="inline-flex w-fit items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition duration-200 hover:-translate-y-0.5"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              color: "var(--text-primary)",
+            }}
+            onClick={() => navigate(PATHS.PRODUCTS)}
           >
-            Retry
+            Browse all
+            <span aria-hidden="true">→</span>
           </button>
         </div>
-      )}
 
-      {/* Empty state */}
-      {!loading && !error && products.length === 0 && (
-        <div
-          className="flex flex-col items-center justify-center rounded-sm py-12 text-center"
-          style={{ backgroundColor: "var(--bg-tertiary)" }}
-        >
-          <span className="text-5xl mb-3">🛍️</span>
-          <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
-            No products yet
-          </p>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-            Products added from the admin panel will appear here.
-          </p>
-        </div>
-      )}
+        {loading && (
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible xl:grid-cols-4 2xl:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </div>
+        )}
 
-      {/* Product grid */}
-      {!loading && !error && products.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {products.map((product) => (
-            <FeaturedCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+        {!loading && error && (
+          <div
+            className="rounded-[20px] border px-6 py-12 text-center"
+            style={{
+              backgroundColor: "var(--error-bg)",
+              borderColor: "var(--error-border)",
+              color: "var(--error-text)",
+            }}
+          >
+            <p className="text-lg font-semibold">Could not load featured products.</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+              {error}
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && products.length === 0 && (
+          <div
+            className="rounded-[20px] border px-6 py-12 text-center"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+              Featured products will appear here soon.
+            </p>
+            <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+              Check back after new collections are added.
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && (
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible xl:grid-cols-4 2xl:grid-cols-5">
+            {products.map((product) => (
+              <FeaturedCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
