@@ -9,11 +9,15 @@ import {
 /**
  * authStore
  *
- * Changes vs. original:
- * - `registeredUsers` array tracks locally-registered users so ForgotPassword
- *   can verify email + phone without a backend endpoint.
- * - `updateRegisteredUser` patches a user entry (used by ResetPassword).
- * - `phone` is added to the register payload and stored alongside the user.
+ * Auth state lives entirely here (Zustand + persist).
+ * AuthContext is a thin re-export so existing imports keep working.
+ *
+ * Response shape from backend (UserDto.Response):
+ *   { id, firstName, lastName, email, role, createdAt }
+ *
+ * The backend does NOT issue a JWT yet — the token field is null until
+ * JWT middleware is added to the Spring Boot app.
+ * PrivateRoute guards on `user !== null`, not on `token`.
  */
 export const useAuthStore = create(
   persist(
@@ -22,9 +26,12 @@ export const useAuthStore = create(
       token: null,
       loading: false,
       error: null,
+      _hydrated: false,
 
-      /** Local registry — email + phone + password index for recovery flow. */
+      /** Local registry for Forgot-Password email+phone verification. */
       registeredUsers: [],
+
+      setHydrated: () => set({ _hydrated: true }),
 
       isLoggedIn: () => !!get().user,
       isAdmin:    () => get().user?.role === 'ADMIN',
@@ -33,7 +40,18 @@ export const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const data = await loginService(credentials);
-          set({ user: data.user, token: data.token, loading: false });
+          /**
+           * Backend returns a flat UserDto.Response:
+           *   { id, firstName, lastName, email, role, createdAt }
+           *
+           * There is no `user` wrapper and no `token` field yet.
+           * We store the whole object as `user`.
+           */
+          set({
+            user:    data,
+            token:   data.token ?? null,   // null until backend issues JWT
+            loading: false,
+          });
           return data;
         } catch (err) {
           set({ error: err.message, loading: false });
@@ -45,12 +63,15 @@ export const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const data = await registerService(userData);
-          // Store phone alongside email for recovery verification
           set((state) => ({
             loading: false,
             registeredUsers: [
               ...state.registeredUsers.filter((u) => u.email !== userData.email),
-              { email: userData.email, phone: userData.phone ?? "", password: userData.password },
+              {
+                email:       userData.email,
+                phone:       userData.phone ?? userData.phoneNumber ?? '',
+                password:    userData.password,
+              },
             ],
           }));
           return data;
@@ -68,7 +89,6 @@ export const useAuthStore = create(
       updateUser: (partial) =>
         set((state) => ({ user: { ...state.user, ...partial } })),
 
-      /** Patch a registered user entry — used by ResetPassword to update password. */
       updateRegisteredUser: (email, partial) =>
         set((state) => ({
           registeredUsers: state.registeredUsers.map((u) =>
@@ -81,10 +101,15 @@ export const useAuthStore = create(
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        user:             state.user,
-        token:            state.token,
-        registeredUsers:  state.registeredUsers,
+        user:            state.user,
+        token:           state.token,
+        registeredUsers: state.registeredUsers,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Mark store as hydrated after persist has restored data.
+        // AuthContext reads _hydrated to avoid flash-redirect on reload.
+        if (state) state.setHydrated();
+      },
     }
   )
 );
