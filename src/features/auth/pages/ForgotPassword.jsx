@@ -1,107 +1,61 @@
+/**
+ * ForgotPassword.jsx
+ *
+ * Multi-step password recovery flow:
+ *   Step 1 — Enter Email
+ *   Step 2 — Enter Phone Number (verification)
+ *   Step 3 — Identity confirmed; navigate to Reset Password
+ *
+ * No SMS / OTP / Twilio. Phone is used only as a local verification factor
+ * against the registered phone stored in authStore.
+ */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Button from "@/components/common/Button";
-import Input from "@/components/common/Input";
 import { PATHS } from "@/routes/paths";
-
-/**
- * ForgotPassword — 3-step identity verification flow.
- *
- * Step 1: Enter email
- * Step 2: Enter registered phone number (verification factor)
- * Step 3: Set new password
- *
- * No SMS / OTP / Twilio. Phone is verified locally against what the
- * backend returns for that email. This is a frontend-only verification
- * gate — the actual password update is sent to the backend in step 3.
- */
+import { useAuthStore } from "@/store/authStore";
+import Button from "@/components/common/Button";
+import Input  from "@/components/common/Input";
 
 const STEPS = {
-  EMAIL: 1,
-  PHONE: 2,
-  RESET: 3,
-  SUCCESS: 4,
+  EMAIL:  1,
+  PHONE:  2,
+  VERIFY: 3,
 };
+
+const PHONE_REGEX = /^[6-9]\d{9}$/;
 
 function ForgotPassword() {
   const navigate = useNavigate();
-  const [step, setStep]           = useState(STEPS.EMAIL);
-  const [email, setEmail]         = useState("");
-  const [phone, setPhone]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [confirm, setConfirm]     = useState("");
-  const [errors, setErrors]       = useState({});
-  const [loading, setLoading]     = useState(false);
-  const [serverError, setServerError] = useState("");
+  const users = useAuthStore((s) => s.registeredUsers ?? []);
 
-  // ── Step 1: Verify email exists ────────────────────────────────────────
-  const handleEmailSubmit = async (e) => {
+  const [step,  setStep]  = useState(STEPS.EMAIL);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+
+  // Step 1 — verify email exists
+  const handleEmailSubmit = (e) => {
     e.preventDefault();
-    setServerError("");
-    const errs = {};
-    if (!email.trim()) errs.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errs.email = "Enter a valid email";
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    setErrors({});
-    setLoading(true);
-    try {
-      // Backend call: verify email exists
-      const { verifyEmailForReset } = await import("@/services/authService");
-      await verifyEmailForReset(email.trim());
-      setStep(STEPS.PHONE);
-    } catch (err) {
-      setServerError(err.message || "No account found with this email.");
-    } finally {
-      setLoading(false);
-    }
+    setError("");
+    if (!email.trim()) { setError("Email is required."); return; }
+    const match = users.find((u) => u.email?.toLowerCase() === email.trim().toLowerCase());
+    if (!match) { setError("No account found with this email address."); return; }
+    setStep(STEPS.PHONE);
   };
 
-  // ── Step 2: Verify phone number ────────────────────────────────────────
-  const handlePhoneSubmit = async (e) => {
+  // Step 2 — verify phone matches
+  const handlePhoneSubmit = (e) => {
     e.preventDefault();
-    setServerError("");
-    const errs = {};
-    if (!phone.trim()) errs.phone = "Phone number is required";
-    else if (!/^[0-9]{10}$/.test(phone.trim())) errs.phone = "Enter a valid 10-digit number";
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    setErrors({});
-    setLoading(true);
-    try {
-      const { verifyPhoneForReset } = await import("@/services/authService");
-      await verifyPhoneForReset(email.trim(), phone.trim());
-      setStep(STEPS.RESET);
-    } catch (err) {
-      setServerError(err.message || "Phone number does not match our records.");
-    } finally {
-      setLoading(false);
-    }
+    setError("");
+    if (!phone.trim()) { setError("Phone number is required."); return; }
+    if (!PHONE_REGEX.test(phone.trim())) { setError("Enter a valid 10-digit mobile number."); return; }
+    const match = users.find(
+      (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && u.phone === phone.trim()
+    );
+    if (!match) { setError("Phone number does not match the account."); return; }
+    // Identity verified — navigate to reset with token-like state
+    navigate(PATHS.RESET_PASSWORD, { state: { email: email.trim(), verified: true } });
   };
-
-  // ── Step 3: Set new password ───────────────────────────────────────────
-  const handleResetSubmit = async (e) => {
-    e.preventDefault();
-    setServerError("");
-    const errs = {};
-    if (!password) errs.password = "Password is required";
-    else if (password.length < 6) errs.password = "At least 6 characters";
-    if (!confirm) errs.confirm = "Please confirm your password";
-    else if (confirm !== password) errs.confirm = "Passwords do not match";
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    setErrors({});
-    setLoading(true);
-    try {
-      const { resetPassword } = await import("@/services/authService");
-      await resetPassword({ email: email.trim(), phone: phone.trim(), newPassword: password });
-      setStep(STEPS.SUCCESS);
-    } catch (err) {
-      setServerError(err.message || "Failed to reset password. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const stepLabels = ["Email", "Verify Identity", "New Password"];
-  const currentStepIndex = step - 1; // 0-based for display
 
   return (
     <div
@@ -109,67 +63,91 @@ function ForgotPassword() {
       style={{ backgroundColor: "var(--bg-primary)" }}
     >
       <div
-        className="w-full max-w-md rounded-2xl p-8 shadow-lg"
-        style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--border-color)" }}
+        className="w-full max-w-md space-y-6 rounded-2xl p-6 shadow-lg"
+        style={{
+          backgroundColor: "var(--card-bg-elevated)",
+          border: "1px solid var(--border-color)",
+        }}
       >
-        {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Forgot Password</h2>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-            We'll verify your identity before resetting your password.
-          </p>
+        {/* Progress indicator */}
+        <div className="flex items-center gap-2 mb-2">
+          {[STEPS.EMAIL, STEPS.PHONE, STEPS.VERIFY].map((s) => (
+            <div
+              key={s}
+              className="h-1.5 flex-1 rounded-full transition-all duration-300"
+              style={{
+                backgroundColor:
+                  step >= s ? "var(--accent)" : "var(--border-color)",
+              }}
+            />
+          ))}
         </div>
 
-        {/* Step indicator — only show for steps 1-3 */}
-        {step !== STEPS.SUCCESS && (
-          <div className="mb-6 flex items-center gap-2">
-            {stepLabels.map((label, idx) => (
-              <div key={label} className="flex flex-1 flex-col items-center gap-1">
-                <div
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors"
-                  style={{
-                    backgroundColor: idx < currentStepIndex ? "var(--accent)" : idx === currentStepIndex ? "var(--accent)" : "var(--bg-tertiary)",
-                    color: idx <= currentStepIndex ? "var(--accent-text)" : "var(--text-secondary)",
-                  }}
-                >
-                  {idx < currentStepIndex ? "✓" : idx + 1}
-                </div>
-                <span className="text-center text-[10px]" style={{ color: idx === currentStepIndex ? "var(--text-primary)" : "var(--text-secondary)" }}>
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Step 1: Email ───────────────────────────────────────────── */}
         {step === STEPS.EMAIL && (
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <form onSubmit={handleEmailSubmit} className="space-y-5">
+            <div>
+              <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+                Forgot Password
+              </h2>
+              <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+                Enter your registered email address.
+              </p>
+            </div>
+
             <Input
               label="Email Address"
               name="email"
               type="email"
-              placeholder="Enter your registered email"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              error={errors.email}
             />
-            {serverError && <p className="text-sm" style={{ color: "var(--error-text)" }}>{serverError}</p>}
-            <Button type="submit" fullWidth loading={loading}>Continue</Button>
+
+            {error && (
+              <p
+                className="rounded-lg px-3 py-2 text-sm"
+                style={{
+                  backgroundColor: "var(--error-bg)",
+                  color: "var(--error-text)",
+                  border: "1px solid var(--error-border)",
+                }}
+              >
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" fullWidth>
+              Continue
+            </Button>
+
             <p className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
-              <Link to={PATHS.LOGIN} className="font-medium hover:underline" style={{ color: "var(--accent)" }}>
-                Back to Login
+              Remember your password?{" "}
+              <Link
+                to={PATHS.LOGIN}
+                className="font-medium hover:underline"
+                style={{ color: "var(--accent)" }}
+              >
+                Login
               </Link>
             </p>
           </form>
         )}
 
-        {/* ── Step 2: Phone Verification ──────────────────────────────── */}
         {step === STEPS.PHONE && (
-          <form onSubmit={handlePhoneSubmit} className="space-y-4">
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              Enter the phone number registered with <strong style={{ color: "var(--text-primary)" }}>{email}</strong>.
-            </p>
+          <form onSubmit={handlePhoneSubmit} className="space-y-5">
+            <div>
+              <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+                Verify Identity
+              </h2>
+              <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+                Enter the phone number registered with{" "}
+                <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {email}
+                </span>
+                .
+              </p>
+            </div>
+
             <Input
               label="Phone Number"
               name="phone"
@@ -177,61 +155,37 @@ function ForgotPassword() {
               placeholder="10-digit mobile number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              error={errors.phone}
+              maxLength={10}
+              inputMode="numeric"
             />
-            {serverError && <p className="text-sm" style={{ color: "var(--error-text)" }}>{serverError}</p>}
-            <Button type="submit" fullWidth loading={loading}>Verify Identity</Button>
-            <button
-              type="button"
-              onClick={() => { setStep(STEPS.EMAIL); setServerError(""); }}
-              className="w-full text-center text-sm hover:underline"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              ← Back
-            </button>
-          </form>
-        )}
 
-        {/* ── Step 3: Set New Password ────────────────────────────────── */}
-        {step === STEPS.RESET && (
-          <form onSubmit={handleResetSubmit} className="space-y-4">
-            <Input
-              label="New Password"
-              name="password"
-              type="password"
-              placeholder="At least 6 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={errors.password}
-            />
-            <Input
-              label="Confirm New Password"
-              name="confirm"
-              type="password"
-              placeholder="Confirm new password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              error={errors.confirm}
-            />
-            {serverError && <p className="text-sm" style={{ color: "var(--error-text)" }}>{serverError}</p>}
-            <Button type="submit" fullWidth loading={loading}>Set New Password</Button>
-          </form>
-        )}
+            {error && (
+              <p
+                className="rounded-lg px-3 py-2 text-sm"
+                style={{
+                  backgroundColor: "var(--error-bg)",
+                  color: "var(--error-text)",
+                  border: "1px solid var(--error-border)",
+                }}
+              >
+                {error}
+              </p>
+            )}
 
-        {/* ── Step 4: Success ─────────────────────────────────────────── */}
-        {step === STEPS.SUCCESS && (
-          <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: "var(--success-bg)" }}>
-              <svg className="h-8 w-8" style={{ color: "var(--success-text)" }} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                fullWidth
+                onClick={() => { setError(""); setStep(STEPS.EMAIL); }}
+              >
+                Back
+              </Button>
+              <Button type="submit" fullWidth>
+                Verify
+              </Button>
             </div>
-            <h3 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Password Reset!</h3>
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              Your password has been updated. You can now sign in with your new password.
-            </p>
-            <Button fullWidth onClick={() => navigate(PATHS.LOGIN)}>Go to Login</Button>
-          </div>
+          </form>
         )}
       </div>
     </div>

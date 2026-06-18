@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Button from "@/components/common/Button";
-import Input from "@/components/common/Input";
+import Input  from "@/components/common/Input";
 import useAuth from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/paths";
 
@@ -16,31 +16,36 @@ function LoginForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.email.trim())    errors.email    = "Email is required";
-    if (!formData.password.trim()) errors.password = "Password is required";
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+  const validate = () => {
+    const errs = {};
+    if (!formData.email.trim())    errs.email    = "Email is required";
+    if (!formData.password.trim()) errs.password = "Password is required";
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    try { await login(formData); } catch (err) { console.error(err); }
+    if (!validate()) return;
+    try { await login(formData); } catch { /* error surfaced via useAuth */ }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-md space-y-5 rounded-2xl p-8 shadow-lg"
+      className="w-full max-w-md space-y-5 rounded-2xl p-6 shadow-lg"
       style={{
-        backgroundColor: "var(--card-bg)",
+        backgroundColor: "var(--card-bg-elevated)",
         border: "1px solid var(--border-color)",
       }}
     >
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Login</h2>
+        <h2
+          className="text-2xl font-bold"
+          style={{ color: "var(--text-primary)" }}
+        >
+          Login
+        </h2>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
           Welcome back. Sign in to continue.
         </p>
@@ -77,7 +82,18 @@ function LoginForm() {
         </Link>
       </div>
 
-      {error && <p className="text-sm" style={{ color: "var(--error-text)" }}>{error}</p>}
+      {error && (
+        <p
+          className="rounded-lg px-3 py-2 text-sm"
+          style={{
+            backgroundColor: "var(--error-bg)",
+            color: "var(--error-text)",
+            border: "1px solid var(--error-border)",
+          }}
+        >
+          {error}
+        </p>
+      )}
 
       <Button type="submit" fullWidth loading={loading}>
         Sign In
@@ -85,7 +101,11 @@ function LoginForm() {
 
       <p className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
         Don&apos;t have an account?{" "}
-        <Link to={PATHS.REGISTER} className="font-medium hover:underline" style={{ color: "var(--accent)" }}>
+        <Link
+          to={PATHS.REGISTER}
+          className="font-medium hover:underline"
+          style={{ color: "var(--accent)" }}
+        >
           Register
         </Link>
       </p>

@@ -1,21 +1,22 @@
 import { useEffect } from 'react';
-import { useThemeStore } from '@/store/themeStore';
+import { useThemeStore, applyTheme } from '@/store/themeStore';
 
 /**
  * ThemeProvider
  *
- * Must be rendered near the top of the tree (inside BrowserRouter is fine).
- * Calls initTheme() once on mount so the correct data-theme attribute is
- * set on <html> before the first paint, preventing any flash.
+ * Applies the correct data-theme attribute to <html> on mount and whenever
+ * the persisted theme changes. Rendering is purely a side-effect — no output.
  *
- * No visible output — purely a side-effect component.
+ * The early init (main.jsx → initThemeEarly) handles the very first paint;
+ * this component keeps subsequent renders in sync (e.g. after hydration).
  */
 const ThemeProvider = ({ children }) => {
-  const initTheme = useThemeStore((s) => s.initTheme);
+  const theme = useThemeStore((s) => s.theme);
 
+  // Sync the <html> attribute whenever the Zustand value changes
   useEffect(() => {
-    initTheme();
-  }, [initTheme]);
+    applyTheme(theme);
+  }, [theme]);
 
   return <>{children}</>;
 };

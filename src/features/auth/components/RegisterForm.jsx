@@ -1,22 +1,22 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Button from "@/components/common/Button";
-import Input from "@/components/common/Input";
+import Input  from "@/components/common/Input";
 import useAuth from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/paths";
+
+const PHONE_REGEX = /^[6-9]\d{9}$/;
 
 function RegisterForm() {
   const { register, loading, error } = useAuth();
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     phone: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-
   const [formErrors, setFormErrors] = useState({});
 
   const handleChange = (e) => {
@@ -24,82 +24,78 @@ function RegisterForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.firstName.trim()) errors.firstName = "First name is required";
-    if (!formData.lastName.trim())  errors.lastName  = "Last name is required";
+  const validate = () => {
+    const errs = {};
+    if (!formData.name.trim())  errs.name  = "Full name is required";
+
     if (!formData.phone.trim()) {
-      errors.phone = "Phone number is required";
-    } else if (!/^[0-9]{10}$/.test(formData.phone.trim())) {
-      errors.phone = "Enter a valid 10-digit phone number";
+      errs.phone = "Phone number is required";
+    } else if (!PHONE_REGEX.test(formData.phone.trim())) {
+      errs.phone = "Enter a valid 10-digit Indian mobile number";
     }
-    if (!formData.email.trim())    errors.email    = "Email is required";
+
+    if (!formData.email.trim()) errs.email = "Email is required";
+
     if (!formData.password.trim()) {
-      errors.password = "Password is required";
+      errs.password = "Password is required";
     } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+      errs.password = "Password must be at least 6 characters";
     }
+
     if (!formData.confirmPassword.trim()) {
-      errors.confirmPassword = "Please confirm your password";
+      errs.confirmPassword = "Please confirm your password";
     } else if (formData.confirmPassword !== formData.password) {
-      errors.confirmPassword = "Passwords do not match";
+      errs.confirmPassword = "Passwords do not match";
     }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validate()) return;
     try {
       await register({
-        firstName: formData.firstName,
-        lastName:  formData.lastName,
-        phone:     formData.phone,
-        email:     formData.email,
-        password:  formData.password,
+        name:     formData.name,
+        phone:    formData.phone,
+        email:    formData.email,
+        password: formData.password,
       });
-    } catch (err) {
-      console.error(err);
-    }
+    } catch { /* error surfaced via useAuth */ }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-md space-y-4 rounded-2xl p-8 shadow-lg"
+      className="w-full max-w-md space-y-5 rounded-2xl p-6 shadow-lg"
       style={{
-        backgroundColor: "var(--card-bg)",
+        backgroundColor: "var(--card-bg-elevated)",
         border: "1px solid var(--border-color)",
       }}
     >
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Create Account</h2>
+        <h2
+          className="text-2xl font-bold"
+          style={{ color: "var(--text-primary)" }}
+        >
+          Create Account
+        </h2>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
           Register to start shopping.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Input
-          label="First Name"
-          name="firstName"
-          placeholder="First name"
-          value={formData.firstName}
-          onChange={handleChange}
-          error={formErrors.firstName}
-        />
-        <Input
-          label="Last Name"
-          name="lastName"
-          placeholder="Last name"
-          value={formData.lastName}
-          onChange={handleChange}
-          error={formErrors.lastName}
-        />
-      </div>
+      <Input
+        label="Full Name"
+        name="name"
+        placeholder="Enter your full name"
+        value={formData.name}
+        onChange={handleChange}
+        error={formErrors.name}
+      />
 
-      {/* Phone — between Full Name and Email, for password recovery only */}
+      {/* Phone — between Full Name and Email, used only for password recovery */}
       <Input
         label="Phone Number"
         name="phone"
@@ -108,7 +104,8 @@ function RegisterForm() {
         value={formData.phone}
         onChange={handleChange}
         error={formErrors.phone}
-        hint="Used only for password recovery verification"
+        maxLength={10}
+        inputMode="numeric"
       />
 
       <Input
@@ -141,7 +138,18 @@ function RegisterForm() {
         error={formErrors.confirmPassword}
       />
 
-      {error && <p className="text-sm" style={{ color: "var(--error-text)" }}>{error}</p>}
+      {error && (
+        <p
+          className="rounded-lg px-3 py-2 text-sm"
+          style={{
+            backgroundColor: "var(--error-bg)",
+            color: "var(--error-text)",
+            border: "1px solid var(--error-border)",
+          }}
+        >
+          {error}
+        </p>
+      )}
 
       <Button type="submit" fullWidth loading={loading}>
         Create Account
@@ -149,7 +157,11 @@ function RegisterForm() {
 
       <p className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
         Already have an account?{" "}
-        <Link to={PATHS.LOGIN} className="font-medium hover:underline" style={{ color: "var(--accent)" }}>
+        <Link
+          to={PATHS.LOGIN}
+          className="font-medium hover:underline"
+          style={{ color: "var(--accent)" }}
+        >
           Login
         </Link>
       </p>
