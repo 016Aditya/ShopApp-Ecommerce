@@ -17,13 +17,6 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; }
 }
 
-/* ── Global theme transition layer ────────────────────────────────────────
-   Smooth 300ms transition for all theme-sensitive properties.
-   The [data-theme-transitioning] class is applied by ThemeProvider during
-   the switch so animations only run on actual theme changes, not on page
-   load (avoids the white-flash anti-pattern).
-   ─────────────────────────────────────────────────────────────────────── */
-
 *,
 *::before,
 *::after {
@@ -44,11 +37,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Global element theming ───────────────────────────────────────────────
-   These rules piggyback on existing Tailwind classes via CSS-variable
-   overrides so you don't need to touch every component individually.
-   ─────────────────────────────────────────────────────────────────────── */
-
 /* Cards / panels */
 .bg-white {
   background-color: var(--card-bg) !important;
@@ -61,8 +49,34 @@ body {
 .bg-gray-100 { background-color: var(--bg-secondary)  !important; }
 .bg-gray-200 { background-color: var(--bg-tertiary)   !important; }
 
-/* Input fields */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+/* ── Search bar isolation ──────────────────────────────────────────────────
+   The search bar MUST stay light in both themes for readability.
+   input[data-search-bar] targets ONLY the SearchBar component input.
+   !important is required to override the global input rule below.
+   ─────────────────────────────────────────────────────────────────────── */
+input[data-search-bar="true"] {
+  background-color: #f8fafc !important;
+  color: #111827 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 0.5rem;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+input[data-search-bar="true"]::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+input[data-search-bar="true"]:focus {
+  background-color: #f8fafc !important;
+  color: #111827 !important;
+  border-color: #2874f0 !important;
+  box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.15) !important;
+  outline: none;
+}
+
+/* ── All other input fields (theme-aware) ─────────────────────────────── */
+input:not([data-search-bar]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 textarea,
 select {
   background-color: var(--input-bg)  !important;
@@ -74,12 +88,12 @@ select {
     border-color     300ms ease;
 }
 
-input::placeholder,
+input:not([data-search-bar])::placeholder,
 textarea::placeholder {
   color: var(--input-placeholder) !important;
 }
 
-input:focus,
+input:not([data-search-bar]):focus,
 textarea:focus,
 select:focus {
   outline: none;
@@ -116,7 +130,6 @@ select:focus {
   background-color: var(--overlay-bg) !important;
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   body,
   .bg-white,

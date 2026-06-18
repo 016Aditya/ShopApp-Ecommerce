@@ -17,7 +17,6 @@ const ProductCard = ({ product, compact = false }) => {
     if (!user) { navigate(PATHS.LOGIN); return; }
     setBusy(true);
     try {
-      // Pass full product object so cartStore can snapshot display data
       await useCartStore.getState().addToCart(product, 1);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
@@ -33,13 +32,20 @@ const ProductCard = ({ product, compact = false }) => {
   if (compact) {
     return (
       <div
-        className="group flex cursor-pointer flex-col items-center rounded-sm border border-slate-100 bg-white p-3 hover:shadow-md transition"
+        className="group flex cursor-pointer flex-col items-center rounded-sm border p-3 hover:shadow-md transition"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          borderColor: "var(--border-color)",
+        }}
         onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
       >
-        <div className="flex h-32 w-full items-center justify-center rounded bg-slate-50 mb-2 overflow-hidden relative">
+        <div
+          className="flex h-32 w-full items-center justify-center rounded mb-2 overflow-hidden relative"
+          style={{ backgroundColor: "var(--bg-tertiary)" }}
+        >
           {discount && (
             <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
               {discount}% OFF
@@ -51,26 +57,38 @@ const ProductCard = ({ product, compact = false }) => {
             <span className="text-4xl">🛍️</span>
           )}
         </div>
-        <p className="text-xs font-semibold text-slate-800 text-center line-clamp-2 group-hover:text-[#2874f0]">
+        <p
+          className="text-center line-clamp-2 group-hover:text-[#2874f0] transition"
+          style={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "var(--text-primary)" }}
+        >
           {product.name}
         </p>
         <div className="mt-1 w-full">
           <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} showCount={false} />
         </div>
-        <p className="mt-1 text-sm font-bold text-slate-900">{formatCurrency(product.price)}</p>
+        <p className="mt-1 font-bold" style={{ fontSize: "18px", fontWeight: 700, color: "#22c55e" }}>
+          {formatCurrency(product.price)}
+        </p>
       </div>
     );
   }
 
   return (
     <div
-      className="group flex cursor-pointer flex-col rounded-sm border border-slate-100 bg-white shadow-sm transition hover:shadow-md"
+      className="group flex cursor-pointer flex-col rounded-sm border shadow-sm transition hover:shadow-md"
+      style={{
+        backgroundColor: "var(--card-bg)",
+        borderColor: "var(--border-color)",
+      }}
       onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
     >
-      <div className="flex h-44 items-center justify-center bg-slate-50 overflow-hidden relative">
+      <div
+        className="flex h-44 items-center justify-center overflow-hidden relative"
+        style={{ backgroundColor: "var(--bg-tertiary)" }}
+      >
         {discount && (
           <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
             {discount}% OFF
@@ -88,28 +106,57 @@ const ProductCard = ({ product, compact = false }) => {
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 text-sm font-medium text-slate-800 group-hover:text-[#2874f0] transition">
+        {/* Product Name */}
+        <h3
+          className="line-clamp-2 group-hover:text-[#2874f0] transition"
+          style={{ fontSize: "14px", fontWeight: 600, lineHeight: 1.4, color: "var(--text-primary)" }}
+        >
           {product.name}
         </h3>
+
         <div className="mt-0.5">
           <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} />
         </div>
+
+        {/* Price Row */}
         <div className="mt-1 flex items-baseline gap-2">
-          <p className="text-base font-bold text-slate-900">{formatCurrency(product.price)}</p>
+          <p style={{ fontSize: "18px", fontWeight: 700, color: "#22c55e" }}>
+            {formatCurrency(product.price)}
+          </p>
           {product.originalPrice && product.originalPrice > product.price && (
-            <p className="text-xs text-slate-500 line-through">{formatCurrency(product.originalPrice)}</p>
+            <p className="text-xs line-through" style={{ color: "var(--text-tertiary)" }}>
+              {formatCurrency(product.originalPrice)}
+            </p>
           )}
         </div>
-        <p className="text-xs text-green-600 font-semibold">✓ Free Delivery</p>
+
+        <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
+
         {product.inStock === false && (
-          <p className="text-xs text-red-600 font-semibold">Out of Stock</p>
+          <p className="text-xs font-semibold text-red-500">Out of Stock</p>
         )}
+
+        {/* Category badges */}
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
+          <span
+            className="w-fit rounded-full px-2 py-0.5"
+            style={{
+              fontSize: "13px",
+              color: "var(--text-secondary)",
+              backgroundColor: "var(--badge-bg)",
+            }}
+          >
             {product.category}
           </span>
           {product.subcategory && (
-            <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+            <span
+              className="w-fit rounded-full px-2 py-0.5"
+              style={{
+                fontSize: "10px",
+                color: "var(--text-secondary)",
+                backgroundColor: "var(--badge-bg)",
+              }}
+            >
               {product.subcategory}
             </span>
           )}

@@ -13,10 +13,10 @@ const DEALS = [
     subtitle: "Up to 60% off",
     link: productPath("Electronics"),
     items: [
-      { label: "Mobiles", emoji: "📱", bg: "bg-blue-50", link: productPath("Electronics", "Mobile") },
-      { label: "Laptops", emoji: "💻", bg: "bg-indigo-50", link: productPath("Electronics", "Laptop") },
-      { label: "Earphones", emoji: "🎧", bg: "bg-purple-50", link: productPath("Electronics", "Headphones") },
-      { label: "Cameras", emoji: "📷", bg: "bg-pink-50", link: productPath("Electronics", "Camera") },
+      { label: "Mobiles",   emoji: "📱", link: productPath("Electronics", "Mobile") },
+      { label: "Laptops",   emoji: "💻", link: productPath("Electronics", "Laptop") },
+      { label: "Earphones", emoji: "🎧", link: productPath("Electronics", "Headphones") },
+      { label: "Cameras",   emoji: "📷", link: productPath("Electronics", "Camera") },
     ],
   },
   {
@@ -24,10 +24,10 @@ const DEALS = [
     subtitle: "Min. 40% off",
     link: productPath("Clothing"),
     items: [
-      { label: "Men's Wear", emoji: "👔", bg: "bg-sky-50", link: productPath("Clothing", "Shirt") },
-      { label: "Women's", emoji: "👗", bg: "bg-rose-50", link: productPath("Clothing", "Dress") },
-      { label: "Footwear", emoji: "👟", bg: "bg-orange-50", link: productPath("Clothing", "Shoes") },
-      { label: "Accessories", emoji: "👜", bg: "bg-yellow-50", link: productPath("Clothing") },
+      { label: "Men's Wear",  emoji: "👔", link: productPath("Clothing", "Shirt") },
+      { label: "Women's",     emoji: "👗", link: productPath("Clothing", "Dress") },
+      { label: "Footwear",    emoji: "👟", link: productPath("Clothing", "Shoes") },
+      { label: "Accessories", emoji: "👜", link: productPath("Clothing") },
     ],
   },
   {
@@ -35,10 +35,10 @@ const DEALS = [
     subtitle: "Starting ₹199",
     link: productPath("Home"),
     items: [
-      { label: "Furniture", emoji: "🛋️", bg: "bg-green-50", link: productPath("Home", "Furniture") },
-      { label: "Kitchen", emoji: "🍳", bg: "bg-lime-50", link: productPath("Home", "Kitchen") },
-      { label: "Decor", emoji: "🪴", bg: "bg-emerald-50", link: productPath("Home", "Decor") },
-      { label: "Bedding", emoji: "🛏️", bg: "bg-teal-50", link: productPath("Home") },
+      { label: "Furniture", emoji: "🛋️", link: productPath("Home", "Furniture") },
+      { label: "Kitchen",   emoji: "🍳", link: productPath("Home", "Kitchen") },
+      { label: "Decor",     emoji: "🪴", link: productPath("Home", "Decor") },
+      { label: "Bedding",   emoji: "🛏️", link: productPath("Home") },
     ],
   },
   {
@@ -46,10 +46,10 @@ const DEALS = [
     subtitle: "Deals from ₹99",
     link: productPath("Books"),
     items: [
-      { label: "Bestsellers", emoji: "📚", bg: "bg-amber-50", link: productPath("Books", "Novel") },
-      { label: "Sports Gear", emoji: "⚽", bg: "bg-red-50", link: productPath("Sports") },
-      { label: "Fitness", emoji: "🏋️", bg: "bg-orange-50", link: productPath("Sports", "Gym") },
-      { label: "Outdoor", emoji: "🏕️", bg: "bg-stone-50", link: productPath("Sports") },
+      { label: "Bestsellers", emoji: "📚", link: productPath("Books", "Novel") },
+      { label: "Sports Gear", emoji: "⚽", link: productPath("Sports") },
+      { label: "Fitness",     emoji: "🏋️", link: productPath("Sports", "Gym") },
+      { label: "Outdoor",     emoji: "🏕️", link: productPath("Sports") },
     ],
   },
 ];
@@ -59,15 +59,27 @@ function DealSection() {
     <div className="container-app py-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {DEALS.map((deal) => (
-          <div key={deal.title} className="rounded-sm bg-white shadow-sm p-4 flex flex-col">
+          <div
+            key={deal.title}
+            className="rounded-sm shadow-sm p-4 flex flex-col"
+            style={{ backgroundColor: "var(--card-bg)" }}
+          >
             <div className="mb-3 flex items-baseline justify-between">
               <div>
-                <h2 className="text-base font-bold text-slate-900">{deal.title}</h2>
-                <p className="text-xs text-[#2874f0] font-semibold">{deal.subtitle}</p>
+                <h2
+                  className="text-base font-bold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {deal.title}
+                </h2>
+                <p className="text-xs font-semibold" style={{ color: "#2874f0" }}>
+                  {deal.subtitle}
+                </p>
               </div>
               <Link
                 to={deal.link}
-                className="text-xs text-[#2874f0] font-medium hover:underline"
+                className="text-xs font-medium hover:underline"
+                style={{ color: "#2874f0" }}
               >
                 See more
               </Link>
@@ -78,10 +90,22 @@ function DealSection() {
                 <Link
                   key={item.label}
                   to={item.link}
-                  className={`flex flex-col items-center justify-center rounded-sm p-4 ${item.bg} hover:opacity-80 transition gap-2`}
+                  className="flex flex-col items-center justify-center rounded-sm p-4 hover:opacity-80 transition gap-2"
+                  style={{ backgroundColor: "var(--bg-tertiary)" }}
                 >
                   <span className="text-3xl">{item.emoji}</span>
-                  <span className="text-xs font-medium text-slate-700 text-center">{item.label}</span>
+                  {/* Category label: 14px / 500 weight / theme-aware colour */}
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "var(--text-primary)",
+                      textAlign: "center",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {item.label}
+                  </span>
                 </Link>
               ))}
             </div>
