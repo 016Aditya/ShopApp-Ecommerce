@@ -20,12 +20,20 @@ const OrderCard = ({ order }) => {
 
   const summary = useMemo(() => {
     if (!order.items?.length) {
-      return "Order details unavailable";
+      // Check if we have other data that indicates the order is valid
+      if (order.quantity && order.quantity > 0) {
+        return `${order.quantity} item${order.quantity !== 1 ? "s" : ""}`;
+      }
+      if (order.totalPrice && order.totalPrice > 0) {
+        return "Order placed successfully";
+      }
+      // Only show this if order has NO data at all
+      return "View order details →";
     }
 
     const [first, ...rest] = order.items;
     return rest.length > 0 ? `${first.productName} +${rest.length} more` : first.productName;
-  }, [order.items]);
+  }, [order.items, order.quantity, order.totalPrice]);
 
   return (
     <div className="order-card">

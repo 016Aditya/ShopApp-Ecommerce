@@ -28,17 +28,28 @@ const normalizeOrderItem = (item = {}, index = 0) => {
   const normalized = {
     id: pickFirst(item.id, item.orderItemId, `${pickFirst(item.productId, product.id, "item")}-${index}`),
     productId: pickFirst(item.productId, product.id, item.id, `item-${index}`),
-    productName: pickFirst(item.productName, item.name, product.name, product.title, "Product"),
+    productName: pickFirst(
+      item.productName, 
+      item.name, 
+      item.title,
+      product.name, 
+      product.title,
+      product.productName,
+      "Product"
+    ),
     imageUrl: pickFirst(
       item.imageUrl,
       item.productImage,
       item.productImageUrl,
+      item.image,
+      item.thumbnail,
       product.imageUrl,
       product.image,
       product.thumbnail,
+      product.productImage,
       ORDER_IMAGE_PLACEHOLDER
     ),
-    quantity,
+    quantity: Math.max(quantity, 1),
     unitPrice,
     totalPrice: toNumber(
       pickFirst(item.totalPrice, item.lineTotal, quantity ? unitPrice * quantity : unitPrice),
@@ -63,7 +74,18 @@ const normalizeAddress = (address = {}) => ({
 });
 
 export const normalizeOrder = (order = {}) => {
-  const rawItems = pickFirst(order.items, order.orderItems, order.products, []);
+  // Try multiple field names for items array
+  const rawItems = pickFirst(
+    order.items,
+    order.orderItems, 
+    order.products,
+    order.lineItems,
+    order.cartItems,
+    order.itemList,
+    order.orderItemList,
+    []
+  );
+  
   const items = Array.isArray(rawItems) ? rawItems.map(normalizeOrderItem) : [];
 
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
