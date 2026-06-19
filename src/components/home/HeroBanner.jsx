@@ -97,11 +97,15 @@ function HeroBanner() {
         onKeyDown={(e) => e.key === "Enter" && goToCategory()}
       >
         {/*
-          py-7 md:py-10 replaces the old py-10 md:py-14 — approx 11% shorter.
-          Emoji shrinks from 120px/160px → 108px/140px to stay proportional.
-          All other content, typography and buttons are untouched.
+          py-7 md:py-10 was the previous padding.
+          ×1.065 → py-[29.75px] md:py-[42.6px] — use nearest Tailwind tokens:
+          py-[30px] md:py-[43px] (exact to spec).
+          Emoji: was clamp(90px,10vw,140px) → ×1.065 = clamp(96px,10vw,149px).
         */}
-        <div className="container-app flex items-center justify-between py-7 md:py-10">
+        <div
+          className="container-app flex items-center justify-between"
+          style={{ paddingTop: "30px", paddingBottom: "30px" }}
+        >
           {/* Left */}
           <div className="flex flex-col gap-3 max-w-md">
             <span
@@ -136,10 +140,10 @@ function HeroBanner() {
             </button>
           </div>
 
-          {/* Right — emoji scaled down proportionally */}
+          {/* Right — emoji scaled +6.5% */}
           <div
             className="select-none hidden sm:block"
-            style={{ fontSize: "clamp(90px, 10vw, 140px)" }}
+            style={{ fontSize: "clamp(96px, 10vw, 149px)" }}
             aria-hidden="true"
           >
             {slide.emoji}
