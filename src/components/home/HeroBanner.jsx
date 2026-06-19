@@ -98,13 +98,12 @@ function HeroBanner() {
       >
         {/*
           py-7 md:py-10 was the previous padding.
-          ×1.065 → py-[29.75px] md:py-[42.6px] — use nearest Tailwind tokens:
-          py-[30px] md:py-[43px] (exact to spec).
-          Emoji: was clamp(90px,10vw,140px) → ×1.065 = clamp(96px,10vw,149px).
+          Increased by 5%: 30px × 1.05 = 31.5px
+          Emoji: was clamp(96px,10vw,149px) → ×1.05 = clamp(100.8px,10vw,156.45px).
         */}
         <div
           className="container-app flex items-center justify-between"
-          style={{ paddingTop: "30px", paddingBottom: "30px" }}
+          style={{ paddingTop: "31.5px", paddingBottom: "31.5px" }}
         >
           {/* Left */}
           <div className="flex flex-col gap-3 max-w-md">
@@ -140,10 +139,10 @@ function HeroBanner() {
             </button>
           </div>
 
-          {/* Right — emoji scaled +6.5% */}
+          {/* Right — emoji scaled +5% */}
           <div
             className="select-none hidden sm:block"
-            style={{ fontSize: "clamp(96px, 10vw, 149px)" }}
+            style={{ fontSize: "clamp(101px, 10vw, 157px)" }}
             aria-hidden="true"
           >
             {slide.emoji}
