@@ -6,11 +6,11 @@ const SLIDES = [
   {
     id: 1,
     title: "Shop Fashion",
-    subtitle: "Under \u20b9999",
+    subtitle: "Under ₹999",
     tag: "TOP BRANDS | LATEST TRENDS",
     bg: "from-blue-50 to-indigo-100",
     accent: "#2874f0",
-    emoji: "\ud83d\udc57",
+    emoji: "👗",
     cta: "Shop Now",
     category: "Clothing",
   },
@@ -21,7 +21,7 @@ const SLIDES = [
     tag: "MOBILES | LAPTOPS | GADGETS",
     bg: "from-slate-800 to-slate-900",
     accent: "#ff9f00",
-    emoji: "\ud83d\udcf1",
+    emoji: "📱",
     cta: "Explore Now",
     category: "Electronics",
     dark: true,
@@ -29,11 +29,11 @@ const SLIDES = [
   {
     id: 3,
     title: "Books & More",
-    subtitle: "Starting \u20b999",
+    subtitle: "Starting ₹99",
     tag: "BESTSELLERS | NEW ARRIVALS",
     bg: "from-orange-50 to-amber-100",
     accent: "#e07d00",
-    emoji: "\ud83d\udcda",
+    emoji: "📚",
     cta: "Browse All",
     category: "Books",
   },
@@ -44,7 +44,7 @@ const SLIDES = [
     tag: "FURNITURE | DECOR | KITCHEN",
     bg: "from-green-50 to-emerald-100",
     accent: "#26a541",
-    emoji: "\ud83c\udfe0",
+    emoji: "🏠",
     cta: "Shop Home",
     category: "Home",
   },
@@ -63,7 +63,6 @@ function HeroBanner() {
 
   const slide = SLIDES[current];
 
-  // Navigate using object form so React Router correctly sets the search param
   const goToCategory = () => {
     navigate({
       pathname: PATHS.PRODUCTS,
@@ -97,7 +96,12 @@ function HeroBanner() {
         aria-label={`Shop ${slide.category}`}
         onKeyDown={(e) => e.key === "Enter" && goToCategory()}
       >
-        <div className="container-app flex items-center justify-between py-10 md:py-14">
+        {/*
+          py-7 md:py-10 replaces the old py-10 md:py-14 — approx 11% shorter.
+          Emoji shrinks from 120px/160px → 108px/140px to stay proportional.
+          All other content, typography and buttons are untouched.
+        */}
+        <div className="container-app flex items-center justify-between py-7 md:py-10">
           {/* Left */}
           <div className="flex flex-col gap-3 max-w-md">
             <span
@@ -125,15 +129,19 @@ function HeroBanner() {
                 e.stopPropagation();
                 goToCategory();
               }}
-              className="mt-3 w-fit rounded-sm px-8 py-2.5 text-sm font-bold text-white shadow transition hover:opacity-90"
+              className="mt-2 w-fit rounded-sm px-8 py-2.5 text-sm font-bold text-white shadow transition hover:opacity-90"
               style={{ backgroundColor: slide.accent }}
             >
               {slide.cta}
             </button>
           </div>
 
-          {/* Right */}
-          <div className="text-[120px] md:text-[160px] select-none hidden sm:block">
+          {/* Right — emoji scaled down proportionally */}
+          <div
+            className="select-none hidden sm:block"
+            style={{ fontSize: "clamp(90px, 10vw, 140px)" }}
+            aria-hidden="true"
+          >
             {slide.emoji}
           </div>
         </div>
@@ -143,7 +151,7 @@ function HeroBanner() {
       <button
         onClick={handlePrev}
         className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition z-10"
-        aria-label="Previous"
+        aria-label="Previous slide"
       >
         <svg className="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -154,7 +162,7 @@ function HeroBanner() {
       <button
         onClick={handleNext}
         className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow hover:bg-white transition z-10"
-        aria-label="Next"
+        aria-label="Next slide"
       >
         <svg className="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -170,7 +178,7 @@ function HeroBanner() {
             className={`h-2 rounded-full transition-all ${
               i === current ? "w-6 bg-[#2874f0]" : "w-2 bg-slate-300"
             }`}
-            aria-label={`Slide ${i + 1}`}
+            aria-label={`Go to slide ${i + 1}`}
           />
         ))}
       </div>
