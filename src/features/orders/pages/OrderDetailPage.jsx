@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PATHS from "@/routes/paths";
 import { cancelOrder } from "@/services/orderService";
+import { formatCurrency } from "@/utils/currency";
 import OrderItemsList from "../components/OrderItemsList";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderSummary from "../components/OrderSummary";
@@ -10,6 +11,7 @@ import ReturnModal from "../components/ReturnModal";
 import ShippingInfo from "../components/ShippingInfo";
 import { useOrder } from "../hooks/useOrders";
 import { useReturn } from "../hooks/useReturn";
+import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
 import "../styles/Orders.css";
 
 /** Statuses where Cancel is allowed */
@@ -27,19 +29,29 @@ const OrderDetailPage = () => {
   const [cancelError,   setCancelError]   = useState(null);
   const [cancelled,     setCancelled]     = useState(false);
 
-  // Frontend-only return state — backend integration done separately
+  // Return state
   const [localReturnStatus, setLocalReturnStatus] = useState(null);
   const [returnModalOpen,   setReturnModalOpen]   = useState(false);
   const [returnSuccess,     setReturnSuccess]     = useState(false);
   const [returnError,       setReturnError]       = useState(null);
   const [returnLoading,     setReturnLoading]     = useState(false);
 
+  // Preview image state for the header product thumbnail
+  const [previewImgSrc, setPreviewImgSrc] = useState(null);
+
   // Sync external returnStatus (from backend) into local state
   useEffect(() => {
     if (returnStatus) setLocalReturnStatus(returnStatus);
   }, [returnStatus]);
 
-  // ── Cancel ──────────────────────────────────────────────────────────
+  // Set initial preview image once order loads
+  useEffect(() => {
+    if (order?.items?.[0]?.imageUrl) {
+      setPreviewImgSrc(order.items[0].imageUrl);
+    }
+  }, [order]);
+
+  // ── Cancel ────────────────────────────────────────────────────────────
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setCancelling(true);
@@ -54,26 +66,22 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Return ───────────────────────────────────────────────────────────
-  // Frontend-only: sets RETURN_REQUESTED immediately; backend call is
-  // attempted but failure does NOT block the UI update.
+  // ── Return ────────────────────────────────────────────────────────────
+  // Optimistic UI: sets RETURN_REQUESTED immediately, then attempts backend call.
   const handleReturnRequest = async (reason) => {
     setReturnLoading(true);
     setReturnError(null);
     try {
-      // Optimistic UI — set return status immediately
       setLocalReturnStatus("RETURN_REQUESTED");
       setReturnSuccess(true);
       setReturnModalOpen(false);
       setTimeout(() => setReturnSuccess(false), 5000);
 
-      // Attempt backend call (may fail if not yet integrated)
       try {
         await requestReturn(reason);
       } catch {
-        // Backend not ready — frontend state already updated, swallow silently
         if (import.meta.env.DEV) {
-          console.warn("[Return] backend call failed — UI state updated optimistically");
+          console.warn("[Return] backend call failed — UI updated optimistically");
         }
       }
     } finally {
@@ -81,7 +89,7 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Loading / error / not found ─────────────────────────────────────
+  // ── Loading / error / not found ───────────────────────────────────────────
   if (loading) {
     return (
       <div className="orders-page">
@@ -119,14 +127,14 @@ const OrderDetailPage = () => {
     );
   }
 
-  // ── Derived display state ────────────────────────────────────────────
+  // ── Derived display state ──────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
   const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
 
   const canCancel = CANCELLABLE.includes(upperStatus) && !cancelled;
   const canReturn = RETURNABLE.includes(upperStatus) && !cancelled && !localReturnStatus;
 
-  // The timeline shows the return status inline when in return flow
+  // The timeline uses returnStatus when in the return flow
   const timelineStatus = localReturnStatus ?? currentStatus;
 
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
@@ -135,6 +143,10 @@ const OrderDetailPage = () => {
         day: "numeric", month: "long", year: "numeric",
       })
     : "N/A";
+
+  // First item for the header preview strip
+  const firstItem  = order.items?.[0];
+  const extraCount = (order.items?.length ?? 0) - 1;
 
   return (
     <div className="orders-page order-detail-page">
@@ -147,6 +159,30 @@ const OrderDetailPage = () => {
         <div>
           <h1 className="order-detail__title">Order #{shortId}</h1>
           <p className="order-detail__date">Placed on {date}</p>
+
+          {/* Product preview strip: tiny image + name below the title */}
+          {firstItem && (
+            <div className="order-detail__product-preview">
+              <img
+                src={previewImgSrc ?? ORDER_IMAGE_PLACEHOLDER}
+                alt={firstItem.productName ?? "Product"}
+                className="order-detail__preview-img"
+                width={44}
+                height={44}
+                loading="lazy"
+                onError={() => setPreviewImgSrc(ORDER_IMAGE_PLACEHOLDER)}
+              />
+              <span className="order-detail__preview-name">
+                {firstItem.productName}
+                {firstItem.unitPrice > 0 && (
+                  <> &mdash; {formatCurrency(firstItem.unitPrice)}</>
+                )}
+              </span>
+              {extraCount > 0 && (
+                <span className="order-detail__preview-more">+{extraCount} more</span>
+              )}
+            </div>
+          )}
         </div>
         <OrderStatusBadge status={currentStatus} />
       </div>
@@ -182,7 +218,7 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons — Cancel (red outline) + Return (blue solid) */}
           <div className="order-detail__section">
             <div className="order-detail__action-row">
               {canCancel && (

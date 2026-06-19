@@ -10,12 +10,12 @@ import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
  *
  * Collapsed order row shown on My Orders page.
  *
- * Collapsed view shows:
- *   [Product Image]  Status badge  Product Name  Qty  | View Details
+ * Shows:
+ *   [Product Image thumbnail]  Status badge  Product Name  Qty  | View Details
  *
- * Image comes from the first normalized item (order.items[0].imageUrl).
- * Product name comes from the first normalized item (order.items[0].productName).
- * Both fields are guaranteed by normalizeOrder — no guessing here.
+ * Image: order.items[0].imageUrl  (guaranteed by normalizeOrder)
+ * Name:  order.items[0].productName  (same guarantee)
+ * Both fall back gracefully to placeholder / "View order details →" if items is empty.
  */
 const OrderCard = ({ order }) => {
   const navigate = useNavigate();
@@ -33,12 +33,12 @@ const OrderCard = ({ order }) => {
       })
     : "N/A";
 
-  // Product name line: "iPhone 17 Pro Max +2 more" or just the name
+  // "iPhone 17 Pro Max +2 more"  or just the single product name
   const productSummary = useMemo(() => {
     if (!order.items?.length) {
       return order.quantity > 0
         ? `${order.quantity} item${order.quantity !== 1 ? "s" : ""}`
-        : "View order details →";
+        : "View order details \u2192";
     }
     const [first, ...rest] = order.items;
     return rest.length > 0
@@ -54,7 +54,7 @@ const OrderCard = ({ order }) => {
 
   return (
     <div className="order-card">
-      {/* ── Header row ── */}
+      {/* \u2500\u2500 Header row \u2500\u2500 */}
       <div className="order-card__header">
         <div className="order-card__header-left">
           <span className="order-card__label">Order placed</span>
@@ -69,13 +69,16 @@ const OrderCard = ({ order }) => {
         </div>
       </div>
 
-      {/* ── Body row ── */}
+      {/* \u2500\u2500 Body row \u2500\u2500 */}
       <div className="order-card__body">
-        {/* Product thumbnail */}
+
+        {/* Product thumbnail — always shown; falls back to SVG placeholder */}
         <img
           src={imageSrc}
           alt={firstItem?.productName ?? "Ordered product"}
           className="order-card__img"
+          width={52}
+          height={52}
           loading="lazy"
           onError={() => setImageSrc(ORDER_IMAGE_PLACEHOLDER)}
         />
@@ -87,8 +90,18 @@ const OrderCard = ({ order }) => {
               <span className="order-card__qty">{qtyLabel}</span>
             )}
           </div>
-          {/* Product name — comes from normalized items */}
-          <p className="order-card__product-name">{productSummary}</p>
+
+          {/* Product name — from normalizeOrder snapshot */}
+          <p className="order-card__product-name" title={productSummary}>
+            {productSummary}
+          </p>
+
+          {/* Unit price of first item (tiny, secondary info) */}
+          {firstItem?.unitPrice > 0 && (
+            <p className="order-card__item-price">
+              {formatCurrency(firstItem.unitPrice)}{order.items?.length > 1 ? " / item" : ""}
+            </p>
+          )}
         </div>
 
         <div className="order-card__actions">
