@@ -5,38 +5,56 @@ import { formatCurrency } from "@/utils/currency";
 import OrderStatusBadge from "./OrderStatusBadge";
 import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
 
+/**
+ * OrderCard
+ *
+ * Collapsed order row shown on My Orders page.
+ *
+ * Collapsed view shows:
+ *   [Product Image]  Status badge  Product Name  Qty  | View Details
+ *
+ * Image comes from the first normalized item (order.items[0].imageUrl).
+ * Product name comes from the first normalized item (order.items[0].productName).
+ * Both fields are guaranteed by normalizeOrder — no guessing here.
+ */
 const OrderCard = ({ order }) => {
   const navigate = useNavigate();
-  const [imageSrc, setImageSrc] = useState(order.items?.[0]?.imageUrl ?? ORDER_IMAGE_PLACEHOLDER);
+
+  const firstItem = order.items?.[0];
+  const [imageSrc, setImageSrc] = useState(
+    firstItem?.imageUrl ?? ORDER_IMAGE_PLACEHOLDER
+  );
 
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
+
   const date = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
+        day: "numeric", month: "short", year: "numeric",
       })
     : "N/A";
 
-  const summary = useMemo(() => {
+  // Product name line: "iPhone 17 Pro Max +2 more" or just the name
+  const productSummary = useMemo(() => {
     if (!order.items?.length) {
-      // Check if we have other data that indicates the order is valid
-      if (order.quantity && order.quantity > 0) {
-        return `${order.quantity} item${order.quantity !== 1 ? "s" : ""}`;
-      }
-      if (order.totalPrice && order.totalPrice > 0) {
-        return "Order placed successfully";
-      }
-      // Only show this if order has NO data at all
-      return "View order details →";
+      return order.quantity > 0
+        ? `${order.quantity} item${order.quantity !== 1 ? "s" : ""}`
+        : "View order details →";
     }
-
     const [first, ...rest] = order.items;
-    return rest.length > 0 ? `${first.productName} +${rest.length} more` : first.productName;
-  }, [order.items, order.quantity, order.totalPrice]);
+    return rest.length > 0
+      ? `${first.productName} +${rest.length} more`
+      : first.productName;
+  }, [order.items, order.quantity]);
+
+  const qtyLabel = order.quantity > 0
+    ? `${order.quantity} item${order.quantity !== 1 ? "s" : ""}`
+    : firstItem
+      ? `${firstItem.quantity} item${firstItem.quantity !== 1 ? "s" : ""}`
+      : "";
 
   return (
     <div className="order-card">
+      {/* ── Header row ── */}
       <div className="order-card__header">
         <div className="order-card__header-left">
           <span className="order-card__label">Order placed</span>
@@ -51,10 +69,12 @@ const OrderCard = ({ order }) => {
         </div>
       </div>
 
+      {/* ── Body row ── */}
       <div className="order-card__body">
+        {/* Product thumbnail */}
         <img
           src={imageSrc}
-          alt={order.items?.[0]?.productName ?? "Ordered product"}
+          alt={firstItem?.productName ?? "Ordered product"}
           className="order-card__img"
           loading="lazy"
           onError={() => setImageSrc(ORDER_IMAGE_PLACEHOLDER)}
@@ -63,11 +83,12 @@ const OrderCard = ({ order }) => {
         <div className="order-card__info">
           <div className="order-card__status-row">
             <OrderStatusBadge status={order.status} />
-            <span className="order-card__qty">
-              {order.quantity} item{order.quantity !== 1 ? "s" : ""}
-            </span>
+            {qtyLabel && (
+              <span className="order-card__qty">{qtyLabel}</span>
+            )}
           </div>
-          <p className="order-card__product-name">{summary}</p>
+          {/* Product name — comes from normalized items */}
+          <p className="order-card__product-name">{productSummary}</p>
         </div>
 
         <div className="order-card__actions">

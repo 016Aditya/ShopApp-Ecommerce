@@ -1,3 +1,16 @@
+/**
+ * normalizeOrder.js
+ *
+ * Single source of truth for mapping ANY backend order shape
+ * into the consistent frontend shape consumed by all order components.
+ *
+ * Field extraction priority mirrors observed Spring Boot response shapes:
+ *   order.orderItems[].product.name
+ *   order.orderItems[].product.imageUrl
+ *   order.orderItems[].productName  (flat variant)
+ *   order.items[].product.*         (alternate key)
+ */
+
 const ORDER_IMAGE_PLACEHOLDER =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(`
@@ -9,101 +22,165 @@ const ORDER_IMAGE_PLACEHOLDER =
     </svg>
   `);
 
-const pickFirst = (...values) => values.find((value) => value !== undefined && value !== null && value !== "");
+const pickFirst = (...values) =>
+  values.find((v) => v !== undefined && v !== null && v !== "");
 
 const toNumber = (value, fallback = 0) => {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 };
 
-const normalizeOrderItem = (item = {}, index = 0) => {
-  const product = item.product ?? item.productDto ?? item.productResponse ?? {};
+/**
+ * Extract product name from an order item — covers all known backend shapes:
+ *   item.productName           (flat)
+ *   item.name                  (flat alt)
+ *   item.product.name          (nested Spring Boot DTO)
+ *   item.product.productName   (nested alt)
+ *   item.productDto.name       (Spring Boot ProductDto)
+ *   item.productResponse.name  (Spring Boot ProductResponse)
+ */
+const extractProductName = (item = {}) => {
+  const nested =
+    item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
 
-  const quantity = toNumber(pickFirst(item.quantity, item.qty), 0);
-  const unitPrice = toNumber(
-    pickFirst(item.unitPrice, item.price, item.productPrice, product.price),
-    0
-  );
-
-  const normalized = {
-    id: pickFirst(item.id, item.orderItemId, `${pickFirst(item.productId, product.id, "item")}-${index}`),
-    productId: pickFirst(item.productId, product.id, item.id, `item-${index}`),
-    productName: pickFirst(
-      item.productName, 
-      item.name, 
+  return (
+    pickFirst(
+      item.productName,
+      item.name,
       item.title,
-      product.name, 
-      product.title,
-      product.productName,
-      "Product"
-    ),
-    imageUrl: pickFirst(
+      nested.name,
+      nested.productName,
+      nested.title,
+    ) ?? "Product"
+  );
+};
+
+/**
+ * Extract product image URL from an order item.
+ * Searches flat fields first, then nested product object.
+ */
+const extractImageUrl = (item = {}) => {
+  const nested =
+    item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
+
+  return (
+    pickFirst(
       item.imageUrl,
       item.productImage,
       item.productImageUrl,
       item.image,
       item.thumbnail,
-      product.imageUrl,
-      product.image,
-      product.thumbnail,
-      product.productImage,
-      ORDER_IMAGE_PLACEHOLDER
+      nested.imageUrl,
+      nested.image,
+      nested.thumbnail,
+      nested.productImage,
+      nested.images?.[0],       // array of images
+    ) ?? ORDER_IMAGE_PLACEHOLDER
+  );
+};
+
+const extractUnitPrice = (item = {}) => {
+  const nested =
+    item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
+
+  return toNumber(
+    pickFirst(
+      item.unitPrice,
+      item.price,
+      item.productPrice,
+      item.sellingPrice,
+      nested.price,
+      nested.sellingPrice,
+      nested.discountedPrice,
+      nested.mrp,
     ),
-    quantity: Math.max(quantity, 1),
+    0
+  );
+};
+
+const normalizeOrderItem = (item = {}, index = 0) => {
+  const nested =
+    item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
+
+  const quantity  = Math.max(toNumber(pickFirst(item.quantity, item.qty, item.count), 1), 1);
+  const unitPrice = extractUnitPrice(item);
+  const totalPrice = toNumber(
+    pickFirst(item.totalPrice, item.lineTotal),
+    unitPrice * quantity
+  );
+
+  const normalized = {
+    id:          pickFirst(item.id, item.orderItemId, `${pickFirst(item.productId, nested.id, "item")}-${index}`),
+    productId:   pickFirst(item.productId, nested.id, item.id, `item-${index}`),
+    productName: extractProductName(item),
+    imageUrl:    extractImageUrl(item),
+    quantity,
     unitPrice,
-    totalPrice: toNumber(
-      pickFirst(item.totalPrice, item.lineTotal, quantity ? unitPrice * quantity : unitPrice),
-      unitPrice * quantity
-    ),
+    totalPrice,
     raw: item,
   };
+
+  if (import.meta.env.DEV) {
+    console.log(`[normalizeOrderItem] #${index}`, {
+      raw: item,
+      extracted: { name: normalized.productName, image: normalized.imageUrl, qty: quantity, price: unitPrice },
+    });
+  }
 
   return normalized;
 };
 
 const normalizeAddress = (address = {}) => ({
-  name: pickFirst(address.name, address.fullName, address.recipientName, address.customerName, ""),
-  phone: pickFirst(address.phone, address.phoneNumber, address.mobile, ""),
-  email: pickFirst(address.email, ""),
-  line1: pickFirst(address.line1, address.addressLine1, address.street, address.address, ""),
-  line2: pickFirst(address.line2, address.addressLine2, address.landmark, ""),
-  city: pickFirst(address.city, address.town, ""),
-  state: pickFirst(address.state, address.region, ""),
+  name:    pickFirst(address.name, address.fullName, address.recipientName, address.customerName, ""),
+  phone:   pickFirst(address.phone, address.phoneNumber, address.mobile, ""),
+  email:   pickFirst(address.email, ""),
+  line1:   pickFirst(address.line1, address.addressLine1, address.street, address.address, ""),
+  line2:   pickFirst(address.line2, address.addressLine2, address.landmark, ""),
+  city:    pickFirst(address.city, address.town, ""),
+  state:   pickFirst(address.state, address.region, ""),
   zipCode: pickFirst(address.zipCode, address.postalCode, address.pincode, ""),
-  country: pickFirst(address.country, ""),
+  country: pickFirst(address.country, "India"),
 });
 
 export const normalizeOrder = (order = {}) => {
-  // Try multiple field names for items array
+  // Try every known field name for the items array
   const rawItems = pickFirst(
+    order.orderItems,   // Spring Boot default
     order.items,
-    order.orderItems, 
     order.products,
     order.lineItems,
     order.cartItems,
     order.itemList,
     order.orderItemList,
-    []
   );
-  
-  const items = Array.isArray(rawItems) ? rawItems.map(normalizeOrderItem) : [];
 
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const itemsSubtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const items = Array.isArray(rawItems)
+    ? rawItems.map(normalizeOrderItem)
+    : [];
+
+  const totalQuantity  = items.reduce((s, i) => s + i.quantity, 0);
+  const itemsSubtotal  = items.reduce((s, i) => s + i.totalPrice, 0);
+
+  if (import.meta.env.DEV) {
+    console.log("[normalizeOrder] raw:", order);
+    console.log("[normalizeOrder] items resolved from key:",
+      order.orderItems ? "orderItems" :
+      order.items      ? "items"      :
+      order.products   ? "products"   : "none"
+    );
+    console.log("[normalizeOrder] normalized items:", items);
+  }
 
   return {
-    id: pickFirst(order.id, order.orderId, order._id, ""),
-    createdAt: pickFirst(order.createdAt, order.orderDate, order.placedAt, order.updatedAt, null),
-    status: pickFirst(order.status, order.orderStatus, "PENDING"),
-    quantity: toNumber(pickFirst(order.quantity, order.totalQuantity), totalQuantity),
-    totalPrice: toNumber(
-      pickFirst(order.totalPrice, order.totalAmount, order.grandTotal, order.orderTotal),
-      itemsSubtotal
-    ),
-    subtotal: toNumber(pickFirst(order.subtotal, order.itemsTotal), itemsSubtotal),
+    id:            pickFirst(order.id, order.orderId, order._id, ""),
+    createdAt:     pickFirst(order.createdAt, order.orderDate, order.placedAt, order.updatedAt, null),
+    status:        pickFirst(order.status, order.orderStatus, "PENDING"),
+    quantity:      toNumber(pickFirst(order.quantity, order.totalQuantity), totalQuantity || 1),
+    totalPrice:    toNumber(pickFirst(order.totalPrice, order.totalAmount, order.grandTotal, order.orderTotal), itemsSubtotal),
+    subtotal:      toNumber(pickFirst(order.subtotal, order.itemsTotal), itemsSubtotal),
     shippingPrice: toNumber(pickFirst(order.shippingPrice, order.shippingAmount, order.deliveryFee), 0),
-    taxPrice: toNumber(pickFirst(order.taxPrice, order.taxAmount, order.gst), 0),
-    address: normalizeAddress(pickFirst(order.address, order.shippingAddress, order.deliveryAddress, {})),
+    taxPrice:      toNumber(pickFirst(order.taxPrice, order.taxAmount, order.gst), 0),
+    address:       normalizeAddress(pickFirst(order.address, order.shippingAddress, order.deliveryAddress, {})),
     items,
     raw: order,
   };

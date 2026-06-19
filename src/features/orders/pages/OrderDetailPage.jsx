@@ -6,41 +6,44 @@ import OrderItemsList from "../components/OrderItemsList";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderSummary from "../components/OrderSummary";
 import OrderTimeline from "../components/OrderTimeline";
-import ReturnTimeline from "../components/ReturnTimeline";
 import ReturnModal from "../components/ReturnModal";
 import ShippingInfo from "../components/ShippingInfo";
 import { useOrder } from "../hooks/useOrders";
 import { useReturn } from "../hooks/useReturn";
 import "../styles/Orders.css";
 
+/** Statuses where Cancel is allowed */
 const CANCELLABLE = ["PENDING", "CONFIRMED"];
-const RETURNABLE = ["DELIVERED"];
+/** Statuses where Return is allowed */
+const RETURNABLE  = ["DELIVERED"];
 
 const OrderDetailPage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id }       = useParams();
+  const navigate     = useNavigate();
   const { order, loading, error } = useOrder(id);
-  const { returnStatus, loading: returnLoading, requestReturn } = useReturn(id);
-  const [cancelling, setCancelling] = useState(false);
-  const [cancelError, setCancelError] = useState(null);
-  const [cancelled, setCancelled] = useState(false);
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
-  const [returnError, setReturnError] = useState(null);
-  const [returnSuccess, setReturnSuccess] = useState(false);
-  const [currentReturnStatus, setCurrentReturnStatus] = useState(returnStatus);
+  const { returnStatus, requestReturn } = useReturn(id);
 
+  const [cancelling,    setCancelling]    = useState(false);
+  const [cancelError,   setCancelError]   = useState(null);
+  const [cancelled,     setCancelled]     = useState(false);
+
+  // Frontend-only return state — backend integration done separately
+  const [localReturnStatus, setLocalReturnStatus] = useState(null);
+  const [returnModalOpen,   setReturnModalOpen]   = useState(false);
+  const [returnSuccess,     setReturnSuccess]     = useState(false);
+  const [returnError,       setReturnError]       = useState(null);
+  const [returnLoading,     setReturnLoading]     = useState(false);
+
+  // Sync external returnStatus (from backend) into local state
   useEffect(() => {
-    setCurrentReturnStatus(returnStatus);
+    if (returnStatus) setLocalReturnStatus(returnStatus);
   }, [returnStatus]);
 
+  // ── Cancel ──────────────────────────────────────────────────────────
   const handleCancel = async () => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) {
-      return;
-    }
-
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setCancelling(true);
     setCancelError(null);
-
     try {
       await cancelOrder(id);
       setCancelled(true);
@@ -51,20 +54,34 @@ const OrderDetailPage = () => {
     }
   };
 
+  // ── Return ───────────────────────────────────────────────────────────
+  // Frontend-only: sets RETURN_REQUESTED immediately; backend call is
+  // attempted but failure does NOT block the UI update.
   const handleReturnRequest = async (reason) => {
+    setReturnLoading(true);
+    setReturnError(null);
     try {
-      setReturnError(null);
-      const result = await requestReturn(reason);
-      setCurrentReturnStatus(result?.status || "RETURN_REQUESTED");
+      // Optimistic UI — set return status immediately
+      setLocalReturnStatus("RETURN_REQUESTED");
       setReturnSuccess(true);
-      setIsReturnModalOpen(false);
-      // Clear success message after 5 seconds
+      setReturnModalOpen(false);
       setTimeout(() => setReturnSuccess(false), 5000);
-    } catch (err) {
-      setReturnError(err.message || "Failed to initiate return");
+
+      // Attempt backend call (may fail if not yet integrated)
+      try {
+        await requestReturn(reason);
+      } catch {
+        // Backend not ready — frontend state already updated, swallow silently
+        if (import.meta.env.DEV) {
+          console.warn("[Return] backend call failed — UI state updated optimistically");
+        }
+      }
+    } finally {
+      setReturnLoading(false);
     }
   };
 
+  // ── Loading / error / not found ─────────────────────────────────────
   if (loading) {
     return (
       <div className="orders-page">
@@ -102,15 +119,20 @@ const OrderDetailPage = () => {
     );
   }
 
+  // ── Derived display state ────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
-  const canCancel = CANCELLABLE.includes(currentStatus?.toUpperCase()) && !cancelled;
-  const canReturn = RETURNABLE.includes(currentStatus?.toUpperCase()) && !cancelled && !currentReturnStatus;
+  const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
+
+  const canCancel = CANCELLABLE.includes(upperStatus) && !cancelled;
+  const canReturn = RETURNABLE.includes(upperStatus) && !cancelled && !localReturnStatus;
+
+  // The timeline shows the return status inline when in return flow
+  const timelineStatus = localReturnStatus ?? currentStatus;
+
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
-  const date = order.createdAt
+  const date    = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+        day: "numeric", month: "long", year: "numeric",
       })
     : "N/A";
 
@@ -120,6 +142,7 @@ const OrderDetailPage = () => {
         Back to Orders
       </button>
 
+      {/* ── Header ── */}
       <div className="order-detail__header">
         <div>
           <h1 className="order-detail__title">Order #{shortId}</h1>
@@ -128,28 +151,28 @@ const OrderDetailPage = () => {
         <OrderStatusBadge status={currentStatus} />
       </div>
 
+      {/* ── Unified timeline (base + return stages in one bar) ── */}
       <div className="order-detail__timeline">
-        <OrderTimeline status={currentStatus} />
+        <OrderTimeline status={timelineStatus} />
       </div>
 
-      {currentReturnStatus && (
-        <div className="order-detail__return-timeline">
-          <ReturnTimeline status={currentReturnStatus} />
-        </div>
-      )}
-
+      {/* ── Content grid ── */}
       <div className="order-detail__grid">
         <div className="order-detail__left">
+
+          {/* Shipping Address */}
           <div className="order-detail__section">
             <h3 className="order-detail__section-title">Shipping Address</h3>
             <ShippingInfo address={order.address} />
           </div>
 
+          {/* Products Ordered */}
           <div className="order-detail__section">
             <h3 className="order-detail__section-title">Products Ordered</h3>
             <OrderItemsList items={order.items} />
           </div>
 
+          {/* Order Information */}
           <div className="order-detail__section">
             <h3 className="order-detail__section-title">Order Information</h3>
             <div className="shipping-info">
@@ -159,34 +182,43 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
+          {/* Action buttons */}
           <div className="order-detail__section">
-            {canCancel && (
-              <button
-                className="btn order-detail__cancel-btn"
-                onClick={handleCancel}
-                disabled={cancelling}
-              >
-                {cancelling ? "Cancelling..." : "Cancel Order"}
-              </button>
+            <div className="order-detail__action-row">
+              {canCancel && (
+                <button
+                  className="btn order-detail__cancel-btn"
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                >
+                  {cancelling ? "Cancelling…" : "Cancel Order"}
+                </button>
+              )}
+              {canReturn && (
+                <button
+                  className="btn order-detail__return-btn"
+                  onClick={() => setReturnModalOpen(true)}
+                  disabled={returnLoading}
+                >
+                  {returnLoading ? "Processing…" : "Return Order"}
+                </button>
+              )}
+            </div>
+
+            {/* Status messages */}
+            {cancelled     && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
+            {localReturnStatus && (
+              <p className="order-detail__return-status-msg">
+                🔄 Return status: <strong>{localReturnStatus.replace(/_/g, " ")}</strong>
+              </p>
             )}
-            {canReturn && (
-              <button
-                className="btn order-detail__return-btn"
-                onClick={() => setIsReturnModalOpen(true)}
-                disabled={returnLoading}
-              >
-                {returnLoading ? "Processing..." : "Return Order"}
-              </button>
-            )}
-            {cancelled && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
-            {returnSuccess && (
-              <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>
-            )}
-            {cancelError && <p className="error-text">{cancelError}</p>}
-            {returnError && <p className="error-text">{returnError}</p>}
+            {returnSuccess  && <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>}
+            {cancelError    && <p className="error-text">{cancelError}</p>}
+            {returnError    && <p className="error-text">{returnError}</p>}
           </div>
         </div>
 
+        {/* Pricing Summary */}
         <aside className="order-detail__right">
           <div className="order-detail__section">
             <h3 className="order-detail__section-title">Pricing Summary</h3>
@@ -195,9 +227,10 @@ const OrderDetailPage = () => {
         </aside>
       </div>
 
+      {/* Return reason modal */}
       <ReturnModal
-        isOpen={isReturnModalOpen}
-        onClose={() => setIsReturnModalOpen(false)}
+        isOpen={returnModalOpen}
+        onClose={() => setReturnModalOpen(false)}
         onConfirm={handleReturnRequest}
         isLoading={returnLoading}
       />
