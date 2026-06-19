@@ -98,12 +98,12 @@ function HeroBanner() {
       >
         {/*
           py-7 md:py-10 was the previous padding.
-          Increased by 5%: 30px × 1.05 = 31.5px
-          Emoji: was clamp(96px,10vw,149px) → ×1.05 = clamp(100.8px,10vw,156.45px).
+          Increased by 5% + 3% more (total 8%): 30px × 1.08 = 32.4px
+          Emoji: was clamp(96px,10vw,149px) → ×1.08 = clamp(103.68px,10vw,160.92px).
         */}
         <div
           className="container-app flex items-center justify-between"
-          style={{ paddingTop: "31.5px", paddingBottom: "31.5px" }}
+          style={{ paddingTop: "32.4px", paddingBottom: "32.4px" }}
         >
           {/* Left */}
           <div className="flex flex-col gap-3 max-w-md">
@@ -139,10 +139,10 @@ function HeroBanner() {
             </button>
           </div>
 
-          {/* Right — emoji scaled +5% */}
+          {/* Right — emoji scaled +8% */}
           <div
             className="select-none hidden sm:block"
-            style={{ fontSize: "clamp(101px, 10vw, 157px)" }}
+            style={{ fontSize: "clamp(104px, 10vw, 161px)" }}
             aria-hidden="true"
           >
             {slide.emoji}
