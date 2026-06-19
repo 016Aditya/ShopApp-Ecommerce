@@ -6,19 +6,21 @@ import { usePlaceOrder } from "../hooks/useOrders";
 import CheckoutAddress, { EMPTY_ADDRESS } from "../components/CheckoutAddress";
 import CheckoutItems from "../components/CheckoutItems";
 import OrderSummary from "../components/OrderSummary";
+import { normalizeToStore } from "../hooks/useSavedAddresses";
 import PATHS from "@/routes/paths";
 import "../styles/Checkout.css";
 
 const CheckoutPage = () => {
-  const { user } = useAuth();
+  const { user }                        = useAuth();
   const { items, cartTotal, emptyCart } = useCart();
-  const { placeOrder, loading, error } = usePlaceOrder();
-  const navigate = useNavigate();
+  const { placeOrder, loading, error }  = usePlaceOrder();
+  const navigate                        = useNavigate();
 
   const [address, setAddress] = useState({
     ...EMPTY_ADDRESS,
-    name: user?.name ?? "",
-    email: user?.email ?? "",
+    name:    user?.name  ?? "",
+    email:   user?.email ?? "",
+    country: "India",
   });
 
   if (!user) {
@@ -44,22 +46,32 @@ const CheckoutPage = () => {
     );
   }
 
+  // ── Validation ────────────────────────────────────────────────────────────
   const isValid = () =>
-    address.name.trim() &&
-    address.phone.trim() &&
-    address.line1.trim() &&
-    address.zipCode.trim();
+    address.name?.trim()    &&
+    address.phone?.trim()   &&
+    address.line1?.trim()   &&
+    address.zipCode?.trim();
 
+  // ── Place Order ───────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
     if (!isValid()) {
-      alert("Please fill in all required address fields.");
+      alert("Please fill in all required address fields (Name, Phone, Address, Pincode).");
       return;
     }
 
+    // normalizeToStore maps frontend keys → backend DTO keys
+    const backendAddress = normalizeToStore(address);
+
+    if (import.meta.env.DEV) {
+      console.log("[CheckoutPage] address (form):",   address);
+      console.log("[CheckoutPage] address (backend):", backendAddress);
+    }
+
     const orderPayload = {
-      userId: user.id,
-      quantity: items.reduce((sum, item) => sum + item.quantity, 0),
-      address,
+      userId:     user.id,
+      quantity:   items.reduce((sum, item) => sum + item.quantity, 0),
+      address:    backendAddress,
       productIds: items.map((item) => item.productId),
     };
 
@@ -106,7 +118,7 @@ const CheckoutPage = () => {
           )}
         </div>
 
-        {/* Order Summary - Sticky on Desktop */}
+        {/* Order Summary — Sticky on Desktop */}
         <div className="checkout-page__aside">
           <OrderSummary
             items={items}

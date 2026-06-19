@@ -1,30 +1,29 @@
 import { useState } from "react";
 
-/*
-  Address selection indicator fix:
-  - accent-color on radio/checkbox → browser-native green fill
-  - selected card: green border + subtle green tinted background
-  - works in both light and dark mode via CSS variables
-*/
+/**
+ * All addresses arrive already normalized to frontend keys:
+ *   { id, name, phone, line1, line2, city, state, zipCode, country }
+ * (guaranteed by useSavedAddresses normalizeToForm)
+ */
 
 const SELECTED_CARD_STYLE = {
-  border: "1.5px solid #22c55e",
+  border:          "1.5px solid #22c55e",
   backgroundColor: "rgba(34, 197, 94, 0.07)",
-  boxShadow: "0 0 0 1px rgba(34, 197, 94, 0.15)",
+  boxShadow:       "0 0 0 1px rgba(34, 197, 94, 0.15)",
 };
 
 const DEFAULT_CARD_STYLE = {
-  border: "1px solid var(--border-color)",
+  border:          "1px solid var(--border-color)",
   backgroundColor: "var(--card-bg)",
-  boxShadow: "none",
+  boxShadow:       "none",
 };
 
 const SavedAddressesList = ({
   addresses,
   selectedId,
-  onSelect,
-  onEdit,
-  onDelete,
+  onSelect,   // (address: object) => void  — passes FULL address, not just id
+  onEdit,     // (address: object) => void
+  onDelete,   // (id) => void
   loading,
 }) => {
   const [expandedId, setExpandedId] = useState(null);
@@ -32,18 +31,15 @@ const SavedAddressesList = ({
   if (loading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map((item) => (
-          <div
-            key={item}
-            className="h-24 animate-pulse rounded"
-            style={{ backgroundColor: "var(--bg-tertiary)" }}
-          />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 animate-pulse rounded"
+            style={{ backgroundColor: "var(--bg-tertiary)" }} />
         ))}
       </div>
     );
   }
 
-  if (addresses.length === 0) {
+  if (!addresses.length) {
     return (
       <div className="py-6 text-center" style={{ color: "var(--text-secondary)" }}>
         <p>No saved addresses yet</p>
@@ -53,102 +49,87 @@ const SavedAddressesList = ({
 
   return (
     <>
-      {/* Global accent-color injection for radio & checkbox */}
+      {/* accent-color for native radio fill */}
       <style>{`
-        .address-radio,
-        .address-checkbox {
+        .addr-radio {
           accent-color: #22c55e;
-          width: 16px;
-          height: 16px;
-          cursor: pointer;
-          flex-shrink: 0;
+          width: 16px; height: 16px;
+          cursor: pointer; flex-shrink: 0;
         }
       `}</style>
 
       <div className="space-y-3">
-        {addresses.map((address) => {
-          const isSelected = selectedId === address.id;
-          const isExpanded = expandedId === address.id;
+        {addresses.map((addr) => {
+          const isSelected = selectedId === addr.id;
+          const isExpanded = expandedId === addr.id;
+
+          // ── Collapsed preview line ─────────────────────────────────────
+          // "Aditya Singh"  /  "GODAM, Kolkata"
+          const previewLine = [
+            addr.line1,
+            addr.city,
+          ]
+            .filter(Boolean)
+            .join(", ");
 
           return (
             <div
-              key={address.id}
+              key={addr.id}
               className="cursor-pointer rounded-lg p-4 transition-all duration-150"
               style={isSelected ? SELECTED_CARD_STYLE : DEFAULT_CARD_STYLE}
-              onClick={() => onSelect(address.id)}
+              onClick={() => onSelect(addr)}
               role="radio"
               aria-checked={isSelected}
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === " " || e.key === "Enter") {
-                  e.preventDefault();
-                  onSelect(address.id);
-                }
+                if (e.key === " " || e.key === "Enter") { e.preventDefault(); onSelect(addr); }
               }}
             >
               <div className="flex items-start gap-3">
-                {/* Radio indicator */}
+                {/* Radio */}
                 <input
                   type="radio"
-                  className="address-radio mt-0.5"
+                  className="addr-radio mt-0.5"
                   checked={isSelected}
-                  onChange={() => onSelect(address.id)}
+                  onChange={() => onSelect(addr)}
                   onClick={(e) => e.stopPropagation()}
-                  aria-label={`Select address: ${address.addressLine1}`}
+                  aria-label={`Select address: ${addr.line1}`}
                 />
 
                 <div className="min-w-0 flex-1">
-                  {/* Name + type badge row */}
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {address.fullName}
+                  {/* Row 1: name + badges */}
+                  <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {addr.name || "—"}
                     </span>
-                    {address.addressType && (
-                      <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                        style={{
-                          backgroundColor: isSelected
-                            ? "rgba(34, 197, 94, 0.15)"
-                            : "var(--bg-tertiary)",
-                          color: isSelected ? "#16a34a" : "var(--text-tertiary)",
-                        }}
-                      >
-                        {address.addressType}
+                    {addr.phone && (
+                      <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                        {addr.phone}
                       </span>
                     )}
                     {isSelected && (
                       <span
                         className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                        style={{
-                          backgroundColor: "rgba(34, 197, 94, 0.15)",
-                          color: "#16a34a",
-                        }}
+                        style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#16a34a" }}
                       >
                         ✓ Selected
                       </span>
                     )}
                   </div>
 
-                  {/* Address line preview */}
-                  <p
-                    className="text-sm leading-snug"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {address.addressLine1}
-                    {address.addressLine2 && `, ${address.addressLine2}`}
+                  {/* Row 2: short address preview */}
+                  <p className="text-sm leading-snug" style={{ color: "var(--text-secondary)" }}>
+                    {previewLine || "—"}
                   </p>
 
-                  {/* Expand toggle */}
+                  {/* Show more / less toggle */}
                   <button
                     type="button"
                     className="mt-1 text-xs font-medium transition hover:underline"
                     style={{ color: "var(--accent)" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setExpandedId(isExpanded ? null : address.id);
+                      setExpandedId(isExpanded ? null : addr.id);
                     }}
                     aria-expanded={isExpanded}
                   >
@@ -161,15 +142,19 @@ const SavedAddressesList = ({
                       className="mt-2 space-y-0.5 text-sm"
                       style={{ color: "var(--text-secondary)" }}
                     >
+                      {addr.line1 && <p>{addr.line1}</p>}
+                      {addr.line2 && <p>{addr.line2}</p>}
                       <p>
-                        {address.city}, {address.state} — {address.postalCode}
+                        {[addr.city, addr.state].filter(Boolean).join(", ")}
+                        {addr.zipCode ? ` — ${addr.zipCode}` : ""}
                       </p>
-                      <p>{address.country}</p>
-                      {address.phoneNumber && <p>Phone: {address.phoneNumber}</p>}
+                      <p style={{ color: "var(--text-primary)" }}>
+                        {addr.country || "India"}
+                      </p>
                     </div>
                   )}
 
-                  {/* Action buttons */}
+                  {/* Edit / Remove */}
                   {(onEdit || onDelete) && (
                     <div className="mt-3 flex gap-3">
                       {onEdit && (
@@ -177,10 +162,7 @@ const SavedAddressesList = ({
                           type="button"
                           className="text-xs font-medium transition hover:underline"
                           style={{ color: "var(--accent)" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(address);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); onEdit(addr); }}
                         >
                           Edit
                         </button>
@@ -190,10 +172,7 @@ const SavedAddressesList = ({
                           type="button"
                           className="text-xs font-medium transition hover:underline"
                           style={{ color: "var(--error-text)" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(address.id);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); onDelete(addr.id); }}
                         >
                           Remove
                         </button>
