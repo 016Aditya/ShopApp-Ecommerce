@@ -30,15 +30,6 @@ const toNumber = (value, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-/**
- * Extract product name from an order item — covers all known backend shapes:
- *   item.productName           (flat)
- *   item.name                  (flat alt)
- *   item.product.name          (nested Spring Boot DTO)
- *   item.product.productName   (nested alt)
- *   item.productDto.name       (Spring Boot ProductDto)
- *   item.productResponse.name  (Spring Boot ProductResponse)
- */
 const extractProductName = (item = {}) => {
   const nested =
     item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
@@ -55,10 +46,6 @@ const extractProductName = (item = {}) => {
   );
 };
 
-/**
- * Extract product image URL from an order item.
- * Searches flat fields first, then nested product object.
- */
 const extractImageUrl = (item = {}) => {
   const nested =
     item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
@@ -74,7 +61,7 @@ const extractImageUrl = (item = {}) => {
       nested.image,
       nested.thumbnail,
       nested.productImage,
-      nested.images?.[0],       // array of images
+      nested.images?.[0],
     ) ?? ORDER_IMAGE_PLACEHOLDER
   );
 };
@@ -102,14 +89,14 @@ const normalizeOrderItem = (item = {}, index = 0) => {
   const nested =
     item.product ?? item.productDto ?? item.productResponse ?? item.productInfo ?? {};
 
-  const quantity  = Math.max(toNumber(pickFirst(item.quantity, item.qty, item.count), 1), 1);
-  const unitPrice = extractUnitPrice(item);
+  const quantity   = Math.max(toNumber(pickFirst(item.quantity, item.qty, item.count), 1), 1);
+  const unitPrice  = extractUnitPrice(item);
   const totalPrice = toNumber(
     pickFirst(item.totalPrice, item.lineTotal),
     unitPrice * quantity
   );
 
-  const normalized = {
+  return {
     id:          pickFirst(item.id, item.orderItemId, `${pickFirst(item.productId, nested.id, "item")}-${index}`),
     productId:   pickFirst(item.productId, nested.id, item.id, `item-${index}`),
     productName: extractProductName(item),
@@ -119,15 +106,6 @@ const normalizeOrderItem = (item = {}, index = 0) => {
     totalPrice,
     raw: item,
   };
-
-  if (import.meta.env.DEV) {
-    console.log(`[normalizeOrderItem] #${index}`, {
-      raw: item,
-      extracted: { name: normalized.productName, image: normalized.imageUrl, qty: quantity, price: unitPrice },
-    });
-  }
-
-  return normalized;
 };
 
 const normalizeAddress = (address = {}) => ({
@@ -143,9 +121,8 @@ const normalizeAddress = (address = {}) => ({
 });
 
 export const normalizeOrder = (order = {}) => {
-  // Try every known field name for the items array
   const rawItems = pickFirst(
-    order.orderItems,   // Spring Boot default
+    order.orderItems,
     order.items,
     order.products,
     order.lineItems,
@@ -158,18 +135,8 @@ export const normalizeOrder = (order = {}) => {
     ? rawItems.map(normalizeOrderItem)
     : [];
 
-  const totalQuantity  = items.reduce((s, i) => s + i.quantity, 0);
-  const itemsSubtotal  = items.reduce((s, i) => s + i.totalPrice, 0);
-
-  if (import.meta.env.DEV) {
-    console.log("[normalizeOrder] raw:", order);
-    console.log("[normalizeOrder] items resolved from key:",
-      order.orderItems ? "orderItems" :
-      order.items      ? "items"      :
-      order.products   ? "products"   : "none"
-    );
-    console.log("[normalizeOrder] normalized items:", items);
-  }
+  const totalQuantity = items.reduce((s, i) => s + i.quantity, 0);
+  const itemsSubtotal = items.reduce((s, i) => s + i.totalPrice, 0);
 
   return {
     id:            pickFirst(order.id, order.orderId, order._id, ""),
