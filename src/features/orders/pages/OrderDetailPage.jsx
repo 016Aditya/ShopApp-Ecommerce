@@ -36,22 +36,21 @@ const OrderDetailPage = () => {
   const [returnError,       setReturnError]       = useState(null);
   const [returnLoading,     setReturnLoading]     = useState(false);
 
-  // Preview image state for the header product thumbnail
-  const [previewImgSrc, setPreviewImgSrc] = useState(null);
+  // Preview image — start with placeholder, fill once order loads
+  const [previewImgSrc, setPreviewImgSrc] = useState(ORDER_IMAGE_PLACEHOLDER);
 
   // Sync external returnStatus (from backend) into local state
   useEffect(() => {
     if (returnStatus) setLocalReturnStatus(returnStatus);
   }, [returnStatus]);
 
-  // Set initial preview image once order loads
+  // Update preview image once order data arrives
   useEffect(() => {
-    if (order?.items?.[0]?.imageUrl) {
-      setPreviewImgSrc(order.items[0].imageUrl);
-    }
+    const url = order?.items?.[0]?.imageUrl;
+    if (url) setPreviewImgSrc(url);
   }, [order]);
 
-  // ── Cancel ────────────────────────────────────────────────────────────
+  // ── Cancel ──────────────────────────────────────────────────────────────
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setCancelling(true);
@@ -66,8 +65,7 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Return ────────────────────────────────────────────────────────────
-  // Optimistic UI: sets RETURN_REQUESTED immediately, then attempts backend call.
+  // ── Return ──────────────────────────────────────────────────────────────
   const handleReturnRequest = async (reason) => {
     setReturnLoading(true);
     setReturnError(null);
@@ -89,10 +87,17 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Loading / error / not found ───────────────────────────────────────────
+  // ── Loading / error / not found ────────────────────────────────────────────
   if (loading) {
     return (
       <div className="orders-page">
+        <button
+          className="orders-back"
+          onClick={() => navigate(PATHS.ORDERS)}
+          aria-label="Back to Orders"
+        >
+          ← Back to Orders
+        </button>
         <div className="order-detail-skeleton">
           <div className="skeleton skeleton-heading" />
           <div className="skeleton skeleton-text" />
@@ -105,8 +110,12 @@ const OrderDetailPage = () => {
   if (error) {
     return (
       <div className="orders-page">
-        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>
-          Back to Orders
+        <button
+          className="orders-back"
+          onClick={() => navigate(PATHS.ORDERS)}
+          aria-label="Back to Orders"
+        >
+          ← Back to Orders
         </button>
         <p className="error-text">{error}</p>
       </div>
@@ -116,8 +125,12 @@ const OrderDetailPage = () => {
   if (!order) {
     return (
       <div className="orders-page">
-        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>
-          Back to Orders
+        <button
+          className="orders-back"
+          onClick={() => navigate(PATHS.ORDERS)}
+          aria-label="Back to Orders"
+        >
+          ← Back to Orders
         </button>
         <div className="orders-empty">
           <h2>Order not found</h2>
@@ -134,7 +147,6 @@ const OrderDetailPage = () => {
   const canCancel = CANCELLABLE.includes(upperStatus) && !cancelled;
   const canReturn = RETURNABLE.includes(upperStatus) && !cancelled && !localReturnStatus;
 
-  // The timeline uses returnStatus when in the return flow
   const timelineStatus = localReturnStatus ?? currentStatus;
 
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
@@ -144,14 +156,19 @@ const OrderDetailPage = () => {
       })
     : "N/A";
 
-  // First item for the header preview strip
   const firstItem  = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
 
   return (
     <div className="orders-page order-detail-page">
-      <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>
-        Back to Orders
+
+      {/* ── Back button ── */}
+      <button
+        className="orders-back"
+        onClick={() => navigate(PATHS.ORDERS)}
+        aria-label="Back to Orders"
+      >
+        ← Back to Orders
       </button>
 
       {/* ── Header ── */}
@@ -164,7 +181,7 @@ const OrderDetailPage = () => {
           {firstItem && (
             <div className="order-detail__product-preview">
               <img
-                src={previewImgSrc ?? ORDER_IMAGE_PLACEHOLDER}
+                src={previewImgSrc}
                 alt={firstItem.productName ?? "Product"}
                 className="order-detail__preview-img"
                 width={44}
@@ -187,7 +204,7 @@ const OrderDetailPage = () => {
         <OrderStatusBadge status={currentStatus} />
       </div>
 
-      {/* ── Unified timeline (base + return stages in one bar) ── */}
+      {/* ── Timeline ── */}
       <div className="order-detail__timeline">
         <OrderTimeline status={timelineStatus} />
       </div>
@@ -218,7 +235,7 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
-          {/* Action buttons — Cancel (red outline) + Return (blue solid) */}
+          {/* Action buttons */}
           <div className="order-detail__section">
             <div className="order-detail__action-row">
               {canCancel && (
@@ -241,9 +258,8 @@ const OrderDetailPage = () => {
               )}
             </div>
 
-            {/* Status messages */}
-            {cancelled     && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
-            {localReturnStatus && (
+            {cancelled          && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
+            {localReturnStatus  && (
               <p className="order-detail__return-status-msg">
                 🔄 Return status: <strong>{localReturnStatus.replace(/_/g, " ")}</strong>
               </p>
