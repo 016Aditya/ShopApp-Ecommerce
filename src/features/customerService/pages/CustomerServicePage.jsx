@@ -1,7 +1,17 @@
 import { Link } from "react-router-dom";
 import PATHS from "@/routes/paths";
 
-// ── Social / contact card data ─────────────────────────────────────────────
+/*
+  Dark mode fix:
+  - All bg-white, bg-[#f3f3f3], text-[#131921], text-slate-* replaced with CSS variables
+  - Hero banner uses var(--navbar-bg) so it looks correct in dark mode
+  - Cards use var(--card-bg) + var(--border-color)
+  - Hover states use var(--card-bg-elevated)
+  - Tag pills use var(--accent-subtle) + var(--accent)
+  - All text uses var(--text-primary) / var(--text-secondary)
+*/
+
+// ── Social / contact card data ───────────────────────────────────────────────
 const CONTACT_CARDS = [
   {
     id: "email",
@@ -49,53 +59,86 @@ const FAQ = [
   { q: "Are my payments secure?", a: "Yes. All payments are processed over HTTPS with industry-standard encryption. We never store your card details." },
 ];
 
+/* Shared card style helper */
+const cardStyle = {
+  backgroundColor: "var(--card-bg)",
+  border: "1px solid var(--border-color)",
+  boxShadow: "var(--shadow-sm)",
+};
+
 function CustomerServicePage() {
   return (
-    <div className="min-h-screen bg-[#f3f3f3]">
-
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: "var(--bg-primary)" }}
+    >
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
-      <div className="bg-[#131921] py-12 text-center">
-        {/* Logo */}
+      <div
+        className="py-12 text-center"
+        style={{ backgroundColor: "var(--navbar-bg)" }}
+      >
         <div className="mb-3 inline-flex flex-col items-center">
-          <span className="text-4xl font-extrabold text-white tracking-tight leading-none">
-            shop<span className="text-[#ff9900]">App</span>
+          <span className="text-4xl font-extrabold tracking-tight leading-none" style={{ color: "var(--text-inverse)" }}>
+            shop<span style={{ color: "var(--accent)" }}>App</span>
           </span>
-          <span className="text-sm text-slate-300 leading-none">.in</span>
+          <span className="text-sm leading-none" style={{ color: "var(--text-tertiary)" }}>.in</span>
         </div>
-        <h1 className="mt-4 text-2xl font-bold text-white">Customer Service</h1>
-        <p className="mt-2 text-slate-400 text-sm max-w-md mx-auto">
-          We're here to help. Reach out via any channel below and we'll get back to you as soon as possible.
+        <h1 className="mt-4 text-2xl font-bold" style={{ color: "var(--text-inverse)" }}>
+          Customer Service
+        </h1>
+        <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: "var(--footer-text)" }}>
+          We’re here to help. Reach out via any channel below and we’ll get back to you as soon as possible.
         </p>
       </div>
 
-      <div className="container-app py-10 space-y-10">
+      <div className="container-app py-10 space-y-8">
 
-        {/* ── About ShopApp ───────────────────────────────────────────────── */}
-        <section className="rounded-lg bg-white shadow-sm p-6 md:p-8">
-          <h2 className="text-lg font-bold text-[#131921] mb-3">About ShopApp.in</h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            <strong>ShopApp.in</strong> is a full-stack e-commerce platform built with{" "}
-            <span className="font-medium text-[#ff9900]">React.js</span> on the frontend and{" "}
-            <span className="font-medium text-[#ff9900]">Spring Boot + MongoDB</span> on the backend.
-            It supports user authentication (including Google OAuth2), product browsing by category &amp;
+        {/* ── About ShopApp ───────────────────────────────────────────── */}
+        <section className="rounded-xl p-6 md:p-8" style={cardStyle}>
+          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--text-primary)" }}>
+            About ShopApp.in
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <strong style={{ color: "var(--text-primary)" }}>ShopApp.in</strong> is a full-stack e-commerce
+            platform built with{" "}
+            <span className="font-medium" style={{ color: "var(--accent)" }}>React.js</span> on the frontend and{" "}
+            <span className="font-medium" style={{ color: "var(--accent)" }}>Spring Boot + MongoDB</span> on the
+            backend. It supports user authentication (including Google OAuth2), product browsing by category &amp;
             subcategory, cart management, order placement, and admin-level product management.
           </p>
-          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-            This project was designed and developed by <strong>Aditya Singh</strong> as a production-grade
-            learning project covering the complete software development lifecycle — from REST API design
-            to React state management and responsive UI.
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            This project was designed and developed by{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Aditya Singh</strong> as a production-grade learning
+            project covering the complete software development lifecycle — from REST API design to React state
+            management and responsive UI.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {["React.js","Spring Boot","MongoDB","JWT Auth","Google OAuth2","Tailwind CSS","REST API"].map(tag => (
-              <span key={tag} className="rounded-full bg-[#fff3d6] text-[#a66000] text-xs font-semibold px-3 py-1">{tag}</span>
-            ))}
+            {["React.js", "Spring Boot", "MongoDB", "JWT Auth", "Google OAuth2", "Tailwind CSS", "REST API"].map(
+              (tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full px-3 py-1 text-xs font-semibold"
+                  style={{
+                    backgroundColor: "var(--accent-subtle)",
+                    color: "var(--accent)",
+                    border: "1px solid var(--accent-border)",
+                  }}
+                >
+                  {tag}
+                </span>
+              )
+            )}
           </div>
         </section>
 
-        {/* ── Contact Us ──────────────────────────────────────────────────── */}
-        <section className="rounded-lg bg-white shadow-sm p-6 md:p-8">
-          <h2 className="text-lg font-bold text-[#131921] mb-1">Contact Us</h2>
-          <p className="text-sm text-slate-500 mb-6">Reach out on any of the platforms below.</p>
+        {/* ── Contact Us ────────────────────────────────────────────────── */}
+        <section className="rounded-xl p-6 md:p-8" style={cardStyle}>
+          <h2 className="text-lg font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+            Contact Us
+          </h2>
+          <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
+            Reach out on any of the platforms below.
+          </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {CONTACT_CARDS.map((card) => (
               <a
@@ -103,14 +146,36 @@ function CustomerServicePage() {
                 href={card.href}
                 target={card.external ? "_blank" : undefined}
                 rel={card.external ? "noopener noreferrer" : undefined}
-                className="flex items-center gap-4 rounded-lg border border-slate-200 p-4 hover:border-[#ff9900] hover:shadow-md transition group"
+                className="group flex items-center gap-4 rounded-lg border p-4 transition-all duration-200"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "var(--border-color)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                  e.currentTarget.style.backgroundColor = "var(--card-bg-elevated)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-color)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
-                <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#131921] text-[#ff9900] group-hover:bg-[#ff9900] group-hover:text-white transition">
+                <span
+                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full transition-colors duration-200"
+                  style={{
+                    backgroundColor: "var(--navbar-bg)",
+                    color: "var(--accent)",
+                  }}
+                >
                   {card.icon}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">{card.label}</p>
-                  <p className="text-sm font-semibold text-slate-700 truncate group-hover:text-[#ff9900] transition">
+                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-tertiary)" }}>
+                    {card.label}
+                  </p>
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
                     {card.value}
                   </p>
                 </div>
@@ -120,72 +185,104 @@ function CustomerServicePage() {
         </section>
 
         {/* ── Source Code ─────────────────────────────────────────────────── */}
-        <section className="rounded-lg bg-white shadow-sm p-6 md:p-8">
-          <h2 className="text-lg font-bold text-[#131921] mb-4">Source Code</h2>
+        <section className="rounded-xl p-6 md:p-8" style={cardStyle}>
+          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            Source Code
+          </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <a
-              href="https://github.com/016Aditya/Ecommerce-Frontend-Reactjs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 hover:border-[#ff9900] hover:shadow-md transition group"
-            >
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#131921] text-white">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23a11.52 11.52 0 0 1 3-.405c1.02.005 2.045.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12z" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Frontend</p>
-                <p className="text-sm font-semibold text-slate-700 group-hover:text-[#ff9900] transition">Ecommerce-Frontend-Reactjs</p>
-              </div>
-            </a>
-            <a
-              href="https://github.com/016Aditya/Spring-Data-MongoDb-ecommerce"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-slate-200 p-4 hover:border-[#ff9900] hover:shadow-md transition group"
-            >
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#131921] text-white">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23a11.52 11.52 0 0 1 3-.405c1.02.005 2.045.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12z" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Backend</p>
-                <p className="text-sm font-semibold text-slate-700 group-hover:text-[#ff9900] transition">Spring-Data-MongoDb-ecommerce</p>
-              </div>
-            </a>
-          </div>
-        </section>
-
-        {/* ── FAQ ─────────────────────────────────────────────────────────── */}
-        <section className="rounded-lg bg-white shadow-sm p-6 md:p-8">
-          <h2 className="text-lg font-bold text-[#131921] mb-6">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {FAQ.map((item, i) => (
-              <details key={i} className="group rounded-lg border border-slate-200 p-4 cursor-pointer">
-                <summary className="flex items-center justify-between text-sm font-semibold text-slate-800 list-none">
-                  {item.q}
-                  <svg className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+            {[
+              {
+                label: "Frontend",
+                name: "Ecommerce-Frontend-Reactjs",
+                href: "https://github.com/016Aditya/Ecommerce-Frontend-Reactjs",
+              },
+              {
+                label: "Backend",
+                name: "Spring-Data-MongoDb-ecommerce",
+                href: "https://github.com/016Aditya/Spring-Data-MongoDb-ecommerce",
+              },
+            ].map((repo) => (
+              <a
+                key={repo.label}
+                href={repo.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-lg border p-4 transition-all duration-200"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "var(--border-color)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                  e.currentTarget.style.backgroundColor = "var(--card-bg-elevated)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-color)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <span
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: "var(--navbar-bg)", color: "var(--text-inverse)" }}
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23a11.52 11.52 0 0 1 3-.405c1.02.005 2.045.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12z" />
                   </svg>
-                </summary>
-                <p className="mt-3 text-sm text-slate-500 leading-relaxed">{item.a}</p>
-              </details>
+                </span>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-tertiary)" }}>
+                    {repo.label}
+                  </p>
+                  <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {repo.name}
+                  </p>
+                </div>
+              </a>
             ))}
           </div>
         </section>
 
-        {/* ── Back home ───────────────────────────────────────────────────── */}
-        <div className="text-center pb-4">
+        {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
+        <section className="rounded-xl p-6 md:p-8" style={cardStyle}>
+          <h2 className="text-lg font-bold mb-6" style={{ color: "var(--text-primary)" }}>
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-4">
+            {FAQ.map((item, i) => (
+              <div
+                key={i}
+                className="rounded-lg p-4"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {item.q}
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                  {item.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Back to shopping ────────────────────────────────────────────── */}
+        <div className="flex justify-center pb-4">
           <Link
             to={PATHS.HOME}
-            className="inline-flex items-center gap-2 rounded-full bg-[#ff9900] px-6 py-2.5 text-sm font-bold text-[#131921] hover:bg-[#e88a00] transition shadow"
+            className="inline-flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-bold transition-opacity hover:opacity-90"
+            style={{
+              backgroundColor: "var(--button-primary)",
+              color: "var(--button-primary-text)",
+            }}
           >
             ← Back to Shopping
           </Link>
         </div>
-
       </div>
     </div>
   );
