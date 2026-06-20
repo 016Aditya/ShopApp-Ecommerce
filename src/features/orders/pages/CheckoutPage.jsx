@@ -63,11 +63,6 @@ const CheckoutPage = () => {
     // normalizeToStore maps frontend keys → backend DTO keys
     const backendAddress = normalizeToStore(address);
 
-    if (import.meta.env.DEV) {
-      console.log("[CheckoutPage] address (form):",   address);
-      console.log("[CheckoutPage] address (backend):", backendAddress);
-    }
-
     const orderPayload = {
       userId:     user.id,
       quantity:   items.reduce((sum, item) => sum + item.quantity, 0),
