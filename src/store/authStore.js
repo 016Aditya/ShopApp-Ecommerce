@@ -12,8 +12,8 @@ import {
  * Auth state lives entirely here (Zustand + persist).
  * AuthContext is a thin re-export so existing imports keep working.
  *
- * Response shape from backend (UserDto.Response):
- *   { id, firstName, lastName, email, role, createdAt }
+ * Backend UserDto.Response shape (after latest backend fix):
+ *   { id, firstName, lastName, email, phoneNumber, role, createdAt }
  *
  * The backend does NOT issue a JWT yet — the token field is null until
  * JWT middleware is added to the Spring Boot app.
@@ -22,10 +22,10 @@ import {
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      user: null,
-      token: null,
+      user:    null,
+      token:   null,
       loading: false,
-      error: null,
+      error:   null,
       _hydrated: false,
 
       /** Local registry for Forgot-Password email+phone verification. */
@@ -42,17 +42,22 @@ export const useAuthStore = create(
           const data = await loginService(credentials);
           /**
            * Backend returns a flat UserDto.Response:
-           *   { id, firstName, lastName, email, role, createdAt }
+           *   { id, firstName, lastName, email, phoneNumber, role, createdAt }
            *
-           * There is no `user` wrapper and no `token` field yet.
-           * We store the whole object as `user`.
+           * Normalise: guarantee `id` is always the string we use for API calls.
+           * Some Spring Boot versions may serialise the Mongo id as `_id`;
+           * we unify it here so `user.id` is always defined.
            */
+          const normalised = {
+            ...data,
+            id: data.id ?? data._id,
+          };
           set({
-            user:    data,
-            token:   data.token ?? null,   // null until backend issues JWT
+            user:    normalised,
+            token:   normalised.token ?? null,
             loading: false,
           });
-          return data;
+          return normalised;
         } catch (err) {
           set({ error: err.message, loading: false });
           throw err;
@@ -68,9 +73,9 @@ export const useAuthStore = create(
             registeredUsers: [
               ...state.registeredUsers.filter((u) => u.email !== userData.email),
               {
-                email:       userData.email,
-                phone:       userData.phone ?? userData.phoneNumber ?? '',
-                password:    userData.password,
+                email:    userData.email,
+                phone:    userData.phone ?? userData.phoneNumber ?? '',
+                password: userData.password,
               },
             ],
           }));
@@ -106,9 +111,17 @@ export const useAuthStore = create(
         registeredUsers: state.registeredUsers,
       }),
       onRehydrateStorage: () => (state) => {
-        // Mark store as hydrated after persist has restored data.
-        // AuthContext reads _hydrated to avoid flash-redirect on reload.
-        if (state) state.setHydrated();
+        /**
+         * Also normalise `id` on rehydration so that users who were
+         * logged in before the backend fix (and have stale localStorage)
+         * still get a valid user.id after a page refresh.
+         */
+        if (state) {
+          if (state.user && !state.user.id && state.user._id) {
+            state.user = { ...state.user, id: state.user._id };
+          }
+          state.setHydrated();
+        }
       },
     }
   )

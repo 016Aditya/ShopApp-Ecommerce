@@ -5,30 +5,31 @@ import { updateUserProfile } from "@/services/profileService";
 const useProfile = () => {
   const { user, updateUser } = useAuth();
 
-  // profile stays null when GET /users/:id is unavailable;
-  // ProfileForm falls back to AuthContext user data in that case.
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [profile, setProfile]   = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState(null);
+  const [success, setSuccess]   = useState(false);
 
-  // fetchProfile is kept for components that explicitly need a refresh,
-  // but it is NO LONGER called automatically on mount — we skip the
-  // GET /users/:id call entirely because the endpoint does not exist
-  // in this backend. The form pre-fills from AuthContext instead.
-  const fetchProfile = useCallback(async () => {
-    // no-op: endpoint unavailable
-  }, []);
+  // fetchProfile kept as a no-op for components that call it explicitly.
+  const fetchProfile = useCallback(async () => {}, []);
 
   const updateProfile = async (profileData) => {
-    if (!user?.id) return;
+    // Guard: user must be in context and have a valid id.
+    const userId = user?.id ?? user?._id;
+    if (!userId) {
+      setError("Session expired. Please log in again.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
+
     try {
-      const updated = await updateUserProfile(user.id, profileData);
+      const updated = await updateUserProfile(userId, profileData);
       setProfile(updated);
-      // Sync all editable fields back into AuthContext + localStorage
+
+      // Sync all editable fields back into AuthContext + localStorage.
       updateUser({
         firstName:   updated.firstName   ?? profileData.firstName,
         lastName:    updated.lastName    ?? profileData.lastName,
@@ -36,7 +37,14 @@ const useProfile = () => {
       });
       setSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to update profile");
+      // Backend returns { error: "..." } — NOT { message: "..." }.
+      // Also handle 422 validation errors which have { error, errors }.
+      const backendMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update profile";
+      setError(backendMsg);
     } finally {
       setLoading(false);
     }
