@@ -99,7 +99,6 @@
 .order-timeline__line--done { background: var(--success-text); }
 
 /* ── Return Timeline — amber/orange tint ───────────────── */
-/* Wraps the new ReturnTimeline component */
 .return-timeline { border-top: 1px solid var(--border-color); padding-top: 16px; }
 .return-timeline::before {
   content: "↩ Return Progress";
@@ -112,8 +111,6 @@
   color: #d97706;
   margin-bottom: 10px;
 }
-
-/* Return dot — amber */
 .order-timeline__dot--return-done {
   background: #fef3c7;
   border-color: #d97706;
@@ -123,24 +120,9 @@
   border-color: #d97706;
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
 }
-/* Return label */
 .order-timeline__label--return-done    { color: #92400e; }
 .order-timeline__label--return-current { color: #d97706; font-weight: 700; }
-/* Return connector line */
 .order-timeline__line--return { background: #d97706; }
-
-/* Legacy return dot styles (used by unified OrderTimeline) */
-.order-timeline__dot--return.order-timeline__dot--done,
-.order-timeline__dot--return.order-timeline__dot--current {
-  background: #4f46e5;
-  border-color: #4f46e5;
-  color: #fff;
-}
-.order-timeline__dot--return.order-timeline__dot--current {
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
-}
-.order-timeline__label--return.order-timeline__label--current { color: #4f46e5; }
-.order-timeline__line--bridge { background: linear-gradient(to right, var(--success-text), #4f46e5); }
 
 /* ── Order detail ──────────────────────────────────────── */
 .order-detail__header {
@@ -167,34 +149,47 @@
 /* Action row */
 .order-detail__action-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
 
-/* Cancel button — red outline */
+/* ── Cancel button — red outline ─────────────────────────────────────────── */
 .order-detail__cancel-btn {
-  background: var(--card-bg); border: 1px solid var(--error-text);
-  color: var(--error-text); padding: 8px 20px;
-  border-radius: 6px; cursor: pointer;
-  font-size: 0.875rem; transition: background 0.15s;
+  background: var(--card-bg);
+  border: 1px solid var(--error-text);
+  color: var(--error-text);
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, opacity 0.15s;
 }
-.order-detail__cancel-btn:hover    { background: var(--error-bg); }
-.order-detail__cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.order-detail__cancelled-msg       { color: var(--success-text); font-size: 0.9rem; font-weight: 500; }
-.order-detail__right { position: sticky; top: 72px; }
+.order-detail__cancel-btn:hover:not(:disabled) { background: var(--error-bg); }
+.order-detail__cancel-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  /* keep the red outline visible but clearly muted */
+}
 
-/* Return button — amber (distinct from red Cancel) */
+/* ── Return button — amber (clearly distinct from red Cancel) ─────────────── */
 .order-detail__return-btn {
-  background: #d97706;
-  border: none;
-  color: #fff;
+  background: #f59e0b;
+  border: 1px solid #fbbf24;
+  color: #ffffff;
   padding: 8px 20px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: background 0.15s;
+  transition: background 0.15s, opacity 0.15s;
 }
-.order-detail__return-btn:hover    { background: #b45309; }
-.order-detail__return-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.order-detail__return-status-msg   { font-size: 0.875rem; color: var(--info-text); margin-top: 6px; }
-.order-detail__success-msg         { color: var(--success-text); font-size: 0.9rem; font-weight: 500; margin-top: 8px; }
+.order-detail__return-btn:hover:not(:disabled) { background: #d97706; border-color: #d97706; }
+.order-detail__return-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  /* amber stays visible so user knows the button exists, just not yet applicable */
+}
+
+.order-detail__cancelled-msg { color: var(--success-text); font-size: 0.9rem; font-weight: 500; }
+.order-detail__success-msg   { color: var(--success-text); font-size: 0.9rem; font-weight: 500; margin-top: 8px; }
+.order-detail__right { position: sticky; top: 72px; }
 
 /* ── Items list ────────────────────────────────────────── */
 .order-items-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -209,9 +204,9 @@
 .order-items-empty { padding: 16px; background: var(--bg-tertiary); border-radius: 6px; text-align: center; color: var(--text-secondary); font-size: 0.875rem; }
 
 /* ── Shipping info ─────────────────────────────────────── */
-.shipping-info          { display: flex; flex-direction: column; gap: 3px; }
+.shipping-info          { display: flex; flex-direction: column; gap: 4px; }
 .shipping-info__name    { font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); }
-.shipping-info__phone   { font-size: 0.875rem; color: var(--text-secondary); }
+.shipping-info__phone   { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 2px; }
 .shipping-info__line    { font-size: 0.875rem; color: var(--text-secondary); }
 
 /* ── Empty / Error ─────────────────────────────────────── */

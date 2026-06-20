@@ -15,10 +15,22 @@ import { useReturn } from "../hooks/useReturn";
 import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
 import "../styles/Orders.css";
 
-/** Statuses where Cancel is allowed */
-const CANCELLABLE = ["PENDING", "CONFIRMED"];
-/** Statuses where Return is allowed */
-const RETURNABLE  = ["DELIVERED"];
+/**
+ * Business rules for Cancel / Return buttons.
+ * Both buttons are ALWAYS rendered — disabled states communicate
+ * unavailability instead of hiding buttons entirely.
+ *
+ * PENDING    → Cancel ✓  Return ✗
+ * CONFIRMED  → Cancel ✓  Return ✗
+ * PACKED     → Cancel ✗  Return ✗
+ * SHIPPED    → Cancel ✗  Return ✗
+ * DELIVERED  → Cancel ✗  Return ✓
+ * RETURN_REQUESTED → Cancel ✗  Return ✗
+ * RETURNED   → Cancel ✗  Return ✗
+ * CANCELLED  → Cancel ✗  Return ✗
+ */
+const CANCELLABLE = new Set(["PENDING", "CONFIRMED"]);
+const RETURNABLE  = new Set(["DELIVERED"]);
 
 const OrderDetailPage = () => {
   const { id }       = useParams();
@@ -26,18 +38,16 @@ const OrderDetailPage = () => {
   const { order, loading, error } = useOrder(id);
   const { returnStatus, requestReturn } = useReturn(id);
 
-  const [cancelling,    setCancelling]    = useState(false);
-  const [cancelError,   setCancelError]   = useState(null);
-  const [cancelled,     setCancelled]     = useState(false);
+  const [cancelling,  setCancelling]  = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+  const [cancelled,   setCancelled]   = useState(false);
 
-  // Return state
   const [localReturnStatus, setLocalReturnStatus] = useState(null);
   const [returnModalOpen,   setReturnModalOpen]   = useState(false);
   const [returnSuccess,     setReturnSuccess]     = useState(false);
   const [returnError,       setReturnError]       = useState(null);
   const [returnLoading,     setReturnLoading]     = useState(false);
 
-  // Preview image — start with placeholder, fill once order loads
   const [previewImgSrc, setPreviewImgSrc] = useState(ORDER_IMAGE_PLACEHOLDER);
 
   // Sync external returnStatus (from backend) into local state
@@ -75,26 +85,17 @@ const OrderDetailPage = () => {
       setReturnSuccess(true);
       setReturnModalOpen(false);
       setTimeout(() => setReturnSuccess(false), 5000);
-
-      try {
-        await requestReturn(reason);
-      } catch {
-        // Backend call failed — UI already updated optimistically, no user-visible impact
-      }
+      try { await requestReturn(reason); } catch { /* optimistic — UI already updated */ }
     } finally {
       setReturnLoading(false);
     }
   };
 
-  // ── Loading / error / not found ────────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="orders-page">
-        <button
-          className="orders-back"
-          onClick={() => navigate(PATHS.ORDERS)}
-          aria-label="Back to Orders"
-        >
+        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
           ← Back to Orders
         </button>
         <div className="order-detail-skeleton">
@@ -109,11 +110,7 @@ const OrderDetailPage = () => {
   if (error) {
     return (
       <div className="orders-page">
-        <button
-          className="orders-back"
-          onClick={() => navigate(PATHS.ORDERS)}
-          aria-label="Back to Orders"
-        >
+        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
           ← Back to Orders
         </button>
         <p className="error-text">{error}</p>
@@ -124,11 +121,7 @@ const OrderDetailPage = () => {
   if (!order) {
     return (
       <div className="orders-page">
-        <button
-          className="orders-back"
-          onClick={() => navigate(PATHS.ORDERS)}
-          aria-label="Back to Orders"
-        >
+        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
           ← Back to Orders
         </button>
         <div className="orders-empty">
@@ -139,15 +132,17 @@ const OrderDetailPage = () => {
     );
   }
 
-  // ── Derived display state ──────────────────────────────────────────────
+  // ── Derived display state ─────────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
   const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
 
-  const canCancel = CANCELLABLE.includes(upperStatus) && !cancelled;
-  const canReturn = RETURNABLE.includes(upperStatus) && !cancelled && !localReturnStatus;
+  // Buttons are always shown — disabled when the action is not allowed
+  const cancelDisabled = !CANCELLABLE.has(upperStatus) || cancelled || cancelling;
+  const returnDisabled =
+    !RETURNABLE.has(upperStatus) || cancelled || !!localReturnStatus || returnLoading;
 
-  // Once a return is initiated, show the return timeline instead of the order timeline
-  const isReturnFlow = !!localReturnStatus;
+  // Once a return is initiated, show the return timeline
+  const isReturnFlow   = !!localReturnStatus;
   const timelineStatus = localReturnStatus ?? currentStatus;
 
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
@@ -163,7 +158,7 @@ const OrderDetailPage = () => {
   return (
     <div className="orders-page order-detail-page">
 
-      {/* ── Back button ── */}
+      {/* ── Back ── */}
       <button
         className="orders-back"
         onClick={() => navigate(PATHS.ORDERS)}
@@ -178,7 +173,6 @@ const OrderDetailPage = () => {
           <h1 className="order-detail__title">Order #{shortId}</h1>
           <p className="order-detail__date">Placed on {date}</p>
 
-          {/* Product preview strip: tiny image + name below the title */}
           {firstItem && (
             <div className="order-detail__product-preview">
               <img
@@ -205,7 +199,7 @@ const OrderDetailPage = () => {
         <OrderStatusBadge status={currentStatus} />
       </div>
 
-      {/* ── Timeline: order journey OR return journey ── */}
+      {/* ── Timeline ── */}
       <div className="order-detail__timeline">
         {isReturnFlow
           ? <ReturnTimeline status={localReturnStatus} />
@@ -239,33 +233,32 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* ── Action buttons — always rendered, disabled when unavailable ── */}
           <div className="order-detail__section">
             <div className="order-detail__action-row">
-              {canCancel && (
-                <button
-                  className="btn order-detail__cancel-btn"
-                  onClick={handleCancel}
-                  disabled={cancelling}
-                >
-                  {cancelling ? "Cancelling…" : "Cancel Order"}
-                </button>
-              )}
-              {canReturn && (
-                <button
-                  className="btn order-detail__return-btn"
-                  onClick={() => setReturnModalOpen(true)}
-                  disabled={returnLoading}
-                >
-                  {returnLoading ? "Processing…" : "↩ Return Order"}
-                </button>
-              )}
+              <button
+                className="btn order-detail__cancel-btn"
+                onClick={handleCancel}
+                disabled={cancelDisabled}
+                aria-label="Cancel this order"
+              >
+                {cancelling ? "Cancelling…" : "Cancel Order"}
+              </button>
+
+              <button
+                className="btn order-detail__return-btn"
+                onClick={() => setReturnModalOpen(true)}
+                disabled={returnDisabled}
+                aria-label="Request a return for this order"
+              >
+                {returnLoading ? "Processing…" : "↩ Return Order"}
+              </button>
             </div>
 
-            {cancelled         && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
-            {returnSuccess     && <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>}
-            {cancelError       && <p className="error-text">{cancelError}</p>}
-            {returnError       && <p className="error-text">{returnError}</p>}
+            {cancelled     && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
+            {returnSuccess && <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>}
+            {cancelError   && <p className="error-text">{cancelError}</p>}
+            {returnError   && <p className="error-text">{returnError}</p>}
           </div>
         </div>
 
