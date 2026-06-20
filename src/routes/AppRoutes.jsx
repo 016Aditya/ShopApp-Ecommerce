@@ -21,12 +21,13 @@ import CustomerServicePage from "@/features/customerService/pages/CustomerServic
 import WishlistPage      from "@/features/wishlist/pages/WishlistPage";
 
 // Protected pages
-import CartPage        from "@/features/cart/pages/CartPage";
-import CheckoutPage    from "@/features/orders/pages/CheckoutPage";
-import OrdersPage      from "@/features/orders/pages/OrdersPage";
-import OrderDetailPage from "@/features/orders/pages/OrderDetailPage";
-import OrderSuccessPage from "@/features/orders/pages/OrderSuccessPage";
-import ProfilePage     from "@/features/profile/pages/ProfilePage";
+import CartPage            from "@/features/cart/pages/CartPage";
+import CheckoutPage        from "@/features/orders/pages/CheckoutPage";
+import OrdersPage          from "@/features/orders/pages/OrdersPage";
+import OrderDetailPage     from "@/features/orders/pages/OrderDetailPage";
+import OrderSuccessPage    from "@/features/orders/pages/OrderSuccessPage";
+import ProfilePage         from "@/features/profile/pages/ProfilePage";
+import SavedAddressesPage  from "@/features/profile/pages/SavedAddressesPage";
 
 // Errors
 import NotFound from "@/errors/NotFound";
@@ -57,12 +58,13 @@ const AppRoutes = () => {
 
         {/* Protected routes */}
         <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART}          element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT}      element={<CheckoutPage />} />
-          <Route path={PATHS.ORDERS}        element={<OrdersPage />} />
-          <Route path={PATHS.ORDER_DETAIL}  element={<OrderDetailPage />} />
-          <Route path={PATHS.ORDER_SUCCESS} element={<OrderSuccessPage />} />
-          <Route path={PATHS.PROFILE}       element={<ProfilePage />} />
+          <Route path={PATHS.CART}             element={<CartPage />} />
+          <Route path={PATHS.CHECKOUT}         element={<CheckoutPage />} />
+          <Route path={PATHS.ORDERS}           element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL}     element={<OrderDetailPage />} />
+          <Route path={PATHS.ORDER_SUCCESS}    element={<OrderSuccessPage />} />
+          <Route path={PATHS.PROFILE}          element={<ProfilePage />} />
+          <Route path={PATHS.SAVED_ADDRESSES}  element={<SavedAddressesPage />} />
         </Route>
 
         {/* 404 */}

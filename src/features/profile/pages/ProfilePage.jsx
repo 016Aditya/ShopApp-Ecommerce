@@ -32,7 +32,7 @@ const ACCOUNT_CARDS = [
     id: "addresses",
     label: "Saved Addresses",
     description: "Manage delivery locations",
-    path: PATHS.CHECKOUT,
+    path: PATHS.SAVED_ADDRESSES,   // ← now navigates to dedicated page
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
