@@ -8,6 +8,7 @@ import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderSummary from "../components/OrderSummary";
 import OrderTimeline from "../components/OrderTimeline";
 import ReturnModal from "../components/ReturnModal";
+import ReturnTimeline from "../components/ReturnTimeline";
 import ShippingInfo from "../components/ShippingInfo";
 import { useOrder } from "../hooks/useOrders";
 import { useReturn } from "../hooks/useReturn";
@@ -78,9 +79,7 @@ const OrderDetailPage = () => {
       try {
         await requestReturn(reason);
       } catch {
-        if (import.meta.env.DEV) {
-          console.warn("[Return] backend call failed — UI updated optimistically");
-        }
+        // Backend call failed — UI already updated optimistically, no user-visible impact
       }
     } finally {
       setReturnLoading(false);
@@ -147,6 +146,8 @@ const OrderDetailPage = () => {
   const canCancel = CANCELLABLE.includes(upperStatus) && !cancelled;
   const canReturn = RETURNABLE.includes(upperStatus) && !cancelled && !localReturnStatus;
 
+  // Once a return is initiated, show the return timeline instead of the order timeline
+  const isReturnFlow = !!localReturnStatus;
   const timelineStatus = localReturnStatus ?? currentStatus;
 
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
@@ -204,9 +205,12 @@ const OrderDetailPage = () => {
         <OrderStatusBadge status={currentStatus} />
       </div>
 
-      {/* ── Timeline ── */}
+      {/* ── Timeline: order journey OR return journey ── */}
       <div className="order-detail__timeline">
-        <OrderTimeline status={timelineStatus} />
+        {isReturnFlow
+          ? <ReturnTimeline status={localReturnStatus} />
+          : <OrderTimeline status={timelineStatus} />
+        }
       </div>
 
       {/* ── Content grid ── */}
@@ -253,20 +257,15 @@ const OrderDetailPage = () => {
                   onClick={() => setReturnModalOpen(true)}
                   disabled={returnLoading}
                 >
-                  {returnLoading ? "Processing…" : "Return Order"}
+                  {returnLoading ? "Processing…" : "↩ Return Order"}
                 </button>
               )}
             </div>
 
-            {cancelled          && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
-            {localReturnStatus  && (
-              <p className="order-detail__return-status-msg">
-                🔄 Return status: <strong>{localReturnStatus.replace(/_/g, " ")}</strong>
-              </p>
-            )}
-            {returnSuccess  && <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>}
-            {cancelError    && <p className="error-text">{cancelError}</p>}
-            {returnError    && <p className="error-text">{returnError}</p>}
+            {cancelled         && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
+            {returnSuccess     && <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>}
+            {cancelError       && <p className="error-text">{cancelError}</p>}
+            {returnError       && <p className="error-text">{returnError}</p>}
           </div>
         </div>
 

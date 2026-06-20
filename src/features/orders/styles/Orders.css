@@ -64,7 +64,7 @@
   line-height: 1.4;
 }
 
-/* ── Timeline ──────────────────────────────────────────── */
+/* ── Timeline (Order Journey) ──────────────────────────── */
 .order-timeline {
   display: flex; align-items: flex-start;
   padding: 16px 0; overflow-x: auto;
@@ -98,7 +98,38 @@
 }
 .order-timeline__line--done { background: var(--success-text); }
 
-/* Return stages — indigo tint */
+/* ── Return Timeline — amber/orange tint ───────────────── */
+/* Wraps the new ReturnTimeline component */
+.return-timeline { border-top: 1px solid var(--border-color); padding-top: 16px; }
+.return-timeline::before {
+  content: "↩ Return Progress";
+  display: block;
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #d97706;
+  margin-bottom: 10px;
+}
+
+/* Return dot — amber */
+.order-timeline__dot--return-done {
+  background: #fef3c7;
+  border-color: #d97706;
+}
+.order-timeline__dot--return-current {
+  background: #fef3c7;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+}
+/* Return label */
+.order-timeline__label--return-done    { color: #92400e; }
+.order-timeline__label--return-current { color: #d97706; font-weight: 700; }
+/* Return connector line */
+.order-timeline__line--return { background: #d97706; }
+
+/* Legacy return dot styles (used by unified OrderTimeline) */
 .order-timeline__dot--return.order-timeline__dot--done,
 .order-timeline__dot--return.order-timeline__dot--current {
   background: #4f46e5;
@@ -135,6 +166,8 @@
 
 /* Action row */
 .order-detail__action-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+
+/* Cancel button — red outline */
 .order-detail__cancel-btn {
   background: var(--card-bg); border: 1px solid var(--error-text);
   color: var(--error-text); padding: 8px 20px;
@@ -146,9 +179,9 @@
 .order-detail__cancelled-msg       { color: var(--success-text); font-size: 0.9rem; font-weight: 500; }
 .order-detail__right { position: sticky; top: 72px; }
 
-/* Return button */
+/* Return button — amber (distinct from red Cancel) */
 .order-detail__return-btn {
-  background: #2563eb;
+  background: #d97706;
   border: none;
   color: #fff;
   padding: 8px 20px;
@@ -158,7 +191,7 @@
   font-weight: 600;
   transition: background 0.15s;
 }
-.order-detail__return-btn:hover    { background: #1d4ed8; }
+.order-detail__return-btn:hover    { background: #b45309; }
 .order-detail__return-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .order-detail__return-status-msg   { font-size: 0.875rem; color: var(--info-text); margin-top: 6px; }
 .order-detail__success-msg         { color: var(--success-text); font-size: 0.9rem; font-weight: 500; margin-top: 8px; }
@@ -245,6 +278,3 @@
 .order-success__btn--orders:hover { background: var(--button-primary-hover); }
 .order-success__btn--shop   { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); }
 .order-success__btn--shop:hover { background: var(--bg-tertiary); }
-
-/* ── Return Order ──────────────────────────────────────── */
-.order-detail__return-timeline { margin: 12px 0 20px; }

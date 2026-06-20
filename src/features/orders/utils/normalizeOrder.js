@@ -9,6 +9,10 @@
  *   order.orderItems[].product.imageUrl
  *   order.orderItems[].productName  (flat variant)
  *   order.items[].product.*         (alternate key)
+ *
+ * NOTE: `raw` fields have been intentionally removed to prevent
+ * sensitive order/address data from leaking into the console or
+ * React DevTools in production builds.
  */
 
 const ORDER_IMAGE_PLACEHOLDER =
@@ -104,7 +108,7 @@ const normalizeOrderItem = (item = {}, index = 0) => {
     quantity,
     unitPrice,
     totalPrice,
-    raw: item,
+    // raw field intentionally omitted — prevents data leaking to console/devtools
   };
 };
 
@@ -149,7 +153,7 @@ export const normalizeOrder = (order = {}) => {
     taxPrice:      toNumber(pickFirst(order.taxPrice, order.taxAmount, order.gst), 0),
     address:       normalizeAddress(pickFirst(order.address, order.shippingAddress, order.deliveryAddress, {})),
     items,
-    raw: order,
+    // raw field intentionally omitted — prevents sensitive order data leaking to console/devtools
   };
 };
 
