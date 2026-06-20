@@ -1,36 +1,24 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getUserById, updateUserProfile } from "@/services/profileService";
+import { updateUserProfile } from "@/services/profileService";
 
 const useProfile = () => {
   const { user, updateUser } = useAuth();
 
+  // profile stays null when GET /users/:id is unavailable;
+  // ProfileForm falls back to AuthContext user data in that case.
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
   const [success, setSuccess] = useState(false);
 
+  // fetchProfile is kept for components that explicitly need a refresh,
+  // but it is NO LONGER called automatically on mount — we skip the
+  // GET /users/:id call entirely because the endpoint does not exist
+  // in this backend. The form pre-fills from AuthContext instead.
   const fetchProfile = useCallback(async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getUserById(user.id);
-      setProfile(data);
-    } catch (err) {
-      // 404 is expected for users whose /api/users/:id endpoint isn't available
-      // We silently swallow this so the form still pre-fills from AuthContext
-      if (err.response?.status !== 404) {
-        setError(err.response?.data?.message || "Failed to load profile");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    // no-op: endpoint unavailable
+  }, []);
 
   const updateProfile = async (profileData) => {
     if (!user?.id) return;
@@ -40,15 +28,15 @@ const useProfile = () => {
     try {
       const updated = await updateUserProfile(user.id, profileData);
       setProfile(updated);
-      // Sync all editable fields into AuthContext + localStorage
+      // Sync all editable fields back into AuthContext + localStorage
       updateUser({
-        firstName:   updated.firstName,
-        lastName:    updated.lastName,
+        firstName:   updated.firstName   ?? profileData.firstName,
+        lastName:    updated.lastName    ?? profileData.lastName,
         phoneNumber: updated.phoneNumber ?? profileData.phoneNumber,
       });
       setSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(err.response?.data?.message || err.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }

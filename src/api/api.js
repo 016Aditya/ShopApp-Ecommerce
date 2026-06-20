@@ -14,7 +14,6 @@ const api = axios.create({
 // ─── Request interceptor ──────────────────────────────────────────────────────
 api.interceptors.request.use(
   (config) => {
-    // Read directly from Zustand store — works outside React components
     const { user, token } = useAuthStore.getState();
 
     if (user?.id) {
@@ -37,7 +36,7 @@ api.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
 
-    // 401 — session invalid, clear Zustand store and redirect
+    // 401 — session invalid, clear store and redirect to login
     if (status === 401) {
       useAuthStore.getState().logout();
       if (!window.location.pathname.includes("/login")) {
@@ -47,17 +46,12 @@ api.interceptors.response.use(
 
     // 403 — not enough permissions
     if (status === 403) {
-      console.warn("Access denied:", error.response?.data);
-    }
-
-    // 404 — resource not found (product, order, user)
-    if (status === 404) {
-      console.warn("Resource not found:", error.response?.data);
+      console.warn("[api] Access denied:", error.response?.data);
     }
 
     // 500+ — server error
     if (status >= 500) {
-      console.error("Server error:", error.response?.data);
+      console.error("[api] Server error:", error.response?.data);
     }
 
     // Normalise error message from Spring Boot GlobalExceptionHandler
