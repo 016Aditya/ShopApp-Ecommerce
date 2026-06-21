@@ -1,102 +1,131 @@
-/* OrderReturnInfo.css
- * NEW FILE — styles for the OrderReturnInfo component.
- * Shown only when an order is in the return flow (additive).
- * Dark mode via [data-theme="dark"] matching the app's ThemeProvider pattern.
- */
+/* =============================================================================
+   OrderReturnInfo.css
+   Styles for the Return Details panel shown inside OrderDetailPage.
+   Only renders for orders in a return flow.
 
-.return-info {
-  background: #fffbeb;
+   Dark mode: [data-theme="dark"] overrides match existing Orders.css pattern.
+   ============================================================================= */
+
+/* ── Section container ──────────────────────────────────────────────────────── */
+.order-return-info {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-primary, #fffbeb);
   border: 1px solid #fde68a;
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
+  border-radius: 12px;
 }
 
-[data-theme="dark"] .return-info {
-  background: #1c1700;
-  border-color: #3d3000;
+[data-theme="dark"] .order-return-info {
+  background: #1c1a0f;
+  border-color: #3d3010;
 }
 
-.return-info__title {
-  font-size: 0.875rem;
+/* ── Section heading ─────────────────────────────────────────────────────────── */
+.order-return-info__heading {
+  font-size: 0.95rem;
   font-weight: 700;
   color: #92400e;
-  margin: 0 0 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-[data-theme="dark"] .return-info__title {
+.order-return-info__heading::before {
+  content: "↩";
+  font-size: 1rem;
+}
+
+[data-theme="dark"] .order-return-info__heading {
   color: #fcd34d;
 }
 
-.return-info__list {
+/* ── Definition list ─────────────────────────────────────────────────────────── */
+.order-return-info__list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.65rem;
   margin: 0;
   padding: 0;
 }
 
-.return-info__row {
+.order-return-info__row {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.return-info__label {
-  font-size: 0.8rem;
-  color: #92400e;
-  font-weight: 600;
-  min-width: 160px;
+.order-return-info__label {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+  font-weight: 500;
   flex-shrink: 0;
 }
 
-[data-theme="dark"] .return-info__label {
-  color: #d97706;
+[data-theme="dark"] .order-return-info__label {
+  color: var(--text-secondary, #9ca3af);
 }
 
-.return-info__value {
+.order-return-info__value {
   font-size: 0.85rem;
-  color: #451a03;
-  font-weight: 500;
+  color: var(--text-primary, #111827);
+  font-weight: 600;
+  text-align: right;
+  margin: 0;
 }
 
-[data-theme="dark"] .return-info__value {
-  color: #fef3c7;
+[data-theme="dark"] .order-return-info__value {
+  color: var(--text-primary, #e5e7eb);
 }
 
-/* Return status — slightly bolder */
-.return-info__value--status {
-  font-weight: 700;
-  color: #b45309;
-}
-[data-theme="dark"] .return-info__value--status {
-  color: #fbbf24;
+/* ── Status badges ───────────────────────────────────────────────────────────── */
+.order-return-info__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-/* Refund status colours */
-.return-info__refund--pending {
-  color: #b45309;
+/* Amber — in-progress return states */
+.order-return-info__badge--amber {
+  background: #fef3c7;
+  color: #92400e;
 }
-.return-info__refund--processed {
-  color: #15803d;
-  font-weight: 700;
-}
-[data-theme="dark"] .return-info__refund--pending {
+
+[data-theme="dark"] .order-return-info__badge--amber {
+  background: #451a03;
   color: #fcd34d;
 }
-[data-theme="dark"] .return-info__refund--processed {
-  color: #4ade80;
+
+/* Green — success / processed states */
+.order-return-info__badge--success {
+  background: #dcfce7;
+  color: #166534;
 }
 
-/* Mobile */
+[data-theme="dark"] .order-return-info__badge--success {
+  background: #14532d;
+  color: #86efac;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  .return-info__row {
-    flex-direction: column;
-    gap: 0.15rem;
+  .order-return-info {
+    padding: 1rem;
+    border-radius: 10px;
   }
-  .return-info__label {
-    min-width: unset;
+
+  .order-return-info__row {
+    flex-direction: column;
+    gap: 0.2rem;
+    align-items: flex-start;
+  }
+
+  .order-return-info__value {
+    text-align: left;
   }
 }

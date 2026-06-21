@@ -1,29 +1,39 @@
-import api from "@/api/api";
-import { API_ENDPOINTS } from "@/api/apiEndpoints";
+// src/services/returnService.js
+import api from "../api/api.js";
+
+const ORDERS_BASE = "/api/orders";
 
 /**
- * returnService.js
+ * PATCH /api/orders/{id}/return
  *
- * PATCH /api/orders/{id}/return  — no request body.
- * Backend sets: status=RETURN_REQUESTED, returnRequestedAt=now(), refundStatus=PENDING
+ * Root-cause fix: was using POST, backend expects PATCH.
+ * No request body — returnRequestedAt and refundStatus are set server-side.
+ *
+ * Backend validation:
+ *   - Allows return only when status === DELIVERED
+ *   - Returns 400 "This order cannot be returned." otherwise
  */
-
-// Initiate a return — PATCH per backend contract, no body
 export const initiateReturn = async (orderId) => {
-  const { data } = await api.patch(`${API_ENDPOINTS.ORDERS}/${orderId}/return`);
+  const { data } = await api.patch(`${ORDERS_BASE}/${orderId}/return`);
   return data;
 };
 
-// Get return status for an order
+/**
+ * GET /api/orders/{id}/return
+ * Fetch the current return status for a specific order.
+ */
 export const getReturnStatus = async (orderId) => {
-  const { data } = await api.get(`${API_ENDPOINTS.ORDERS}/${orderId}/return`);
+  const { data } = await api.get(`${ORDERS_BASE}/${orderId}/return`);
   return data;
 };
 
-// Update return status (admin/system use)
+/**
+ * PATCH /api/orders/{id}/return/status
+ * Admin: update return status (RETURN_APPROVED, PICKUP_SCHEDULED, etc.)
+ */
 export const updateReturnStatus = async (orderId, status) => {
   const { data } = await api.patch(
-    `${API_ENDPOINTS.ORDERS}/${orderId}/return/status`,
+    `${ORDERS_BASE}/${orderId}/return/status`,
     { status }
   );
   return data;

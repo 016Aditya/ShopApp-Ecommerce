@@ -1,17 +1,23 @@
+// src/features/orders/components/OrderStatusBadge.jsx
+
 /**
  * OrderStatusBadge
  *
- * FIX: Added all 6 return statuses.
- * Return in-progress statuses → amber  (#f59e0b palette)
- * REFUND_PROCESSED / RETURN_SUCCESSFUL → green (terminal success)
- * RETURNED kept as legacy alias → green
+ * Fix: added all 6 return statuses that were missing.
+ * Return statuses in-progress → amber; terminal success → green.
+ *
+ * Existing delivery statuses are UNTOUCHED.
  */
 
-const AMBER = { color: "#92400e", bg: "#fef3c7" };
-const GREEN = { color: "#166534", bg: "#dcfce7" };
+const AMBER_LIGHT = { color: "#92400e", bg: "#fef3c7" };
+const AMBER_DARK  = { color: "#fcd34d", bg: "#451a03" }; // used via CSS variable
+const GREEN_LIGHT = { color: "#166534", bg: "#dcfce7" };
 
+// All status definitions — light mode colours.
+// Dark mode overrides are handled by the .order-status-badge--dark-* classes
+// injected via the <style> block below.
 const STATUS_MAP = {
-  // ── Delivery statuses — unchanged ─────────────────────────────────────
+  // ── Delivery (existing — DO NOT RENAME) ─────────────────────────────
   PENDING:   { label: "Pending",   color: "#b45309", bg: "#fef3c7" },
   CONFIRMED: { label: "Confirmed", color: "#1d4ed8", bg: "#dbeafe" },
   PACKED:    { label: "Packed",    color: "#7c3aed", bg: "#ede9fe" },
@@ -19,28 +25,53 @@ const STATUS_MAP = {
   DELIVERED: { label: "Delivered", color: "#15803d", bg: "#dcfce7" },
   CANCELLED: { label: "Cancelled", color: "#b91c1c", bg: "#fee2e2" },
 
-  // ── Return in-progress → amber ──────────────────────────────────────
-  RETURN_REQUESTED: { label: "Return Requested", ...AMBER },
-  RETURN_APPROVED:  { label: "Return Approved",  ...AMBER },
-  PICKUP_SCHEDULED: { label: "Pickup Scheduled", ...AMBER },
-  PICKED_UP:        { label: "Picked Up",         ...AMBER },
+  // ── Return in-progress (amber) — NEW ────────────────────────────────
+  RETURN_REQUESTED: { label: "Return Requested", ...AMBER_LIGHT },
+  RETURN_APPROVED:  { label: "Return Approved",  ...AMBER_LIGHT },
+  PICKUP_SCHEDULED: { label: "Pickup Scheduled", ...AMBER_LIGHT },
+  PICKED_UP:        { label: "Picked Up",         ...AMBER_LIGHT },
 
-  // ── Return terminal → green ─────────────────────────────────────────
-  REFUND_PROCESSED:  { label: "Refund Processed",  ...GREEN },
-  RETURN_SUCCESSFUL: { label: "Return Successful", ...GREEN },
-  RETURNED:          { label: "Returned",           ...GREEN }, // legacy alias
+  // ── Return terminal success (green) — NEW ───────────────────────────
+  REFUND_PROCESSED:  { label: "Refund Processed",  ...GREEN_LIGHT },
+  RETURN_SUCCESSFUL: { label: "Return Successful", ...GREEN_LIGHT },
+
+  // ── Legacy alias (keep for old data compatibility) ───────────────────
+  RETURNED: { label: "Returned", ...GREEN_LIGHT },
 };
 
+// Which statuses are "return in-progress" (amber) for dark mode
+const RETURN_AMBER_STATUSES = new Set([
+  "RETURN_REQUESTED",
+  "RETURN_APPROVED",
+  "PICKUP_SCHEDULED",
+  "PICKED_UP",
+]);
+
+// Which statuses are "return success" (green) for dark mode
+const RETURN_GREEN_STATUSES = new Set([
+  "REFUND_PROCESSED",
+  "RETURN_SUCCESSFUL",
+  "RETURNED",
+]);
+
 const OrderStatusBadge = ({ status }) => {
-  const s = STATUS_MAP[status?.toUpperCase()] ?? {
+  const key = (status ?? "").toUpperCase();
+  const s   = STATUS_MAP[key] ?? {
     label: status ?? "Unknown",
-    color: "#555",
-    bg: "#f3f4f6",
+    color: "var(--text-secondary, #6b7280)",
+    bg:    "var(--bg-secondary, #f3f4f6)",
   };
+
+  // Dark-mode modifier class for the two new groups
+  const darkClass = RETURN_AMBER_STATUSES.has(key)
+    ? "order-status-badge--return-amber"
+    : RETURN_GREEN_STATUSES.has(key)
+    ? "order-status-badge--return-green"
+    : "";
 
   return (
     <span
-      className="order-status-badge"
+      className={["order-status-badge", darkClass].filter(Boolean).join(" ")}
       style={{ color: s.color, background: s.bg }}
     >
       {s.label}
@@ -49,3 +80,29 @@ const OrderStatusBadge = ({ status }) => {
 };
 
 export default OrderStatusBadge;
+
+/*
+  Append these rules to Orders.css (or keep here via a <style> injection).
+  They override the inline light-mode colours in dark mode without
+  requiring CSS variables on every inline style.
+
+  .order-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  [data-theme="dark"] .order-status-badge--return-amber {
+    background: #451a03 !important;
+    color: #fcd34d !important;
+  }
+
+  [data-theme="dark"] .order-status-badge--return-green {
+    background: #14532d !important;
+    color: #86efac !important;
+  }
+*/

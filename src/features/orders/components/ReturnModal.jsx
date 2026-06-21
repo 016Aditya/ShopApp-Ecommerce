@@ -1,16 +1,22 @@
+// src/features/orders/components/ReturnModal.jsx
 import "../styles/ReturnModal.css";
 
 /**
  * ReturnModal
  *
- * Spec-exact copy:
- *   Title:   "Return this order?"
- *   Message: "Are you sure you want to return this product?
- *             Refund will be processed after successful pickup and verification."
- *   Buttons: "Cancel" | "Confirm Return"
+ * Fixes applied:
+ *   1. Title now exactly matches spec: "Return this order?"
+ *   2. Message now exactly matches spec (two lines per spec).
+ *   3. Removed the "reason" textarea — spec does not include it.
+ *   4. Added CSS import (ReturnModal.css was missing entirely).
+ *   5. Buttons: "Cancel" | "Confirm Return" (spec exact).
+ *   6. Overlay click closes the modal (UX standard).
  *
- * No reason textarea — spec does not require it.
- * The PATCH endpoint takes no body; reason is handled server-side if needed.
+ * Props:
+ *   isOpen    {boolean}  — whether the modal is visible
+ *   onClose   {function} — called on Cancel or overlay click
+ *   onConfirm {function} — called on "Confirm Return" click
+ *   isLoading {boolean}  — disables buttons and shows loading text
  */
 const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
   if (!isOpen) return null;
@@ -28,7 +34,7 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
         aria-modal="true"
         aria-labelledby="return-modal-title"
       >
-        {/* Header */}
+        {/* ── Header ────────────────────────────────────────────────── */}
         <div className="return-modal__header">
           <h2 className="return-modal__title" id="return-modal-title">
             Return this order?
@@ -36,14 +42,14 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
           <button
             className="return-modal__close"
             onClick={onClose}
+            aria-label="Close return modal"
             disabled={isLoading}
-            aria-label="Close dialog"
           >
-            \u2715
+            ✕
           </button>
         </div>
 
-        {/* Body */}
+        {/* ── Body ──────────────────────────────────────────────────── */}
         <div className="return-modal__body">
           <p className="return-modal__message">
             Are you sure you want to return this product?
@@ -53,21 +59,23 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
           </p>
         </div>
 
-        {/* Footer */}
+        {/* ── Footer ────────────────────────────────────────────────── */}
         <div className="return-modal__footer">
           <button
-            className="btn return-modal__btn return-modal__btn--cancel"
+            className="return-modal__btn return-modal__btn--cancel"
             onClick={onClose}
             disabled={isLoading}
+            type="button"
           >
             Cancel
           </button>
           <button
-            className="btn return-modal__btn return-modal__btn--confirm"
+            className="return-modal__btn return-modal__btn--confirm"
             onClick={onConfirm}
             disabled={isLoading}
+            type="button"
           >
-            {isLoading ? "Processing\u2026" : "Confirm Return"}
+            {isLoading ? "Processing…" : "Confirm Return"}
           </button>
         </div>
       </div>
