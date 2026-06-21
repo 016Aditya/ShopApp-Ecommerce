@@ -17,15 +17,12 @@ import "../styles/Orders.css";
 
 /**
  * Business rules for Cancel / Return buttons.
- * Both buttons are ALWAYS rendered — disabled states communicate
- * unavailability instead of hiding buttons entirely.
- *
  * PENDING    → Cancel ✓  Return ✗
  * CONFIRMED  → Cancel ✓  Return ✗
  * PACKED     → Cancel ✗  Return ✗
  * SHIPPED    → Cancel ✗  Return ✗
- * DELIVERED  → Cancel ✗  Return ✓  ← only state where Return is active
- * RETURN_*   → Cancel ✗  Return ✗  (already in return flow)
+ * DELIVERED  → Cancel ✗  Return ✓
+ * RETURN_*   → Cancel ✗  Return ✗
  * CANCELLED  → Cancel ✗  Return ✗
  */
 const CANCELLABLE = new Set(["PENDING", "CONFIRMED"]);
@@ -41,6 +38,29 @@ const RETURN_STATUSES = new Set([
   "RETURNED",
 ]);
 
+/** Convert enum → readable label for Order Information section */
+const STATUS_LABELS = {
+  PENDING:           "Pending",
+  CONFIRMED:         "Confirmed",
+  PACKED:            "Packed",
+  SHIPPED:           "Shipped",
+  DELIVERED:         "Delivered",
+  CANCELLED:         "Cancelled",
+  RETURN_REQUESTED:  "Return Requested",
+  RETURN_APPROVED:   "Return Approved",
+  PICKUP_SCHEDULED:  "Pickup Scheduled",
+  PICKED_UP:         "Picked Up",
+  REFUND_PROCESSED:  "Refund Processed",
+  RETURN_SUCCESSFUL: "Return Successful",
+  RETURNED:          "Returned",
+};
+
+/** Convert refund enum → readable label */
+const REFUND_LABELS = {
+  PENDING:   "Pending",
+  PROCESSED: "Processed",
+};
+
 const formatDate = (iso) =>
   iso
     ? new Date(iso).toLocaleDateString("en-IN", {
@@ -49,8 +69,8 @@ const formatDate = (iso) =>
     : null;
 
 const OrderDetailPage = () => {
-  const { id }       = useParams();
-  const navigate     = useNavigate();
+  const { id }     = useParams();
+  const navigate   = useNavigate();
   const { order, loading, error } = useOrder(id);
   const { returnStatus, requestReturn } = useReturn(id);
 
@@ -66,20 +86,16 @@ const OrderDetailPage = () => {
 
   const [previewImgSrc, setPreviewImgSrc] = useState(ORDER_IMAGE_PLACEHOLDER);
 
-  // Sync external returnStatus (from useReturn hook) into local state
   useEffect(() => {
     if (returnStatus) setLocalReturnStatus(returnStatus);
   }, [returnStatus]);
 
-  // Seed localReturnStatus from order.status on load
-  // (handles page reload when order is already in return flow)
   useEffect(() => {
     if (order && RETURN_STATUSES.has(order.status?.toUpperCase())) {
       setLocalReturnStatus(order.status.toUpperCase());
     }
   }, [order]);
 
-  // Update preview image once order data arrives
   useEffect(() => {
     const url = order?.items?.[0]?.imageUrl;
     if (url) setPreviewImgSrc(url);
@@ -104,13 +120,10 @@ const OrderDetailPage = () => {
   const handleReturnRequest = async () => {
     setReturnLoading(true);
     setReturnError(null);
-    // Optimistic UI — update immediately so the dual timeline appears at once
     setLocalReturnStatus("RETURN_REQUESTED");
     setReturnModalOpen(false);
     try {
       const updated = await requestReturn();
-      // Sync orderStore so the Orders list page reflects new status
-      // without requiring a full refetch
       useOrderStore.getState().updateOrderReturn(id, {
         status:            updated?.status            ?? "RETURN_REQUESTED",
         returnRequestedAt: updated?.returnRequestedAt ?? new Date().toISOString(),
@@ -119,7 +132,6 @@ const OrderDetailPage = () => {
       setReturnSuccess(true);
       setTimeout(() => setReturnSuccess(false), 5000);
     } catch (err) {
-      // Revert optimistic update on failure
       setLocalReturnStatus(null);
       setReturnError(err.message || "Failed to initiate return. Please try again.");
     } finally {
@@ -168,7 +180,7 @@ const OrderDetailPage = () => {
     );
   }
 
-  // ── Derived display state ─────────────────────────────────────────────────
+  // ── Derived display state ────────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
   const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
 
@@ -184,9 +196,22 @@ const OrderDetailPage = () => {
   const firstItem  = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
 
-  // Return info fields — null-safe for old orders without these fields
+  // Readable label for return button after submit
+  const returnBtnLabel = returnLoading
+    ? "Processing…"
+    : localReturnStatus
+    ? "Return Requested"
+    : "↩ Return Order";
+
+  // Return info fields
   const returnRequestedOn = formatDate(order.returnRequestedAt);
   const returnCompletedOn = formatDate(order.returnCompletedAt);
+
+  // Human-readable status label for Order Information
+  const displayStatus  = STATUS_LABELS[upperStatus] ?? currentStatus;
+  const displayRefund  = order.refundStatus
+    ? (REFUND_LABELS[order.refundStatus?.toUpperCase()] ?? order.refundStatus)
+    : "Pending";
 
   return (
     <div className="orders-page order-detail-page">
@@ -212,8 +237,8 @@ const OrderDetailPage = () => {
                 src={previewImgSrc}
                 alt={firstItem.productName ?? "Product"}
                 className="order-detail__preview-img"
-                width={44}
-                height={44}
+                width={48}
+                height={48}
                 loading="lazy"
                 onError={() => setPreviewImgSrc(ORDER_IMAGE_PLACEHOLDER)}
               />
@@ -232,12 +257,7 @@ const OrderDetailPage = () => {
         <OrderStatusBadge status={currentStatus} />
       </div>
 
-      {/* ── Unified Timeline section ── */}
-      {/*
-        Single horizontal timeline showing delivery progress and return progress
-        when the order enters the return flow. Return stages are appended to the
-        delivery timeline without creating a separate box or section.
-      */}
+      {/* ── Unified Timeline ── */}
       <div className="order-detail__timeline">
         <OrderTimeline
           status={localReturnStatus || currentStatus}
@@ -265,17 +285,13 @@ const OrderDetailPage = () => {
           <div className="order-detail__section">
             <h3 className="order-detail__section-title">Order Information</h3>
             <div className="shipping-info">
-              <p className="shipping-info__line">Status: {currentStatus}</p>
+              <p className="shipping-info__line">Status: {displayStatus}</p>
               <p className="shipping-info__line">Items: {order.quantity}</p>
               <p className="shipping-info__line">Order date: {date}</p>
             </div>
           </div>
 
-          {/*
-            Return Information panel — only shown when in return flow.
-            All fields are null-safe: old orders without returnRequestedAt
-            or refundStatus will simply not render those lines.
-          */}
+          {/* Return Information — only in return flow */}
           {isReturnFlow && (
             <div className="order-detail__section order-detail__return-info">
               <h3 className="order-detail__section-title">Return Information</h3>
@@ -283,12 +299,12 @@ const OrderDetailPage = () => {
                 <p className="shipping-info__line">
                   <span className="order-detail__return-info-label">Return Status:</span>{" "}
                   <span className="order-detail__return-info-value">
-                    {localReturnStatus}
+                    {STATUS_LABELS[localReturnStatus] ?? localReturnStatus}
                   </span>
                 </p>
                 {returnRequestedOn && (
                   <p className="shipping-info__line">
-                    <span className="order-detail__return-info-label">Return Requested On:</span>{" "}
+                    <span className="order-detail__return-info-label">Requested On:</span>{" "}
                     {returnRequestedOn}
                   </p>
                 )}
@@ -301,7 +317,7 @@ const OrderDetailPage = () => {
                 <p className="shipping-info__line">
                   <span className="order-detail__return-info-label">Refund Status:</span>{" "}
                   <span className="order-detail__return-info-value">
-                    {order.refundStatus ?? "PENDING"}
+                    {displayRefund}
                   </span>
                 </p>
               </div>
@@ -320,13 +336,22 @@ const OrderDetailPage = () => {
                 {cancelling ? "Cancelling…" : "Cancel Order"}
               </button>
 
+              {/*
+                Return button:
+                - Active (DELIVERED, not yet requested): amber, enabled
+                - After request submitted: "Return Requested", amber, disabled, cursor not-allowed
+                - Any other state: dimmed (opacity 0.6), cursor not-allowed
+              */}
               <button
-                className="btn order-detail__return-btn"
+                className={[
+                  "btn order-detail__return-btn",
+                  localReturnStatus ? "order-detail__return-btn--requested" : "",
+                ].filter(Boolean).join(" ")}
                 onClick={() => setReturnModalOpen(true)}
                 disabled={returnDisabled}
                 aria-label="Request a return for this order"
               >
-                {returnLoading ? "Processing…" : "↩ Return Order"}
+                {returnBtnLabel}
               </button>
             </div>
 
@@ -346,7 +371,6 @@ const OrderDetailPage = () => {
         </aside>
       </div>
 
-      {/* Return confirmation modal */}
       <ReturnModal
         isOpen={returnModalOpen}
         onClose={() => setReturnModalOpen(false)}

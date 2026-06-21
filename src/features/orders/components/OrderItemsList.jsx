@@ -3,11 +3,14 @@ import { formatCurrency } from "@/utils/currency";
 import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
 
 /**
- * OrderItemsList
+ * OrderItemsList — polish update
  *
- * Renders the "Products Ordered" section inside OrderDetailPage.
- * Receives items already normalized by normalizeOrder — all fields
- * are guaranteed (productName, imageUrl, quantity, unitPrice, totalPrice).
+ * Changes:
+ * - Image: 64×64, border-radius 12px
+ * - Product title: font-weight 600
+ * - Qty: secondary text (unchanged class, explicit style reinforcement)
+ * - Price: slightly bolder (font-weight 600 already; confirmed)
+ * - No logic change
  */
 const OrderItemsList = ({ items = [] }) => {
   if (!items || items.length === 0) {
@@ -35,7 +38,6 @@ function OrderItemRow({ item }) {
     item.imageUrl || ORDER_IMAGE_PLACEHOLDER
   );
 
-  // All these fields come from normalizeOrderItem — guaranteed present
   const productName = item.productName || "Product";
   const quantity    = item.quantity    || 1;
   const unitPrice   = item.unitPrice   || 0;
@@ -43,18 +45,18 @@ function OrderItemRow({ item }) {
 
   return (
     <li className="order-items-list__row">
-      {/* Product image */}
       <img
         src={imageSrc}
         alt={productName}
-        className="order-items-list__img"
+        className="order-items-list__img order-items-list__img--polished"
+        width={64}
+        height={64}
         loading="lazy"
         onError={() => setImageSrc(ORDER_IMAGE_PLACEHOLDER)}
       />
 
-      {/* Product meta */}
       <div className="order-items-list__meta">
-        <p className="order-items-list__name">{productName}</p>
+        <p className="order-items-list__name order-items-list__name--bold">{productName}</p>
         <p className="order-items-list__qty">Qty: {quantity}</p>
         {unitPrice > 0 && (
           <p className="order-items-list__unit-price">
@@ -63,7 +65,6 @@ function OrderItemRow({ item }) {
         )}
       </div>
 
-      {/* Line total */}
       <div className="order-items-list__pricing">
         <span className="order-items-list__price">
           {formatCurrency(totalPrice)}
