@@ -19,8 +19,9 @@ import {
 const enrichItem = (apiItem, productSnapshot) => ({
   productId:   apiItem.productId,
   quantity:    apiItem.quantity,
-  unitPrice:   apiItem.unitPrice ?? productSnapshot?.price ?? 0,
-  productName: productSnapshot?.name       ?? apiItem.productName ?? '',
+  unitPrice:   apiItem.unitPrice ?? productSnapshot?.unitPrice ?? productSnapshot?.price ?? 0,
+  // productSnapshot from persistence uses 'productName'; from product object uses 'name'
+  productName: productSnapshot?.name ?? productSnapshot?.productName ?? apiItem.productName ?? '',
   imageUrl:    productSnapshot?.imageUrl   ?? apiItem.imageUrl    ?? '',
   brand:       productSnapshot?.brand      ?? apiItem.brand       ?? '',
   category:    productSnapshot?.category   ?? apiItem.category    ?? '',
