@@ -3,17 +3,15 @@ import "../styles/ReturnModal.css";
 /**
  * ReturnModal
  *
- * Spec-exact confirmation modal:
+ * Spec-exact copy:
  *   Title:   "Return this order?"
- *   Message: "Are you sure you want to return this product?"
- *            "Refund will be processed after successful pickup and verification."
+ *   Message: "Are you sure you want to return this product?
+ *             Refund will be processed after successful pickup and verification."
  *   Buttons: "Cancel" | "Confirm Return"
  *
- * The reason textarea has been removed — the spec does not require it
- * in the confirmation modal. The backend endpoint (PATCH /api/orders/{id}/return)
- * takes no body.
+ * No reason textarea — spec does not require it.
+ * The PATCH endpoint takes no body; reason is handled server-side if needed.
  */
-
 const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
   if (!isOpen) return null;
 
@@ -38,10 +36,10 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
           <button
             className="return-modal__close"
             onClick={onClose}
-            aria-label="Close return modal"
             disabled={isLoading}
+            aria-label="Close dialog"
           >
-            ✕
+            \u2715
           </button>
         </div>
 
@@ -69,7 +67,7 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
             onClick={onConfirm}
             disabled={isLoading}
           >
-            {isLoading ? "Processing…" : "Confirm Return"}
+            {isLoading ? "Processing\u2026" : "Confirm Return"}
           </button>
         </div>
       </div>

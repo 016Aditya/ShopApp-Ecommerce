@@ -4,12 +4,11 @@ import { API_ENDPOINTS } from "@/api/apiEndpoints";
 /**
  * returnService.js
  *
- * PATCH /api/orders/{id}/return
+ * PATCH /api/orders/{id}/return  — no request body.
  * Backend sets: status=RETURN_REQUESTED, returnRequestedAt=now(), refundStatus=PENDING
- * No request body needed — all fields set server-side.
  */
 
-// Initiate a return — PATCH per backend contract
+// Initiate a return — PATCH per backend contract, no body
 export const initiateReturn = async (orderId) => {
   const { data } = await api.patch(`${API_ENDPOINTS.ORDERS}/${orderId}/return`);
   return data;
