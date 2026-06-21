@@ -4,15 +4,9 @@
  * Single source of truth for mapping ANY backend order shape
  * into the consistent frontend shape consumed by all order components.
  *
- * Field extraction priority mirrors observed Spring Boot response shapes:
- *   order.orderItems[].product.name
- *   order.orderItems[].product.imageUrl
- *   order.orderItems[].productName  (flat variant)
- *   order.items[].product.*         (alternate key)
- *
- * NOTE: `raw` fields have been intentionally removed to prevent
- * sensitive order/address data from leaking into the console or
- * React DevTools in production builds.
+ * FIX: Now passes through return fields:
+ *   returnRequestedAt, returnCompletedAt, refundStatus
+ * These are optional — old orders without them stay compatible (null defaults).
  */
 
 const ORDER_IMAGE_PLACEHOLDER =
@@ -108,7 +102,6 @@ const normalizeOrderItem = (item = {}, index = 0) => {
     quantity,
     unitPrice,
     totalPrice,
-    // raw field intentionally omitted — prevents data leaking to console/devtools
   };
 };
 
@@ -153,7 +146,10 @@ export const normalizeOrder = (order = {}) => {
     taxPrice:      toNumber(pickFirst(order.taxPrice, order.taxAmount, order.gst), 0),
     address:       normalizeAddress(pickFirst(order.address, order.shippingAddress, order.deliveryAddress, {})),
     items,
-    // raw field intentionally omitted — prevents sensitive order data leaking to console/devtools
+    // ── Return fields (additive — null for old orders without these fields) ──
+    returnRequestedAt: pickFirst(order.returnRequestedAt, null),
+    returnCompletedAt: pickFirst(order.returnCompletedAt, null),
+    refundStatus:      pickFirst(order.refundStatus, null),
   };
 };
 

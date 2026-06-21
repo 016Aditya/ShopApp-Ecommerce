@@ -8,15 +8,22 @@ import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
 /**
  * OrderCard
  *
- * Collapsed order row shown on My Orders page.
- *
- * Shows:
- *   [Product Image thumbnail]  Status badge  Product Name  Qty  | View Details
- *
- * Image: order.items[0].imageUrl  (guaranteed by normalizeOrder)
- * Name:  order.items[0].productName  (same guarantee)
- * Both fall back gracefully to placeholder / "View order details →" if items is empty.
+ * FIX: Added amber "Returning" / "Returned" secondary badge for return
+ * statuses. The primary OrderStatusBadge already shows the exact status
+ * (e.g. "Return Requested"), but the spec also requires a prominent
+ * contextual label in the card body. We render it next to the badge.
  */
+
+const RETURN_IN_PROGRESS = new Set([
+  "RETURN_REQUESTED",
+  "RETURN_APPROVED",
+  "PICKUP_SCHEDULED",
+  "PICKED_UP",
+  "REFUND_PROCESSED",
+]);
+
+const RETURN_COMPLETE = new Set(["RETURN_SUCCESSFUL", "RETURNED"]);
+
 const OrderCard = ({ order }) => {
   const navigate = useNavigate();
 
@@ -33,7 +40,6 @@ const OrderCard = ({ order }) => {
       })
     : "N/A";
 
-  // "iPhone 17 Pro Max +2 more"  or just the single product name
   const productSummary = useMemo(() => {
     if (!order.items?.length) {
       return order.quantity > 0
@@ -52,9 +58,16 @@ const OrderCard = ({ order }) => {
       ? `${firstItem.quantity} item${firstItem.quantity !== 1 ? "s" : ""}`
       : "";
 
+  const upperStatus = order.status?.toUpperCase() ?? "";
+  const returnBadgeLabel = RETURN_COMPLETE.has(upperStatus)
+    ? "Returned"
+    : RETURN_IN_PROGRESS.has(upperStatus)
+      ? "Returning"
+      : null;
+
   return (
     <div className="order-card">
-      {/* \u2500\u2500 Header row \u2500\u2500 */}
+      {/* ── Header row ── */}
       <div className="order-card__header">
         <div className="order-card__header-left">
           <span className="order-card__label">Order placed</span>
@@ -69,10 +82,8 @@ const OrderCard = ({ order }) => {
         </div>
       </div>
 
-      {/* \u2500\u2500 Body row \u2500\u2500 */}
+      {/* ── Body row ── */}
       <div className="order-card__body">
-
-        {/* Product thumbnail — always shown; falls back to SVG placeholder */}
         <img
           src={imageSrc}
           alt={firstItem?.productName ?? "Ordered product"}
@@ -86,17 +97,21 @@ const OrderCard = ({ order }) => {
         <div className="order-card__info">
           <div className="order-card__status-row">
             <OrderStatusBadge status={order.status} />
+            {/* Amber return badge — shown alongside the primary status badge */}
+            {returnBadgeLabel && (
+              <span className="order-card__return-badge">
+                {returnBadgeLabel}
+              </span>
+            )}
             {qtyLabel && (
               <span className="order-card__qty">{qtyLabel}</span>
             )}
           </div>
 
-          {/* Product name — from normalizeOrder snapshot */}
           <p className="order-card__product-name" title={productSummary}>
             {productSummary}
           </p>
 
-          {/* Unit price of first item (tiny, secondary info) */}
           {firstItem?.unitPrice > 0 && (
             <p className="order-card__item-price">
               {formatCurrency(firstItem.unitPrice)}{order.items?.length > 1 ? " / item" : ""}

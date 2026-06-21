@@ -1,33 +1,34 @@
 import { useState } from "react";
 import "../styles/ReturnModal.css";
 
+/**
+ * ReturnModal
+ *
+ * FIX: Updated to match spec exactly:
+ *   Title:   "Return this order?"
+ *   Message: "Are you sure you want to return this product?
+ *             Refund will be processed after successful pickup and verification."
+ *   Buttons: "Cancel"  |  "Confirm Return"
+ *
+ * The reason textarea is removed — the spec does not require it in the
+ * confirmation modal. The backend endpoint only requires hitting
+ * PATCH /api/orders/{id}/return; reason is optional and can be added
+ * later as a separate step if needed.
+ */
+
 const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
-  const [reason, setReason] = useState("");
   const [error, setError] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!reason.trim()) {
-      setError("Please provide a reason for the return.");
-      return;
-    }
-
-    if (reason.trim().length < 10) {
-      setError("Reason must be at least 10 characters long.");
-      return;
-    }
-
+  const handleConfirm = async () => {
     try {
       setError(null);
-      await onConfirm(reason.trim());
+      await onConfirm();
     } catch (err) {
-      setError(err.message || "Failed to process return request");
+      setError(err.message || "Failed to process return request.");
     }
   };
 
   const handleClose = () => {
-    setReason("");
     setError(null);
     onClose();
   };
@@ -36,9 +37,9 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
 
   return (
     <div className="return-modal-overlay" onClick={handleClose}>
-      <div className="return-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="return-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="return-modal-title">
         <div className="return-modal__header">
-          <h2 className="return-modal__title">Request Return</h2>
+          <h2 className="return-modal__title" id="return-modal-title">Return this order?</h2>
           <button
             className="return-modal__close"
             onClick={handleClose}
@@ -49,70 +50,40 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="return-modal__form">
-          <div className="return-modal__body">
-            <p className="return-modal__description">
-              Please tell us why you want to return this order. We'll use this information to improve our service.
-            </p>
+        <div className="return-modal__body">
+          <p className="return-modal__description">
+            Are you sure you want to return this product?
+          </p>
+          <p className="return-modal__description return-modal__description--secondary">
+            Refund will be processed after successful pickup and verification.
+          </p>
 
-            <div className="return-modal__field">
-              <label htmlFor="return-reason" className="return-modal__label">
-                Reason for Return <span className="return-modal__required">*</span>
-              </label>
-              <textarea
-                id="return-reason"
-                className="return-modal__textarea"
-                placeholder="Example: Product doesn't match the description, arrived damaged, changed mind, etc."
-                value={reason}
-                onChange={(e) => {
-                  setReason(e.target.value);
-                  if (error) setError(null); // Clear error on input change
-                }}
-                disabled={isLoading}
-                minLength={10}
-                maxLength={500}
-                rows={4}
-              />
-              <p className="return-modal__char-count">
-                {reason.length}/500 characters
-              </p>
+          {error && (
+            <div className="return-modal__error">
+              <span className="return-modal__error-icon">⚠️</span>
+              <span className="return-modal__error-text">{error}</span>
             </div>
+          )}
+        </div>
 
-            {error && (
-              <div className="return-modal__error">
-                <span className="return-modal__error-icon">⚠️</span>
-                <span className="return-modal__error-text">{error}</span>
-              </div>
-            )}
-
-            <div className="return-modal__info">
-              <p className="return-modal__info-title">What happens next:</p>
-              <ul className="return-modal__info-list">
-                <li>We'll schedule a pickup for your package</li>
-                <li>Once picked up, we'll inspect the items</li>
-                <li>Your refund will be processed within 7-10 business days</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="return-modal__footer">
-            <button
-              type="button"
-              className="btn return-modal__btn return-modal__btn--cancel"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn return-modal__btn return-modal__btn--submit"
-              disabled={isLoading || !reason.trim()}
-            >
-              {isLoading ? "Processing..." : "Confirm Return"}
-            </button>
-          </div>
-        </form>
+        <div className="return-modal__footer">
+          <button
+            type="button"
+            className="btn return-modal__btn return-modal__btn--cancel"
+            onClick={handleClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn return-modal__btn return-modal__btn--submit"
+            onClick={handleConfirm}
+            disabled={isLoading}
+          >
+            {isLoading ? "Processing..." : "Confirm Return"}
+          </button>
+        </div>
       </div>
     </div>
   );

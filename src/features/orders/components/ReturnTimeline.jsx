@@ -1,18 +1,27 @@
 /**
  * ReturnTimeline
  *
- * Dedicated progress bar shown ONLY when a return has been initiated.
- * Stages: Return Placed → Return Confirmed → Pickup Scheduled → Item Picked Up → Refund Processed
+ * FIX: Stage keys now match the backend enum exactly:
+ *   RETURN_REQUESTED → RETURN_APPROVED → PICKUP_SCHEDULED → PICKED_UP
+ *   → REFUND_PROCESSED → RETURN_SUCCESSFUL
  *
- * Displayed in place of the regular OrderTimeline once localReturnStatus is set.
+ * Previous keys RETURN_CONFIRMED and ITEM_PICKED_UP did not exist on the
+ * backend, causing currentIdx to always return -1 and the timeline to
+ * show step 0 regardless of actual status.
+ *
+ * CSS: Uses classes already defined in Orders.css (return-timeline,
+ * order-timeline__dot--return-done, etc.). ReturnTimeline.css is not
+ * imported here because it uses a completely different class naming
+ * convention and would be a dead override.
  */
 
 const RETURN_STAGES = [
-  { key: "RETURN_REQUESTED",    label: "Return Placed",       icon: "🔄" },
-  { key: "RETURN_CONFIRMED",    label: "Return Confirmed",    icon: "✅" },
-  { key: "PICKUP_SCHEDULED",    label: "Pickup Scheduled",   icon: "📅" },
-  { key: "ITEM_PICKED_UP",      label: "Item Picked Up",     icon: "📦" },
-  { key: "REFUND_PROCESSED",    label: "Refund Processed",   icon: "💸" },
+  { key: "RETURN_REQUESTED",  label: "Return Requested", icon: "🔄" },
+  { key: "RETURN_APPROVED",   label: "Return Approved",  icon: "✅" },
+  { key: "PICKUP_SCHEDULED",  label: "Pickup Scheduled", icon: "📅" },
+  { key: "PICKED_UP",         label: "Picked Up",        icon: "📦" },
+  { key: "REFUND_PROCESSED",  label: "Refund Processed", icon: "💸" },
+  { key: "RETURN_SUCCESSFUL", label: "Return Successful",icon: "🎉" },
 ];
 
 const ReturnTimeline = ({ status }) => {
