@@ -9,23 +9,30 @@ import {
 /**
  * authStore
  *
- * Auth state lives entirely here (Zustand + persist).
+ * Auth state lives here (Zustand + persist).
  * AuthContext is a thin re-export so existing imports keep working.
  *
- * Backend UserDto.Response shape (after latest backend fix):
- *   { id, firstName, lastName, email, phoneNumber, role, createdAt }
+ * Backend LoginResponse shape (after JWT implementation):
+ *   {
+ *     token: "<signed JWT>",
+ *     user:  { id, firstName, lastName, email, phoneNumber, role, createdAt }
+ *   }
  *
- * The backend does NOT issue a JWT yet — the token field is null until
- * JWT middleware is added to the Spring Boot app.
- * PrivateRoute guards on `user !== null`, not on `token`.
+ * The JWT token is stored in:
+ *   1. Zustand state (token field) — persisted to localStorage via zustand/persist
+ *   2. localStorage['auth_token']  — direct write for the Axios interceptor to
+ *      read during the brief pre-hydration window on page reload
+ *
+ * PrivateRoute guards on `user !== null`.
+ * Axios interceptor guards on `token` (Zustand store → localStorage fallback).
  */
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      user:    null,
-      token:   null,
-      loading: false,
-      error:   null,
+      user:      null,
+      token:     null,
+      loading:   false,
+      error:     null,
       _hydrated: false,
 
       /** Local registry for Forgot-Password email+phone verification. */
@@ -36,34 +43,44 @@ export const useAuthStore = create(
       isLoggedIn: () => !!get().user,
       isAdmin:    () => get().user?.role === 'ADMIN',
 
+      // ── Login ────────────────────────────────────────────────────────────────
       login: async (credentials) => {
         set({ loading: true, error: null });
         try {
-          const data = await loginService(credentials);
           /**
-           * Backend returns a flat UserDto.Response:
-           *   { id, firstName, lastName, email, phoneNumber, role, createdAt }
+           * loginService returns the full backend LoginResponse:
+           *   { token: string, user: UserDto.Response }
            *
-           * Normalise: guarantee `id` is always the string we use for API calls.
-           * Some Spring Boot versions may serialise the Mongo id as `_id`;
-           * we unify it here so `user.id` is always defined.
+           * We destructure them separately so the store fields are correct
+           * and the Axios interceptor always has the JWT it needs.
            */
-          const normalised = {
-            ...data,
-            id: data.id ?? data._id,
+          const { token, user } = await loginService(credentials);
+
+          // Normalise: guarantee user.id is always the string used for API calls
+          const normalisedUser = {
+            ...user,
+            id: user.id ?? user._id,
           };
+
+          // Write token to localStorage directly so the Axios interceptor can
+          // read it immediately on the next request, before Zustand rehydrates.
+          localStorage.setItem('auth_token', token);
+          localStorage.setItem('auth_user', JSON.stringify(normalisedUser));
+
           set({
-            user:    normalised,
-            token:   normalised.token ?? null,
+            user:    normalisedUser,
+            token,
             loading: false,
           });
-          return normalised;
+
+          return normalisedUser;
         } catch (err) {
           set({ error: err.message, loading: false });
           throw err;
         }
       },
 
+      // ── Register ─────────────────────────────────────────────────────────────
       register: async (userData) => {
         set({ loading: true, error: null });
         try {
@@ -86,11 +103,13 @@ export const useAuthStore = create(
         }
       },
 
+      // ── Logout ───────────────────────────────────────────────────────────────
       logout: () => {
-        logoutService();
+        logoutService();                          // clears localStorage auth_token + auth_user
         set({ user: null, token: null });
       },
 
+      // ── Helpers ──────────────────────────────────────────────────────────────
       updateUser: (partial) =>
         set((state) => ({ user: { ...state.user, ...partial } })),
 
@@ -111,14 +130,16 @@ export const useAuthStore = create(
         registeredUsers: state.registeredUsers,
       }),
       onRehydrateStorage: () => (state) => {
-        /**
-         * Also normalise `id` on rehydration so that users who were
-         * logged in before the backend fix (and have stale localStorage)
-         * still get a valid user.id after a page refresh.
-         */
         if (state) {
+          // Normalise user.id from stale localStorage (pre-JWT sessions)
           if (state.user && !state.user.id && state.user._id) {
             state.user = { ...state.user, id: state.user._id };
+          }
+          // Keep localStorage auth_token in sync with the rehydrated Zustand token
+          if (state.token) {
+            localStorage.setItem('auth_token', state.token);
+          } else {
+            localStorage.removeItem('auth_token');
           }
           state.setHydrated();
         }
