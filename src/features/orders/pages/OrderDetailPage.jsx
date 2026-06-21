@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PATHS from "@/routes/paths";
 import { cancelOrder } from "@/services/orderService";
 import { formatCurrency } from "@/utils/currency";
+import { useOrderStore } from "@/store/orderStore";
 import OrderItemsList from "../components/OrderItemsList";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderSummary from "../components/OrderSummary";
@@ -31,10 +32,6 @@ import "../styles/Orders.css";
 const CANCELLABLE = new Set(["PENDING", "CONFIRMED"]);
 const RETURNABLE  = new Set(["DELIVERED"]);
 
-/**
- * Return statuses that indicate the return flow has begun.
- * Used to decide when to render the secondary ReturnTimeline.
- */
 const RETURN_STATUSES = new Set([
   "RETURN_REQUESTED",
   "RETURN_APPROVED",
@@ -70,7 +67,7 @@ const OrderDetailPage = () => {
 
   const [previewImgSrc, setPreviewImgSrc] = useState(ORDER_IMAGE_PLACEHOLDER);
 
-  // Sync external returnStatus (from backend) into local state
+  // Sync external returnStatus (from useReturn hook) into local state
   useEffect(() => {
     if (returnStatus) setLocalReturnStatus(returnStatus);
   }, [returnStatus]);
@@ -105,20 +102,27 @@ const OrderDetailPage = () => {
   };
 
   // ── Return ──────────────────────────────────────────────────────────────
-  // FIX: onConfirm no longer receives a reason argument (modal simplified per spec).
-  // Optimistic update first, then fire the API call.
   const handleReturnRequest = async () => {
     setReturnLoading(true);
     setReturnError(null);
+    // Optimistic UI — update immediately so the dual timeline appears at once
+    setLocalReturnStatus("RETURN_REQUESTED");
+    setReturnModalOpen(false);
     try {
-      // Optimistic UI — update immediately so the dual timeline appears at once
-      setLocalReturnStatus("RETURN_REQUESTED");
+      const updated = await requestReturn();
+      // Sync orderStore so the Orders list page reflects new status
+      // without requiring a full refetch
+      useOrderStore.getState().updateOrderReturn(id, {
+        status:            updated?.status            ?? "RETURN_REQUESTED",
+        returnRequestedAt: updated?.returnRequestedAt ?? new Date().toISOString(),
+        refundStatus:      updated?.refundStatus      ?? "PENDING",
+      });
       setReturnSuccess(true);
-      setReturnModalOpen(false);
       setTimeout(() => setReturnSuccess(false), 5000);
-      // Fire API in background; on failure the optimistic state remains
-      // (user sees the timeline update; backend sync happens on next load)
-      try { await requestReturn(); } catch { /* optimistic — UI already updated */ }
+    } catch (err) {
+      // Revert optimistic update on failure
+      setLocalReturnStatus(null);
+      setReturnError(err.message || "Failed to initiate return. Please try again.");
     } finally {
       setReturnLoading(false);
     }
@@ -173,9 +177,6 @@ const OrderDetailPage = () => {
   const returnDisabled =
     !RETURNABLE.has(upperStatus) || cancelled || !!localReturnStatus || returnLoading;
 
-  // FIX: Show BOTH timelines simultaneously once return flow starts.
-  // The delivery timeline always renders; the return timeline appears below
-  // it as a secondary section — not as a replacement.
   const isReturnFlow = !!localReturnStatus;
 
   const shortId = order.id?.slice(-8).toUpperCase() || "UNKNOWN";
@@ -184,7 +185,7 @@ const OrderDetailPage = () => {
   const firstItem  = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
 
-  // Return info — only shown when in a return flow
+  // Return info fields — null-safe for old orders without these fields
   const returnRequestedOn = formatDate(order.returnRequestedAt);
   const returnCompletedOn = formatDate(order.returnCompletedAt);
 
@@ -234,18 +235,16 @@ const OrderDetailPage = () => {
 
       {/* ── Timeline section ── */}
       {/*
-        FIX: Both timelines are rendered when return is in progress.
-        Delivery Progress is always shown (never replaced).
-        Return Progress appears below as a secondary section.
+        Delivery Progress is ALWAYS rendered — never replaced.
+        Return Progress appears below it as a secondary section
+        only when the return flow has started.
       */}
       <div className="order-detail__timeline">
-        {/* Delivery timeline — always rendered */}
         <div className="order-detail__timeline-section">
           <span className="order-detail__timeline-label">Delivery Progress</span>
           <OrderTimeline status={isReturnFlow ? "DELIVERED" : currentStatus} />
         </div>
 
-        {/* Return timeline — rendered only when return flow has started */}
         {isReturnFlow && (
           <div className="order-detail__timeline-section">
             <span className="order-detail__timeline-label order-detail__timeline-label--return">
@@ -283,10 +282,9 @@ const OrderDetailPage = () => {
           </div>
 
           {/*
-            FIX: Return info panel — shown only when order is in return flow.
-            Fields: Return Status, Return Requested On, Refund Status.
-            Old orders without returnRequestedAt / refundStatus stay compatible
-            because normalizeOrder now returns null for those fields by default.
+            Return Information panel — only shown when in return flow.
+            All fields are null-safe: old orders without returnRequestedAt
+            or refundStatus will simply not render those lines.
           */}
           {isReturnFlow && (
             <div className="order-detail__section order-detail__return-info">
@@ -320,7 +318,7 @@ const OrderDetailPage = () => {
             </div>
           )}
 
-          {/* ── Action buttons — always rendered, disabled when unavailable ── */}
+          {/* ── Action buttons ── */}
           <div className="order-detail__section">
             <div className="order-detail__action-row">
               <button

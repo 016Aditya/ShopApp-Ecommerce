@@ -4,18 +4,14 @@ import { API_ENDPOINTS } from "@/api/apiEndpoints";
 /**
  * returnService.js
  *
- * FIX: initiateReturn now uses PATCH (not POST) per backend contract:
- *   PATCH /api/orders/{id}/return
- *
- * The backend expects only { reason } in the body.
- * returnRequestedAt is set server-side, not passed from the client.
+ * PATCH /api/orders/{id}/return
+ * Backend sets: status=RETURN_REQUESTED, returnRequestedAt=now(), refundStatus=PENDING
+ * No request body needed — all fields set server-side.
  */
 
-// Initiate a return for an order — PATCH per spec
-export const initiateReturn = async (orderId, reason = "") => {
-  const { data } = await api.patch(`${API_ENDPOINTS.ORDERS}/${orderId}/return`, {
-    reason,
-  });
+// Initiate a return — PATCH per backend contract
+export const initiateReturn = async (orderId) => {
+  const { data } = await api.patch(`${API_ENDPOINTS.ORDERS}/${orderId}/return`);
   return data;
 };
 
@@ -27,14 +23,9 @@ export const getReturnStatus = async (orderId) => {
 
 // Update return status (admin/system use)
 export const updateReturnStatus = async (orderId, status) => {
-  const { data } = await api.patch(`${API_ENDPOINTS.ORDERS}/${orderId}/return/status`, {
-    status,
-  });
-  return data;
-};
-
-// Cancel a return request
-export const cancelReturn = async (orderId) => {
-  const { data } = await api.delete(`${API_ENDPOINTS.ORDERS}/${orderId}/return`);
+  const { data } = await api.patch(
+    `${API_ENDPOINTS.ORDERS}/${orderId}/return/status`,
+    { status }
+  );
   return data;
 };
