@@ -9,7 +9,6 @@ import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderSummary from "../components/OrderSummary";
 import OrderTimeline from "../components/OrderTimeline";
 import ReturnModal from "../components/ReturnModal";
-import ReturnTimeline from "../components/ReturnTimeline";
 import ShippingInfo from "../components/ShippingInfo";
 import { useOrder } from "../hooks/useOrders";
 import { useReturn } from "../hooks/useReturn";
@@ -233,26 +232,17 @@ const OrderDetailPage = () => {
         <OrderStatusBadge status={currentStatus} />
       </div>
 
-      {/* ── Timeline section ── */}
+      {/* ── Unified Timeline section ── */}
       {/*
-        Delivery Progress is ALWAYS rendered — never replaced.
-        Return Progress appears below it as a secondary section
-        only when the return flow has started.
+        Single horizontal timeline showing delivery progress and return progress
+        when the order enters the return flow. Return stages are appended to the
+        delivery timeline without creating a separate box or section.
       */}
       <div className="order-detail__timeline">
-        <div className="order-detail__timeline-section">
-          <span className="order-detail__timeline-label">Delivery Progress</span>
-          <OrderTimeline status={isReturnFlow ? "DELIVERED" : currentStatus} />
-        </div>
-
-        {isReturnFlow && (
-          <div className="order-detail__timeline-section">
-            <span className="order-detail__timeline-label order-detail__timeline-label--return">
-              Return Progress
-            </span>
-            <ReturnTimeline status={localReturnStatus} />
-          </div>
-        )}
+        <OrderTimeline
+          status={localReturnStatus || currentStatus}
+          isReturnFlow={isReturnFlow}
+        />
       </div>
 
       {/* ── Content grid ── */}
