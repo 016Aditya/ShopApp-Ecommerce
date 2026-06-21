@@ -1,7 +1,9 @@
 // src/services/returnService.js
 import api from "../api/api.js";
 
-const ORDERS_BASE = "/api/orders";
+// api baseURL is already http://localhost:8080/api (from constants.js)
+// so service paths must start with /orders, NOT /api/orders
+const ORDERS_BASE = "/orders";
 
 /**
  * PATCH /api/orders/{id}/return
