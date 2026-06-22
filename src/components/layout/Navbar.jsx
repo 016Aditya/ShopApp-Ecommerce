@@ -50,16 +50,31 @@ function Navbar() {
     navigate(PATHS.LOGIN);
   };
 
+  const displayName = user?.firstName || user?.name || "User";
+
   return (
     <header className="sticky top-0 z-50 shadow-md" style={{ colorScheme: "dark" }}>
-      {/* ── Primary bar ─────────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "var(--navbar-bg)" }}>
-        <div className="container-app flex h-14 items-center gap-3">
 
-          {/* Logo — clickable, navigates home */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          PRIMARY BAR
+          Desktop  (md+):  single h-14 flex row — Logo Search Account Orders Wishlist Cart Theme
+          Mobile   (<md):  wraps into 2 rows via .navbar-primary-inner CSS:
+                           Row 1 → Logo  ·············  [Account] [Wishlist] [Cart] [Theme]
+                           Row 2 → Search bar (full width)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ backgroundColor: "var(--navbar-bg)" }}>
+        {/*
+          navbar-primary-inner:
+            desktop: flex-nowrap h-14 items-center  (unchanged)
+            mobile:  flex-wrap gap-y-2 py-2          (rows wrap naturally)
+          See mobile.css for the @media rule.
+        */}
+        <div className="navbar-primary-inner container-app flex items-center gap-3">
+
+          {/* ── Logo — always visible, both breakpoints ── */}
           <Link
             to={PATHS.HOME}
-            className="navbar-logo flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
+            className="navbar-logo flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white hover:opacity-90 transition"
             style={{ cursor: "pointer" }}
             aria-label="ShopApp Home"
           >
@@ -69,8 +84,9 @@ function Navbar() {
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
-          {/* Search — form submit only */}
-          <form onSubmit={handleSearch} className="flex flex-1">
+          {/* ── Search — desktop: flex-1 in the same row
+                         mobile:  full-width row 2 via .navbar-search CSS ── */}
+          <form onSubmit={handleSearch} className="navbar-search flex flex-1">
             <div className="flex w-full overflow-hidden rounded-sm" style={{ outline: "2px solid var(--accent)" }}>
               <input
                 type="text"
@@ -94,27 +110,45 @@ function Navbar() {
             </div>
           </form>
 
-          {/* Account */}
+          {/* ── Account — desktop: full block with dropdown
+                          mobile:  compact Hello + Account pill (no dropdown, tap → profile) ── */}
           {user ? (
-            <div className="group relative flex-shrink-0 flex cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
-              <span className="text-[10px] text-slate-300">Hello, {user.firstName || user.name || "User"}</span>
-              <span className="text-sm font-bold text-white">Account</span>
-              <div className="absolute top-full right-0 z-50 hidden w-48 rounded shadow-xl group-hover:block" style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}>
-                <Link to={PATHS.PROFILE}  className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Profile</Link>
-                <Link to={PATHS.ORDERS}   className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>My Orders</Link>
-                <Link to={PATHS.WISHLIST} className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>
-                  Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
-                </Link>
-                <hr style={{ borderColor: "var(--border-color)" }} />
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleLogout(); }}
-                  className="block w-full px-4 py-2 text-left text-sm hover:opacity-80 transition"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  Sign Out
-                </button>
+            <>
+              {/* Desktop account block — hidden on mobile */}
+              <div className="group relative hidden md:flex flex-shrink-0 cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
+                <span className="text-[10px] text-slate-300">Hello, {displayName}</span>
+                <span className="text-sm font-bold text-white">Account</span>
+                <div className="absolute top-full right-0 z-50 hidden w-48 rounded shadow-xl group-hover:block" style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}>
+                  <Link to={PATHS.PROFILE}  className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Profile</Link>
+                  <Link to={PATHS.ORDERS}   className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>My Orders</Link>
+                  <Link to={PATHS.WISHLIST} className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>
+                    Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+                  </Link>
+                  <hr style={{ borderColor: "var(--border-color)" }} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleLogout(); }}
+                    className="block w-full px-4 py-2 text-left text-sm hover:opacity-80 transition"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile account pill — visible only on mobile, sits in right-side icon group */}
+              <Link
+                to={PATHS.PROFILE}
+                className="flex-shrink-0 flex flex-col items-end rounded border border-transparent px-1 py-0.5 hover:border-white transition md:hidden"
+                aria-label="My Account"
+              >
+                <span className="leading-none" style={{ fontSize: "0.7rem", color: "#cbd5e1" }}>
+                  Hello, {displayName}
+                </span>
+                <span className="font-semibold text-white leading-none" style={{ fontSize: "0.9rem" }}>
+                  Account
+                </span>
+              </Link>
+            </>
           ) : (
             <Link
               to={PATHS.LOGIN}
@@ -125,19 +159,20 @@ function Navbar() {
             </Link>
           )}
 
-          {/* Orders */}
+          {/* ── Orders — desktop only (hidden on mobile to save space) ── */}
           <Link
             to={PATHS.ORDERS}
-            className="flex-shrink-0 flex flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
+            className="hidden md:flex flex-shrink-0 flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
           >
             <span className="text-[10px] text-slate-300">Returns</span>
             <span className="text-sm font-bold text-white">&amp; Orders</span>
           </Link>
 
-          {/* Wishlist icon */}
+          {/* ── Wishlist icon — label hidden on mobile to save width ── */}
           <Link
             to={PATHS.WISHLIST}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
+            aria-label="Wishlist"
           >
             <div className="relative">
               <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -145,17 +180,19 @@ function Navbar() {
               </svg>
               {wishlistCount > 0 && (
                 <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-extrabold" style={{ backgroundColor: "var(--accent)", color: "var(--accent-text)" }}>
-                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
                 </span>
               )}
             </div>
-            <span className="mb-1 text-sm font-bold text-white">Wishlist</span>
+            {/* Label: desktop only */}
+            <span className="mb-1 hidden text-sm font-bold text-white md:inline">Wishlist</span>
           </Link>
 
-          {/* Cart icon */}
+          {/* ── Cart icon — label hidden on mobile ── */}
           <Link
             to={PATHS.CART}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
+            aria-label="Cart"
           >
             <div className="relative">
               <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -163,22 +200,19 @@ function Navbar() {
               </svg>
               {totalItems > 0 && (
                 <span className="absolute -top-1 left-4 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-extrabold" style={{ backgroundColor: "var(--accent)", color: "var(--accent-text)" }}>
-                  {totalItems > 99 ? '99+' : totalItems}
+                  {totalItems > 99 ? "99+" : totalItems}
                 </span>
               )}
             </div>
-            <span className="mb-1 text-sm font-bold text-white">Cart</span>
+            {/* Label: desktop only */}
+            <span className="mb-1 hidden text-sm font-bold text-white md:inline">Cart</span>
           </Link>
 
           <ThemeToggle />
         </div>
       </div>
 
-      {/* ── Secondary / category bar ─────────────────────────────────────
-          - overflow-x-auto + scrollbar-hide so categories are swipeable
-          - white-space: nowrap on the inner flex container prevents wrap
-          - every item has flex-shrink: 0 so nothing gets squished
-      ──────────────────────────────────────────────────────────────── */}
+      {/* ── Category bar — swipeable on mobile, same on desktop ─────────── */}
       <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
         <div
           className="navbar-category-bar container-app"
@@ -187,12 +221,11 @@ function Navbar() {
             alignItems: "center",
             overflowX: "auto",
             whiteSpace: "nowrap",
-            scrollbarWidth: "none",          /* Firefox */
-            msOverflowStyle: "none",         /* IE/Edge */
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
             gap: "0",
           }}
         >
-          {/* All — hamburger icon link */}
           <Link
             to={PATHS.PRODUCTS}
             className="navbar-cat-item flex flex-shrink-0 items-center gap-1.5 border border-transparent px-3 py-2 text-sm font-bold text-white hover:border-white transition"
