@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Button from '@/components/common/Button';
 import Input  from '@/components/common/Input';
@@ -9,6 +9,7 @@ const PHONE_REGEX = /^[6-9]\d{9}$/;
 
 function RegisterForm() {
   const { register, loading, error } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name:            '',
@@ -39,10 +40,6 @@ function RegisterForm() {
     if (!formData.password.trim()) {
       errs.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      /**
-       * Backend DTO: @Size(min = 8).
-       * Previous frontend validation was min 6 — corrected to match.
-       */
       errs.password = 'Password must be at least 8 characters';
     }
 
@@ -70,17 +67,32 @@ function RegisterForm() {
      * If the user entered only one word, firstName = that word, lastName = "."
      * (backend rejects blank lastName).
      */
-    const nameParts   = formData.name.trim().split(/\s+/);
-    const firstName   = nameParts[0];
-    const lastName    = nameParts.slice(1).join(' ') || '.';
+    const nameParts = formData.name.trim().split(/\s+/);
+    const firstName = nameParts[0];
+    const lastName  = nameParts.slice(1).join(' ') || '.';
 
     try {
       await register({
         firstName,
         lastName,
-        phone: formData.phone.trim(),   // authService maps this → phoneNumber
+        phone:    formData.phone.trim(),   // authService maps this → phoneNumber
         email:    formData.email.trim(),
         password: formData.password,
+      });
+
+      /**
+       * Registration succeeded — no auto-login in this app.
+       * Navigate to Login and pass a success flag + firstName via
+       * React Router location.state so LoginForm can show a banner.
+       * State is never written to the URL, so it vanishes on refresh
+       * (by design: the banner is a one-time confirmation).
+       */
+      navigate(PATHS.LOGIN, {
+        replace: true,
+        state: {
+          registered: true,
+          firstName,
+        },
       });
     } catch { /* error surfaced via useAuth */ }
   };

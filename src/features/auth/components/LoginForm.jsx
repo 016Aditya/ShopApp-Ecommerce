@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import Button from "@/components/common/Button";
 import Input  from "@/components/common/Input";
@@ -7,8 +7,24 @@ import { PATHS } from "@/routes/paths";
 
 function LoginForm() {
   const { login, loading, error } = useAuth();
+  const location = useLocation();
 
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  /**
+   * Registration success state — passed via React Router location.state
+   * from RegisterForm after a successful Create Account.
+   * Shape: { registered: true, firstName: string }
+   *
+   * We read it once on mount (initial state); the user can dismiss it.
+   * It never survives a page refresh (state is not in the URL) — correct
+   * behaviour: the banner is a one-time confirmation.
+   */
+  const regState = location.state;
+  const [showBanner, setShowBanner] = useState(
+    () => !!(regState?.registered)
+  );
+  const registeredName = regState?.firstName ?? '';
+
+  const [formData, setFormData]   = useState({ email: "", password: "" });
   const [formErrors, setFormErrors] = useState({});
 
   const handleChange = (e) => {
@@ -50,6 +66,36 @@ function LoginForm() {
           Welcome back. Sign in to continue.
         </p>
       </div>
+
+      {/*
+        Registration success banner.
+        Shown only when navigated from RegisterForm with state.registered=true.
+        Dismissible via the × button.
+        Uses .auth-success-banner from Orders.css (shared styles).
+      */}
+      {showBanner && (
+        <div className="auth-success-banner" role="alert" aria-live="polite">
+          <span className="auth-success-banner__icon" aria-hidden="true">✓</span>
+          <div className="auth-success-banner__body">
+            <p className="auth-success-banner__title">
+              Account Created Successfully
+            </p>
+            <p className="auth-success-banner__sub">
+              {registeredName
+                ? `Welcome, ${registeredName}! Please sign in using your email and password.`
+                : "Please sign in using your email and password."}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="auth-success-banner__dismiss"
+            onClick={() => setShowBanner(false)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <Input
         label="Email"

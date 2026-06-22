@@ -2,7 +2,7 @@
    Orders.css — all colours via CSS variables, no hardcodes
    ============================================================ */
 
-/* ── Page wrapper ──────────────────────────────────────── */
+/* ── Page wrapper ──────────────────────────────────────────── */
 .orders-page {
   max-width: 1100px;
   margin: 0 auto;
@@ -20,10 +20,10 @@
 }
 .orders-back:hover { text-decoration: underline; color: var(--accent); }
 
-/* ── Orders list ───────────────────────────────────────── */
+/* ── Orders list ────────────────────────────────────────────── */
 .orders-list { display: flex; flex-direction: column; gap: 12px; }
 
-/* ── Order card ────────────────────────────────────────── */
+/* ── Order card ─────────────────────────────────────────────── */
 .order-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -65,7 +65,7 @@
   border: 1px solid #fde68a;
 }
 
-/* ── Status badge ──────────────────────────────────────── */
+/* ── Status badge ───────────────────────────────────────────── */
 /*
   v3 spec: rgba(245,158,11,.12) bg, rgba(245,158,11,.25) border,
   #f59e0b text, 8px 14px padding, 999px radius, 0.82rem, 600
@@ -90,8 +90,7 @@
   color: #86efac !important;
 }
 
-/* ── Timeline wrapper ─────────────────────────────────── */
-/* Desktop: overflow-visible (no scrollbar). Mobile/tablet: overflow-x-auto. */
+/* ── Timeline wrapper ──────────────────────────────────────── */
 .order-timeline-wrapper {
   max-width: 1200px;
   margin: 0 auto;
@@ -104,28 +103,42 @@
   }
 }
 
-/* ── Timeline ───────────────────────────────────────────── */
+/*
+  Section label — "Delivery Completed | Return Process"
+  Sits 12-18px above the timeline progress bar.
+  Centered, dimmed, purely decorative context.
+  Only rendered when isReturnFlow is true.
+*/
+.order-timeline__section-label {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.65;
+  letter-spacing: 0.3px;
+  margin-bottom: 18px;
+  /* 12px min so it never collapses on tight viewports */
+  padding-top: 12px;
+}
+
+/* ── Timeline ───────────────────────────────────────────────── */
 .order-timeline {
   display: flex;
-  align-items: flex-start;   /* default: column items start at top */
+  align-items: flex-start;
   flex-wrap: nowrap;
   padding: 16px 0;
   gap: 0;
   background: transparent;
 }
 /*
-  --gap14 modifier:
-  gap: 14px — tighter spacing between delivery end, divider, and return start.
-  align-items: center — ensures the dot row, divider text, and all nodes share
-  the same vertical midpoint (no node appears lower than another).
-  The connector lines are position:absolute from the dot centre, so they still
-  align correctly regardless of this flex alignment.
+  --gap14: tighter spacing between all nodes;
+  align-items: center keeps every dot, connector, and label on the same
+  vertical midpoint — no node appears lower than another.
 */
 .order-timeline--gap14 {
   gap: 14px;
   align-items: center;
 }
-/* Step column: each step is a flex column with dot on top, label below */
 .order-timeline--gap14 .order-timeline__step {
   align-items: center;
   justify-content: flex-start;
@@ -154,7 +167,7 @@
   min-width: 70px;
 }
 
-/* ── Dots ──────────────────────────────────────────────── */
+/* ── Dots ─────────────────────────────────────────────────────*/
 .order-timeline__dot {
   width: 32px;
   height: 32px;
@@ -168,31 +181,25 @@
   border: 2px solid var(--border-color);
   transition: background-color 200ms, border-color 200ms, transform 200ms;
 }
-
-/* Delivery completed — green */
 .order-timeline__dot--done {
   background: #22c55e;
   border-color: #16a34a;
 }
-/* Delivery active — amber */
 .order-timeline__dot--current {
   background: #f59e0b;
   border-color: rgba(245, 158, 11, 0.4);
   box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
 }
-/* Return completed — amber */
 .order-timeline__dot--return-done {
   background: #f59e0b;
   border-color: #d97706;
 }
-/* Active return step — amber + shadow + border per spec */
 .order-timeline__dot--return-current {
   background: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.4);
   box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
   transform: scale(1.05);
 }
-/* Terminal return success — green */
 .order-timeline__dot--success {
   background: #22c55e;
   border-color: #16a34a;
@@ -204,7 +211,7 @@
   transform: scale(1.05);
 }
 
-/* ── Labels ──────────────────────────────────────────────── */
+/* ── Labels ───────────────────────────────────────────────────*/
 .order-timeline__label {
   font-size: 0.72rem;
   color: var(--text-tertiary);
@@ -214,21 +221,20 @@
   max-width: 80px;
   word-break: break-word;
 }
-/* Return labels: compact */
 .order-timeline__label--return {
   font-size: 12px;
   line-height: 1.2;
   max-width: 80px;
   text-align: center;
 }
-.order-timeline__label--done           { color: #16a34a; font-weight: 500; }
-.order-timeline__label--current        { color: #d97706; font-weight: 600; }
-.order-timeline__label--return-done    { color: #d97706; font-weight: 500; }
-.order-timeline__label--return-current { color: #d97706; font-weight: 600; }
-.order-timeline__label--success        { color: #16a34a; font-weight: 500; }
-.order-timeline__label--success-current{ color: #16a34a; font-weight: 600; }
+.order-timeline__label--done            { color: #16a34a; font-weight: 500; }
+.order-timeline__label--current         { color: #d97706; font-weight: 600; }
+.order-timeline__label--return-done     { color: #d97706; font-weight: 500; }
+.order-timeline__label--return-current  { color: #d97706; font-weight: 600; }
+.order-timeline__label--success         { color: #16a34a; font-weight: 500; }
+.order-timeline__label--success-current { color: #16a34a; font-weight: 600; }
 
-/* ── Connector lines ─────────────────────────────────────── */
+/* ── Connector lines ──────────────────────────────────────────*/
 .order-timeline__line {
   position: absolute;
   top: 15px;
@@ -250,41 +256,19 @@
   font-size: 0.875rem;
 }
 
-/* ── Return flow divider (inline, not a full-width block) ────────── */
-/*
-  Sits inline between Delivered and Return Requested.
-  Vertically centred by the parent flex align-items:center.
-  Spec: 0.8rem / 500 / opacity 0.55 / letter-spacing 0.3px / margin 0 16px
-*/
-.order-timeline__return-divider {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  margin: 0;        /* gap on parent handles the spacing */
-}
-.order-timeline__return-divider-text {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  opacity: 0.55;
-  letter-spacing: 0.3px;
-  margin: 0 16px;
-  white-space: nowrap;
-}
-
-/* ── Return info panel ─────────────────────────────────── */
+/* ── Return info panel ────────────────────────────────────────*/
 .order-detail__return-info { border-left: 3px solid #f59e0b; }
 .order-detail__return-info-label { font-weight: 600; color: var(--text-primary); }
 .order-detail__return-info-value { color: #d97706; font-weight: 500; }
 
-/* ── Return metadata line ("Requested on 22 Jun 2026") ────────── */
+/* ── Return metadata line ("Requested on 22 Jun 2026") ────────*/
 .order-detail__return-meta {
   font-size: 0.8rem;
   color: var(--text-secondary);
   margin-top: 6px;
 }
 
-/* ── Order detail layout ────────────────────────────────── */
+/* ── Order detail layout ──────────────────────────────────────*/
 .order-detail__header {
   display: flex; justify-content: space-between;
   align-items: flex-start; flex-wrap: wrap;
@@ -306,12 +290,7 @@
 }
 .order-detail__section-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
 
-/*
-  Product-preview card: wraps image + name + price in a subtle card.
-  background: var(--card-bg), border, border-radius 12px, padding 12px 16px,
-  display: inline-flex, align-items: center, gap: 12px.
-  Do not change the markup — purely CSS-driven via .order-detail__product-preview.
-*/
+/* Product-preview card */
 .order-detail__product-preview {
   display: inline-flex;
   align-items: center;
@@ -375,7 +354,7 @@
 .order-detail__success-msg   { color: var(--success-text); font-size: 0.9rem; font-weight: 500; margin-top: 8px; }
 .order-detail__right { position: sticky; top: 72px; }
 
-/* ── Items list ────────────────────────────────────────── */
+/* ── Items list ───────────────────────────────────────────────*/
 .order-items-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .order-items-list__row  { display: flex; align-items: center; gap: 12px; }
 .order-items-list__img  { width: 72px; height: 72px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border-color); flex-shrink: 0; }
@@ -389,14 +368,14 @@
 .order-items-list__price { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
 .order-items-empty { padding: 16px; background: var(--bg-tertiary); border-radius: 6px; text-align: center; color: var(--text-secondary); font-size: 0.875rem; }
 
-/* ── Shipping info ─────────────────────────────────────── */
+/* ── Shipping info ────────────────────────────────────────────*/
 .shipping-info          { display: flex; flex-direction: column; gap: 4px; }
 .shipping-info__name    { font-weight: 600; font-size: 0.9375rem; color: var(--text-primary); }
 .shipping-info__phone   { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 2px; }
 .shipping-info__line    { font-size: 0.875rem; color: var(--text-secondary); }
 .shipping-info__country { color: var(--text-secondary); font-size: 0.8125rem; }
 
-/* ── Empty / Error ─────────────────────────────────────── */
+/* ── Empty / Error ────────────────────────────────────────────*/
 .orders-empty {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; gap: 12px; padding: 60px 16px;
@@ -410,7 +389,7 @@
 .error-text         { color: var(--error-text); font-size: 0.875rem; }
 .text-muted         { color: var(--text-secondary); font-size: 0.875rem; }
 
-/* ── Skeletons ─────────────────────────────────────────── */
+/* ── Skeletons ────────────────────────────────────────────────*/
 @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 .skeleton {
   background: linear-gradient(
@@ -429,7 +408,7 @@
 .order-skeleton__card  { height: 120px; border-radius: 8px; }
 .order-detail-skeleton { padding: 20px 0; }
 
-/* ── Order success ─────────────────────────────────────── */
+/* ── Order success page ───────────────────────────────────────*/
 .order-success-page {
   display: flex; align-items: center; justify-content: center;
   min-height: 70vh; padding: 24px;
@@ -460,3 +439,55 @@
 .order-success__btn--orders:hover { background: var(--button-primary-hover); }
 .order-success__btn--shop   { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); }
 .order-success__btn--shop:hover { background: var(--bg-tertiary); }
+
+/* ── Auth success banner (shown on Login after registration) ──
+   Spec: rgba(34,197,94,.12) bg, rgba(34,197,94,.3) border,
+         #22c55e text, border-radius 12px, padding 14px 16px,
+         margin-bottom 20px.
+   Includes a dismiss × button top-right.
+*/
+.auth-success-banner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+}
+.auth-success-banner__icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  margin-top: 1px;
+}
+.auth-success-banner__body {
+  flex: 1;
+}
+.auth-success-banner__title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #22c55e;
+  margin-bottom: 2px;
+}
+.auth-success-banner__sub {
+  font-size: 0.8125rem;
+  color: #22c55e;
+  opacity: 0.85;
+}
+.auth-success-banner__dismiss {
+  background: none;
+  border: none;
+  color: #22c55e;
+  opacity: 0.7;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  transition: opacity 150ms;
+}
+.auth-success-banner__dismiss:hover { opacity: 1; }
