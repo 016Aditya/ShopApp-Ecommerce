@@ -8,7 +8,7 @@ import PATHS, { buildPath } from "@/routes/paths";
 function SkeletonCard() {
   return (
     <div
-      className="w-full min-w-0 overflow-hidden"
+      className="flex h-full w-full min-w-0 flex-col overflow-hidden"
       style={{
         backgroundColor: "var(--card-bg)",
         border: "1px solid var(--border-color)",
@@ -16,22 +16,24 @@ function SkeletonCard() {
         boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
       }}
     >
+      {/* Aspect-ratio image placeholder */}
       <div
-        className="animate-pulse"
+        className="animate-pulse w-full"
         style={{
-          height: "148px",
+          aspectRatio: "1 / 1",
           margin: "7px",
+          width: "calc(100% - 14px)",
           borderRadius: "8px",
           background:
             "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
         }}
       />
-      <div className="space-y-1.5 px-3 pb-3 pt-1">
+      <div className="flex flex-col gap-1.5 px-3 pb-3 pt-1">
         <div className="h-2 w-1/3 animate-pulse rounded" style={{ backgroundColor: "var(--bg-tertiary)" }} />
         <div className="h-3 w-3/4 animate-pulse rounded" style={{ backgroundColor: "var(--bg-tertiary)" }} />
         <div className="h-3 w-1/2 animate-pulse rounded" style={{ backgroundColor: "var(--bg-tertiary)" }} />
         <div className="h-3.5 w-1/3 animate-pulse rounded" style={{ backgroundColor: "var(--bg-tertiary)" }} />
-        <div className="h-6 w-24 animate-pulse rounded-md" style={{ backgroundColor: "var(--bg-tertiary)" }} />
+        <div className="h-9 w-full animate-pulse rounded-md" style={{ backgroundColor: "var(--bg-tertiary)" }} />
       </div>
     </div>
   );
@@ -44,7 +46,7 @@ function FeaturedCard({ product }) {
 
   return (
     <article
-      className="group w-full min-w-0 cursor-pointer overflow-hidden transition-all duration-[220ms]"
+      className="group flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden transition-all duration-[220ms]"
       style={{
         backgroundColor: "var(--card-bg)",
         border: "1px solid var(--border-color)",
@@ -64,14 +66,15 @@ function FeaturedCard({ product }) {
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && openProduct()}
     >
-      {/* Image */}
+      {/* ── Image — aspect-ratio 1:1, scales with column width ── */}
       <div
-        className="relative flex items-center justify-center overflow-hidden"
+        className="relative flex w-full items-center justify-center overflow-hidden"
         style={{
-          height: "152px",
+          aspectRatio: "1 / 1",
           margin: "7px",
+          width: "calc(100% - 14px)",
           borderRadius: "8px",
-          padding: "10px",
+          padding: "8px",
           background:
             "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
         }}
@@ -80,23 +83,31 @@ function FeaturedCard({ product }) {
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="h-full w-full object-contain transition-transform duration-[220ms] group-hover:scale-[1.04]"
             loading="lazy"
-            width={260}
-            height={152}
-            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              transition: "transform 220ms ease",
+            }}
+            className="group-hover:scale-[1.04]"
           />
         ) : (
           <span className="text-4xl" aria-hidden="true">🛒</span>
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col gap-1.5 px-3 pb-3 pt-1.5">
-        {/* Name — allow wrapping, no aggressive truncation on mobile */}
+      {/* ── Content ── */}
+      <div className="flex flex-1 flex-col gap-1.5 px-3 pb-3 pt-1.5">
+        {/* Name — max 2 lines, wraps properly */}
         <p
           className="featured-card__name line-clamp-2 text-sm font-semibold leading-snug"
-          style={{ color: "var(--text-primary)", overflowWrap: "anywhere", wordBreak: "break-word" }}
+          style={{
+            color: "var(--text-primary)",
+            overflowWrap: "anywhere",
+            wordBreak: "break-word",
+            minHeight: "2.4em", /* reserve 2 lines so cards align */
+          }}
         >
           {product.name}
         </p>
@@ -110,8 +121,8 @@ function FeaturedCard({ product }) {
         </div>
 
         {/* Price — green */}
-        <div className="mt-0.5 flex items-baseline gap-1.5 flex-wrap">
-          <span style={{ fontSize: "17px", fontWeight: 700, color: "#22c55e" }}>
+        <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
+          <span style={{ fontSize: "15px", fontWeight: 700, color: "#22c55e" }}>
             {formatCurrency(product.price)}
           </span>
           {product.originalPrice && product.originalPrice > product.price && (
@@ -131,7 +142,7 @@ function FeaturedCard({ product }) {
               <span
                 className="w-fit rounded-full px-2 py-0.5"
                 style={{
-                  fontSize: "11px",
+                  fontSize: "10px",
                   color: "var(--text-secondary)",
                   backgroundColor: "var(--badge-bg)",
                 }}
@@ -154,12 +165,14 @@ function FeaturedCard({ product }) {
           </div>
         )}
 
-        {/* CTA */}
+        {/* CTA — pushed to bottom, full width, 40px min-height for touch */}
         <button
-          className="mt-1 w-full rounded-md py-1.5 text-xs font-bold transition-opacity hover:opacity-90"
+          className="mt-auto w-full rounded-md text-xs font-bold transition-opacity hover:opacity-90"
           style={{
             backgroundColor: "var(--button-primary)",
             color: "var(--button-primary-text)",
+            minHeight: "40px",
+            paddingBlock: "8px",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -179,6 +192,17 @@ function FeaturedProducts() {
   const { products, loading, error } = useFeaturedProducts();
   const navigate = useNavigate();
 
+  /*
+   * Grid breakpoints (Tailwind):
+   *   grid-cols-2        — phones (< 640 px)   → 2 cards / row  [Amazon style]
+   *   sm:grid-cols-2     — small tablet (640+)  → 2 cards / row
+   *   md:grid-cols-3     — tablet (768+)        → 3 cards / row
+   *   lg:grid-cols-4     — desktop (1024+)      → 4 cards / row
+   *   xl:grid-cols-5     — wide desktop (1280+) → 5 cards / row
+   */
+  const gridClass =
+    "grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+
   return (
     <section
       className="featured-section container-app"
@@ -187,7 +211,7 @@ function FeaturedProducts() {
       <div
         className="featured-shell overflow-hidden"
         style={{
-          padding: "15px 22px",
+          padding: "15px 16px",
           background:
             "linear-gradient(180deg, var(--featured-shell-start) 0%, var(--featured-shell-end) 100%)",
           border: "1px solid var(--border-color)",
@@ -229,10 +253,10 @@ function FeaturedProducts() {
           </button>
         </div>
 
-        {/* Loading */}
+        {/* Loading skeletons */}
         {loading && (
-          <div className="grid grid-cols-1 gap-[11px] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
+          <div className={gridClass}>
+            {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
@@ -270,9 +294,9 @@ function FeaturedProducts() {
           </div>
         )}
 
-        {/* Cards — responsive grid: 1 col mobile → 2 sm → 3 md → 4 lg → 5 xl */}
+        {/* Cards grid */}
         {!loading && !error && products.length > 0 && (
-          <div className="grid grid-cols-1 gap-[11px] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className={gridClass}>
             {products.map((product) => (
               <FeaturedCard key={product.id} product={product} />
             ))}
