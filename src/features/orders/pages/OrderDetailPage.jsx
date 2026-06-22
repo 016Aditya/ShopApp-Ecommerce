@@ -38,7 +38,6 @@ const RETURN_STATUSES = new Set([
   "RETURNED",
 ]);
 
-/** Convert enum → readable label for Order Information section */
 const STATUS_LABELS = {
   PENDING:           "Pending",
   CONFIRMED:         "Confirmed",
@@ -55,7 +54,6 @@ const STATUS_LABELS = {
   RETURNED:          "Returned",
 };
 
-/** Convert refund enum → readable label */
 const REFUND_LABELS = {
   PENDING:   "Pending",
   PROCESSED: "Processed",
@@ -64,7 +62,7 @@ const REFUND_LABELS = {
 const formatDate = (iso) =>
   iso
     ? new Date(iso).toLocaleDateString("en-IN", {
-        day: "numeric", month: "long", year: "numeric",
+        day: "numeric", month: "short", year: "numeric",
       })
     : null;
 
@@ -101,7 +99,7 @@ const OrderDetailPage = () => {
     if (url) setPreviewImgSrc(url);
   }, [order]);
 
-  // ── Cancel ──────────────────────────────────────────────────────────────
+  // ── Cancel ───────────────────────────────────────────────────────
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setCancelling(true);
@@ -116,7 +114,7 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Return ──────────────────────────────────────────────────────────────
+  // ── Return ───────────────────────────────────────────────────────
   const handleReturnRequest = async () => {
     setReturnLoading(true);
     setReturnError(null);
@@ -139,7 +137,7 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Loading ──────────────────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="orders-page">
@@ -180,7 +178,7 @@ const OrderDetailPage = () => {
     );
   }
 
-  // ── Derived display state ────────────────────────────────────────────────
+  // ── Derived display state ─────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
   const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
 
@@ -196,18 +194,15 @@ const OrderDetailPage = () => {
   const firstItem  = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
 
-  // Readable label for return button after submit
   const returnBtnLabel = returnLoading
     ? "Processing…"
     : localReturnStatus
     ? "Return Requested"
     : "↩ Return Order";
 
-  // Return info fields
   const returnRequestedOn = formatDate(order.returnRequestedAt);
   const returnCompletedOn = formatDate(order.returnCompletedAt);
 
-  // Human-readable status label for Order Information
   const displayStatus  = STATUS_LABELS[upperStatus] ?? currentStatus;
   const displayRefund  = order.refundStatus
     ? (REFUND_LABELS[order.refundStatus?.toUpperCase()] ?? order.refundStatus)
@@ -216,7 +211,7 @@ const OrderDetailPage = () => {
   return (
     <div className="orders-page order-detail-page">
 
-      {/* ── Back ── */}
+      {/* Back */}
       <button
         className="orders-back"
         onClick={() => navigate(PATHS.ORDERS)}
@@ -225,12 +220,18 @@ const OrderDetailPage = () => {
         ← Back to Orders
       </button>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="order-detail__header">
         <div>
           <h1 className="order-detail__title">Order #{shortId}</h1>
           <p className="order-detail__date">Placed on {date}</p>
 
+          {/*
+            Product-preview card:
+            CSS class .order-detail__product-preview now styles this as an
+            inline-flex card (var(--card-bg), border, border-radius 12px,
+            padding 12px 16px). No markup changes — purely CSS-driven.
+          */}
           {firstItem && (
             <div className="order-detail__product-preview">
               <img
@@ -254,10 +255,23 @@ const OrderDetailPage = () => {
             </div>
           )}
         </div>
-        <OrderStatusBadge status={currentStatus} />
+
+        {/*
+          Status badge (top-right of header).
+          In return flow the badge shows the return status.
+          .order-detail__return-meta shows the requested-on date below the badge.
+        */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+          <OrderStatusBadge status={currentStatus} />
+          {isReturnFlow && returnRequestedOn && (
+            <p className="order-detail__return-meta">
+              Requested on {returnRequestedOn}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* ── Unified Timeline ── */}
+      {/* Unified Timeline */}
       <div className="order-detail__timeline">
         <OrderTimeline
           status={localReturnStatus || currentStatus}
@@ -265,7 +279,7 @@ const OrderDetailPage = () => {
         />
       </div>
 
-      {/* ── Content grid ── */}
+      {/* Content grid */}
       <div className="order-detail__grid">
         <div className="order-detail__left">
 
@@ -324,7 +338,7 @@ const OrderDetailPage = () => {
             </div>
           )}
 
-          {/* ── Action buttons ── */}
+          {/* Action buttons */}
           <div className="order-detail__section">
             <div className="order-detail__action-row">
               <button
@@ -336,12 +350,6 @@ const OrderDetailPage = () => {
                 {cancelling ? "Cancelling…" : "Cancel Order"}
               </button>
 
-              {/*
-                Return button:
-                - Active (DELIVERED, not yet requested): amber, enabled
-                - After request submitted: "Return Requested", amber, disabled, cursor not-allowed
-                - Any other state: dimmed (opacity 0.6), cursor not-allowed
-              */}
               <button
                 className={[
                   "btn order-detail__return-btn",

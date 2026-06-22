@@ -1,14 +1,13 @@
 /**
  * OrderTimeline — Unified Horizontal Timeline
  *
- * Polish pass (spec v2):
- * 1. Desktop: no scrollbar — overflow-visible; mobile/tablet: overflow-x-auto
- * 2. Divider simplified: “Delivery Completed | Return Process”, subtle, 0.85rem
- * 3. Gap between Delivered → divider → Return Requested reduced to ~20px
- * 4. Return labels: 12px, line-height 1.2, max-width 80px
- * 5. Active return step: box-shadow 0 0 0 4px rgba(245,158,11,.18) + scale(1.05)
- * 6. Connector colors: delivery done → #22c55e, return done → #f59e0b
- * 7. max-width 1200px, margin 0 auto
+ * Polish pass v3:
+ * 1. gap: 14px on .order-timeline (flex container)
+ * 2. Divider: 0.8rem / 500 / opacity 0.55 / letter-spacing 0.3px / margin 0 16px
+ * 3. align-items: center so dot row, divider, and labels share one baseline
+ * 4. Return connector: #f59e0b done, var(--border-color) future
+ * 5. Active return dot: box-shadow 0 0 0 4px rgba(245,158,11,.15) + border rgba(245,158,11,.4)
+ * 6. max-width 1200px wrapper, desktop overflow-visible, mobile overflow-x-auto
  */
 
 const DELIVERY_STAGES = [
@@ -29,8 +28,8 @@ const RETURN_STAGES = [
 ];
 
 /**
- * Slim inline divider between delivery end and return start.
- * Not a step — aria-hidden, never affects activeIdx.
+ * Inline divider between Delivered and Return Requested.
+ * Vertically centred with the dot row via align-items: center on the flex parent.
  */
 const ReturnFlowDivider = () => (
   <div className="order-timeline__return-divider" aria-hidden="true">
@@ -58,7 +57,8 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
 
   return (
     <div className="order-timeline-wrapper">
-      <div className="order-timeline" role="list" aria-label="Order timeline">
+      {/* gap-14 class applies gap:14px; align-items:center keeps everything on one row */}
+      <div className="order-timeline order-timeline--gap14" role="list" aria-label="Order timeline">
         {stages.map((stage, idx) => {
           const isDone    = idx <= activeIdx;
           const isCurrent = idx === activeIdx;
@@ -66,7 +66,7 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
           const isTerminalReturn =
             (stage.key === "RETURN_SUCCESSFUL" || stage.key === "REFUND_PROCESSED") && isDone;
 
-          // Dot modifier
+          // Dot classes
           let dotClass = "order-timeline__dot";
           if (isDone) {
             dotClass += isTerminalReturn
@@ -83,7 +83,7 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
               : " order-timeline__dot--current";
           }
 
-          // Label modifier
+          // Label classes
           let labelClass = "order-timeline__label";
           if (isDone) {
             labelClass += isTerminalReturn
@@ -99,10 +99,9 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
               ? " order-timeline__label--return-current"
               : " order-timeline__label--current";
           }
-          // Compact font for return labels
           if (isReturn) labelClass += " order-timeline__label--return";
 
-          // Connector line
+          // Connector classes
           let lineClass = "order-timeline__line";
           if (idx < activeIdx) {
             lineClass += isReturn
@@ -116,12 +115,15 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
             <>
               {isFirstReturn && <ReturnFlowDivider key="return-divider" />}
               <div key={stage.key} className="order-timeline__step" role="listitem">
+                {/* Dot */}
                 <div className={dotClass} aria-hidden="true">
                   {isDone && (
                     <span className="order-timeline__dot-icon">{stage.icon}</span>
                   )}
                 </div>
+                {/* Label — sits below the dot inside the step column */}
                 <span className={labelClass}>{stage.label}</span>
+                {/* Connector to the next step */}
                 {idx < stages.length - 1 && (
                   <div className={lineClass} aria-hidden="true" />
                 )}
