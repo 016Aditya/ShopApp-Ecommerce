@@ -8,7 +8,7 @@ import PATHS, { buildPath } from "@/routes/paths";
 function SkeletonCard() {
   return (
     <div
-      className="min-w-[200px] snap-start overflow-hidden md:min-w-0"
+      className="w-full min-w-0 overflow-hidden"
       style={{
         backgroundColor: "var(--card-bg)",
         border: "1px solid var(--border-color)",
@@ -44,7 +44,7 @@ function FeaturedCard({ product }) {
 
   return (
     <article
-      className="group min-w-[200px] snap-start cursor-pointer overflow-hidden transition-all duration-[220ms] md:min-w-0"
+      className="group w-full min-w-0 cursor-pointer overflow-hidden transition-all duration-[220ms]"
       style={{
         backgroundColor: "var(--card-bg)",
         border: "1px solid var(--border-color)",
@@ -64,7 +64,7 @@ function FeaturedCard({ product }) {
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && openProduct()}
     >
-      {/* Image — 152px (+6% from 144px) */}
+      {/* Image */}
       <div
         className="relative flex items-center justify-center overflow-hidden"
         style={{
@@ -84,6 +84,7 @@ function FeaturedCard({ product }) {
             loading="lazy"
             width={260}
             height={152}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         ) : (
           <span className="text-4xl" aria-hidden="true">🛒</span>
@@ -92,15 +93,15 @@ function FeaturedCard({ product }) {
 
       {/* Content */}
       <div className="flex flex-col gap-1.5 px-3 pb-3 pt-1.5">
-        {/* Name */}
+        {/* Name — allow wrapping, no aggressive truncation on mobile */}
         <p
-          className="line-clamp-2 text-sm font-semibold leading-snug"
-          style={{ color: "var(--text-primary)" }}
+          className="featured-card__name line-clamp-2 text-sm font-semibold leading-snug"
+          style={{ color: "var(--text-primary)", overflowWrap: "anywhere", wordBreak: "break-word" }}
         >
           {product.name}
         </p>
 
-        {/* Rating — uses same RatingBadge as ProductCard */}
+        {/* Rating */}
         <div className="mt-0.5">
           <RatingBadge
             rating={product.averageRating || 0}
@@ -108,8 +109,8 @@ function FeaturedCard({ product }) {
           />
         </div>
 
-        {/* Price — green, same as ProductCard */}
-        <div className="mt-0.5 flex items-baseline gap-1.5">
+        {/* Price — green */}
+        <div className="mt-0.5 flex items-baseline gap-1.5 flex-wrap">
           <span style={{ fontSize: "17px", fontWeight: 700, color: "#22c55e" }}>
             {formatCurrency(product.price)}
           </span>
@@ -120,10 +121,10 @@ function FeaturedCard({ product }) {
           )}
         </div>
 
-        {/* Free Delivery — same as ProductCard */}
+        {/* Free Delivery */}
         <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
 
-        {/* Category chips — same as ProductCard */}
+        {/* Category chips */}
         {(product.category || product.subcategory) && (
           <div className="flex flex-wrap items-center gap-1">
             {product.category && (
@@ -153,7 +154,7 @@ function FeaturedCard({ product }) {
           </div>
         )}
 
-        {/* CTA — unchanged */}
+        {/* CTA */}
         <button
           className="mt-1 w-full rounded-md py-1.5 text-xs font-bold transition-opacity hover:opacity-90"
           style={{
@@ -179,11 +180,12 @@ function FeaturedProducts() {
   const navigate = useNavigate();
 
   return (
-    /* py-5 → py-[21px] (+6%) */
-    <section className="container-app" style={{ paddingTop: "21px", paddingBottom: "21px" }}>
-      {/* Shell — px/py scaled +6% */}
+    <section
+      className="featured-section container-app"
+      style={{ paddingTop: "21px", paddingBottom: "21px" }}
+    >
       <div
-        className="overflow-hidden"
+        className="featured-shell overflow-hidden"
         style={{
           padding: "15px 22px",
           background:
@@ -193,7 +195,7 @@ function FeaturedProducts() {
           boxShadow: "var(--shadow-md)",
         }}
       >
-        {/* Header row — mb-3 → mb-[13px] (+6%) */}
+        {/* Header row */}
         <div
           className="flex items-center justify-between gap-4"
           style={{ marginBottom: "13px" }}
@@ -229,7 +231,7 @@ function FeaturedProducts() {
 
         {/* Loading */}
         {loading && (
-          <div className="flex snap-x snap-mandatory gap-[11px] overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-[11px] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {Array.from({ length: 5 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -268,9 +270,9 @@ function FeaturedProducts() {
           </div>
         )}
 
-        {/* Cards grid — gap-2.5 → gap-[11px] (+6%) */}
+        {/* Cards — responsive grid: 1 col mobile → 2 sm → 3 md → 4 lg → 5 xl */}
         {!loading && !error && products.length > 0 && (
-          <div className="flex snap-x snap-mandatory gap-[11px] overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:overflow-visible xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-[11px] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {products.map((product) => (
               <FeaturedCard key={product.id} product={product} />
             ))}

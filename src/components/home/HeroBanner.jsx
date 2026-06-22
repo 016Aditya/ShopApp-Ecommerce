@@ -86,7 +86,7 @@ function HeroBanner() {
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="hero-banner relative overflow-hidden">
       {/* Entire banner clickable */}
       <div
         className={`bg-gradient-to-r ${slide.bg} transition-all duration-700 cursor-pointer`}
@@ -96,17 +96,12 @@ function HeroBanner() {
         aria-label={`Shop ${slide.category}`}
         onKeyDown={(e) => e.key === "Enter" && goToCategory()}
       >
-        {/*
-          py-7 md:py-10 was the previous padding.
-          Increased by 5% + 3% more (total 8%): 30px × 1.08 = 32.4px
-          Emoji: was clamp(96px,10vw,149px) → ×1.08 = clamp(103.68px,10vw,160.92px).
-        */}
         <div
           className="container-app flex items-center justify-between"
-          style={{ paddingTop: "32.4px", paddingBottom: "32.4px" }}
+          style={{ paddingTop: "clamp(20px, 5vw, 32px)", paddingBottom: "clamp(20px, 5vw, 32px)" }}
         >
-          {/* Left */}
-          <div className="flex flex-col gap-3 max-w-md">
+          {/* Left content */}
+          <div className="hero-banner__content flex flex-col gap-3 max-w-md">
             <span
               className="text-xs font-bold tracking-widest"
               style={{ color: slide.accent }}
@@ -114,16 +109,18 @@ function HeroBanner() {
               {slide.tag}
             </span>
             <h1
-              className={`text-4xl md:text-5xl font-extrabold ${
+              className={`hero-banner__title font-extrabold ${
                 slide.dark ? "text-white" : "text-slate-900"
               }`}
+              style={{ fontSize: "clamp(26px, 6vw, 48px)" }}
             >
               {slide.title}
             </h1>
             <p
-              className={`text-2xl font-bold ${
+              className={`hero-banner__subtitle font-bold ${
                 slide.dark ? "text-yellow-400" : "text-slate-700"
               }`}
+              style={{ fontSize: "clamp(16px, 3.5vw, 26px)" }}
             >
               {slide.subtitle}
             </p>
@@ -132,17 +129,17 @@ function HeroBanner() {
                 e.stopPropagation();
                 goToCategory();
               }}
-              className="mt-2 w-fit rounded-sm px-8 py-2.5 text-sm font-bold text-white shadow transition hover:opacity-90"
+              className="hero-banner__cta mt-2 rounded-sm px-8 py-2.5 text-sm font-bold text-white shadow transition hover:opacity-90"
               style={{ backgroundColor: slide.accent }}
             >
               {slide.cta}
             </button>
           </div>
 
-          {/* Right — emoji scaled +8% */}
+          {/* Right — emoji, hidden on xs phones */}
           <div
-            className="select-none hidden sm:block"
-            style={{ fontSize: "clamp(104px, 10vw, 161px)" }}
+            className="hero-banner__emoji select-none hidden sm:block"
+            style={{ fontSize: "clamp(64px, 10vw, 161px)" }}
             aria-hidden="true"
           >
             {slide.emoji}

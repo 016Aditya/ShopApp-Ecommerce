@@ -1,5 +1,5 @@
 /* ============================================================
-   mobile.css — Production Mobile Optimisation Pass
+   mobile.css — Production Mobile Optimisation Pass v2
 
    Strategy
    --------
@@ -19,9 +19,7 @@
 
 /* ── 0 · CONTAINER-APP ─────────────────────────────────────────
    utilities.css:  width: min(100% - 2rem, 1200px)
-   On desktop: centred with side padding — leave alone.
-   On mobile:  the 2rem side-margin creates the grey gutters;
-               override to width:100% + inline padding instead.
+   On mobile: override to width:100% + inline padding instead.
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .container-app {
@@ -32,20 +30,16 @@
 
 
 /* ── 1 · NAVBAR (PRIMARY BAR) ──────────────────────────────────
-
    JSX structure (Navbar.jsx):
-   <header>                          ← sticky, shadow-md
-     <div style=navbar-bg>           ← primary bar wrapper
+   <header>
+     <div style=navbar-bg>
        <div class="container-app flex h-14 items-center gap-3">
          Logo  Search-form  Account  Orders  Wishlist  Cart  Toggle
        </div>
      </div>
-     <div style=navbar-secondary-bg> ← category bar (scrollable)
-       <div class="container-app flex ... overflow-x-auto">
+     <div style=navbar-secondary-bg>
+       <div class="navbar-category-bar container-app ...">
    </header>
-
-   Fix: allow the primary bar flex row to wrap so the search form
-   drops to its own full-width second row on narrow screens.
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   /* Primary bar inner container: allow wrap */
@@ -59,73 +53,178 @@
 
   /* Search form: full-width second row */
   header > div:first-child > .container-app > form {
-    order: 10;          /* push after logo + icons */
-    flex: 1 1 100%;     /* take full row */
+    order: 10;
+    flex: 1 1 100%;
     min-width: 0;
   }
 
-  /* Logo stays first, never shrinks */
-  header > div:first-child > .container-app > a:first-child {
-    flex-shrink: 0;
+  /* Logo: stays first, never shrinks, hover opacity */
+  .navbar-logo {
+    flex-shrink: 0 !important;
     order: 1;
+    cursor: pointer;
+  }
+  .navbar-logo:hover {
+    opacity: 0.9;
   }
 
-  /* Icon links (Account / Orders / Wishlist / Cart) — shrink but
-     stay in the top row; reduce padding so they all fit at 320px */
+  /* Icon links and account group — shrink but stay in top row */
   header > div:first-child > .container-app > a,
   header > div:first-child > .container-app > div.group {
     flex-shrink: 0;
     padding-inline: 6px;
   }
 
-  /* ThemeToggle — shrink, no text */
+  /* ThemeToggle */
   header > div:first-child > .container-app > button {
     flex-shrink: 0;
     padding: 4px;
   }
 }
 
-/* At very small phones (<= 480px) hide the text labels next to
-   icons so only the SVG shows — prevents the top row overflowing */
+/* At very small phones (<= 480px) hide verbose text labels */
 @media (max-width: 480px) {
-  /* "Hello, sign in" + "Account & Lists" text spans inside Account */
   header > div:first-child > .container-app > a > span,
   header > div:first-child > .container-app > div.group > div > span,
-  /* "Returns" + "& Orders" text spans inside Orders link */
   header > div:first-child > .container-app > a[href] > span {
     display: none;
   }
 
-  /* Keep icon SVGs and badge counts visible */
   header > div:first-child > .container-app > a > div,
   header > div:first-child > .container-app > a > svg {
     display: flex;
   }
 
-  /* Wishlist / Cart label text "Wishlist" / "Cart" — hide */
   header > div:first-child > .container-app .mb-1 {
     display: none;
   }
 }
 
-/* Category bar: already overflow-x:auto in JSX — just ensure
-   it never wraps and never adds vertical height on mobile */
+/* ── Category bar: horizontal swipe, no wrap, scrollbar hidden ── */
+/* (Also applied on desktop via the inline styles in JSX, but
+   the -webkit-scrollbar hide needs a CSS rule.) */
+.navbar-category-bar::-webkit-scrollbar {
+  display: none;
+}
+
 @media (max-width: 767px) {
+  /* Inner container padding reset */
   header > div:last-child > .container-app {
     padding-block: 0;
+  }
+
+  /* Every category item: no shrink, normal whitespace */
+  .navbar-cat-item {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }
 
 
-/* ── 2 · PRODUCT DETAIL PAGE (pdp-*) ──────────────────────────
-
-   ProductDetail.css already handles ≤680px for .pdp-grid and
-   ≤480px for a few properties. We fill the gap 481–767px and
-   add missing constraints (pdp-page width, sticky positions,
-   skeleton, breadcrumb wrapping).
+/* ── 2 · HERO BANNER ───────────────────────────────────────────
+   HeroBanner.jsx uses .hero-banner as the root and
+   .hero-banner__content / .hero-banner__cta / .hero-banner__emoji
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Page wrapper — full width, tighter padding */
+  /* Banner: full width, no overflow */
+  .hero-banner {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Inner gradient div: stretch to full width */
+  .hero-banner > div:first-child {
+    width: 100%;
+  }
+
+  /* Content block: full width, wrap if needed */
+  .hero-banner__content {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Title + subtitle: wrap naturally */
+  .hero-banner__title,
+  .hero-banner__subtitle {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* CTA button: full width on mobile */
+  .hero-banner__cta {
+    width: 100%;
+    text-align: center;
+    display: block;
+  }
+
+  /* Emoji: hidden on phones < 480px (already hidden via sm:block
+     but override here for phones between 480–640px too) */
+  .hero-banner__emoji {
+    display: none !important;
+  }
+}
+
+
+/* ── 3 · FEATURED PRODUCTS ─────────────────────────────────────
+   FeaturedProducts.jsx now uses a CSS Grid (grid-cols-1 etc.).
+   Add safety nets for the section container and card internals.
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Section + shell: no overflow */
+  .featured-section {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .featured-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 12px 12px !important; /* tighter on phone */
+  }
+
+  /* Cards: fill column, no overflow */
+  .featured-section article,
+  .featured-section > div > div > article {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Card images: contain, no fixed height override */
+  .featured-section img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Card name: wrap properly */
+  .featured-card__name {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+    -webkit-line-clamp: 3; /* allow 3 lines on mobile */
+  }
+
+  /* Price row: wrap if original price is long */
+  .featured-section .flex.items-baseline {
+    flex-wrap: wrap;
+  }
+
+  /* Category pills: wrap */
+  .featured-section .flex.flex-wrap {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* ── 4 · PRODUCT DETAIL PAGE (pdp-*) ──────────────────────────
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
   .pdp-page {
     width: 100%;
     max-width: 100%;
@@ -134,23 +233,19 @@
     overflow-x: hidden;
   }
 
-  /* Breadcrumb — wrap on small screens */
   .pdp-breadcrumb {
     flex-wrap: wrap;
   }
 
-  /* Gallery: un-sticky on mobile so it doesn't obscure content */
   .pdp-gallery {
     position: static;
   }
 
-  /* Purchase card: un-sticky, full width */
   .pdp-purchase {
     position: static;
     width: 100%;
   }
 
-  /* Product name + price: allow wrap */
   .pdp-info__name {
     overflow-wrap: anywhere;
     word-break: break-word;
@@ -161,17 +256,14 @@
     flex-wrap: wrap;
   }
 
-  /* Purchase buttons: always full-width */
   .pdp-purchase__btn {
     width: 100%;
   }
 
-  /* Skeleton: single column */
   .pdp-skeleton {
     grid-template-columns: 1fr;
   }
 
-  /* Error state: contained */
   .pdp-error {
     padding: 40px 12px;
     width: 100%;
@@ -179,9 +271,6 @@
   }
 }
 
-/* pdp-grid: the existing CSS already handles ≤680px but misses
-   681–767px where the 2-column (300px 1fr) layout still overflows
-   on phones between 681–767px. Ensure single-col for all phones. */
 @media (max-width: 767px) {
   .pdp-grid {
     grid-template-columns: 1fr;
@@ -193,9 +282,7 @@
 }
 
 
-/* ── 3 · CHECKOUT PAGE ─────────────────────────────────────────
-   Checkout.css already has the grid going 1-column at ≤768px.
-   Add: aside un-sticky, full-width constraints, tight padding.
+/* ── 5 · CHECKOUT PAGE ─────────────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .checkout-page {
@@ -206,13 +293,11 @@
     overflow-x: hidden;
   }
 
-  /* Disable sticky summary sidebar on mobile */
   .checkout-page__aside {
     position: static !important;
     width: 100%;
   }
 
-  /* Address form inputs: full-width on all phones */
   .input,
   .checkout-address input,
   .checkout-address select,
@@ -221,14 +306,12 @@
     box-sizing: border-box;
   }
 
-  /* Item name — no overflow */
   .checkout-items__name {
     min-width: 0;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
-  /* Item meta — flex-shrink so price doesn't get pushed off */
   .checkout-items__meta {
     flex: 1;
     min-width: 0;
@@ -239,26 +322,19 @@
     white-space: nowrap;
   }
 
-  /* Summary place-order button: full width */
   .order-summary__btn {
     width: 100%;
   }
 }
 
 
-/* ── 4 · CART PAGE ─────────────────────────────────────────────
-   CartPage.jsx uses Tailwind: grid grid-cols-1 lg:grid-cols-3
-   Already collapses at lg. Only add safety net for containers.
+/* ── 6 · CART PAGE ─────────────────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* The outer min-h-screen div and container-app already flex-col
-     via Tailwind. Just ensure no horizontal overflow on cart items
-     and the sticky order-summary becomes static. */
   .lg\:col-span-1 {
     position: static !important;
   }
 
-  /* Cart item text — no overflow */
   .cart-item__name,
   .cart-item__title {
     min-width: 0;
@@ -268,9 +344,7 @@
 }
 
 
-/* ── 5 · ORDERS PAGE ───────────────────────────────────────────
-   Orders.css targets the correct class names already and has
-   mobile rules. We reinforce + add missing constraints.
+/* ── 7 · ORDERS PAGE ───────────────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .orders-page {
@@ -281,7 +355,6 @@
     overflow-x: hidden;
   }
 
-  /* Order card: full width, no clip */
   .order-card {
     width: 100%;
     max-width: 100%;
@@ -289,7 +362,6 @@
     box-sizing: border-box;
   }
 
-  /* Card header: wrap, reduce padding */
   .order-card__header {
     flex-wrap: wrap;
     gap: 8px;
@@ -308,7 +380,6 @@
     width: 100%;
   }
 
-  /* Order ID + value: word-wrap */
   .order-card__id,
   .order-card__value {
     min-width: 0;
@@ -316,7 +387,6 @@
     word-break: break-word;
   }
 
-  /* Card body: stack vertically */
   .order-card__body {
     flex-direction: column;
     align-items: flex-start;
@@ -324,7 +394,6 @@
     padding: 12px;
   }
 
-  /* Product name */
   .order-card__product-name {
     min-width: 0;
     overflow-wrap: anywhere;
@@ -332,7 +401,6 @@
     white-space: normal;
   }
 
-  /* Actions: full-width button */
   .order-card__actions {
     width: 100%;
   }
@@ -342,7 +410,6 @@
     text-align: center;
   }
 
-  /* Status badge row: wrap */
   .order-card__status-row {
     flex-wrap: wrap;
     gap: 6px;
@@ -350,23 +417,18 @@
 }
 
 
-/* ── 6 · ORDER DETAILS PAGE ────────────────────────────────────
-   Orders.css already has @media (max-width:768px) for the grid.
-   Reinforce + fix sticky panel + long-text safety nets.
+/* ── 8 · ORDER DETAILS PAGE ────────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Disable sticky right panel */
   .order-detail__right {
     position: static !important;
   }
 
-  /* Grid → 1 column */
   .order-detail__grid {
     grid-template-columns: 1fr !important;
     width: 100%;
   }
 
-  /* Header: stack */
   .order-detail__header {
     flex-direction: column;
     align-items: flex-start;
@@ -379,7 +441,6 @@
     word-break: break-word;
   }
 
-  /* Action row: full-width stacked buttons */
   .order-detail__action-row {
     flex-direction: column;
     gap: 8px;
@@ -392,7 +453,6 @@
     text-align: center;
   }
 
-  /* Timeline: horizontal scroll */
   .order-detail__timeline {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -412,7 +472,6 @@
     padding: 10px 0;
   }
 
-  /* Section cards: contained */
   .order-detail__section {
     width: 100%;
     max-width: 100%;
@@ -420,7 +479,6 @@
     overflow: hidden;
   }
 
-  /* Items list: wrap, text safety */
   .order-items-list__row {
     flex-wrap: wrap;
     gap: 8px;
@@ -438,7 +496,6 @@
     align-items: flex-start;
   }
 
-  /* Shipping address */
   .shipping-info__name,
   .shipping-info__line,
   .shipping-info__phone {
@@ -447,7 +504,6 @@
     word-break: break-word;
   }
 
-  /* Product preview card */
   .order-detail__product-preview {
     display: flex;
     flex-wrap: wrap;
@@ -457,12 +513,9 @@
 }
 
 
-/* ── 7 · SAVED ADDRESSES PAGE ──────────────────────────────────
-   Addresses pages use a CSS Grid for address cards.
-   The grid class names vary — cover both known patterns.
+/* ── 9 · SAVED ADDRESSES PAGE ──────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Grid → 1 column for any variant of address grid */
   .addresses-grid,
   .saved-addresses__grid,
   [class*="address-grid"],
@@ -471,7 +524,6 @@
     width: 100%;
   }
 
-  /* Address card: full width */
   .address-card,
   [class*="address-card"] {
     width: 100%;
@@ -479,7 +531,6 @@
     box-sizing: border-box;
   }
 
-  /* Address text: no overflow */
   .address-card__line,
   .address-card__name,
   [class*="address-card__line"],
@@ -490,7 +541,6 @@
     white-space: normal;
   }
 
-  /* Action buttons: wrap, equal width */
   .address-card__actions,
   [class*="address-card__actions"] {
     display: flex;
@@ -509,13 +559,9 @@
 }
 
 
-/* ── 8 · AUTH PAGES (Login / Register / Forgot Password) ───────
-   These pages are Tailwind-only; they use responsive classes
-   already (max-w-md mx-auto etc.). Add safety nets for any
-   fixed widths that might slip through.
+/* ── 10 · AUTH PAGES ───────────────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Any card / box used inside auth pages */
   .auth-card,
   .auth-box,
   [class*="auth-card"],
@@ -526,7 +572,6 @@
     padding: 20px 16px;
   }
 
-  /* All inputs inside auth pages */
   [class*="auth-"] input,
   [class*="auth-"] select,
   [class*="auth-"] textarea {
@@ -535,27 +580,21 @@
     box-sizing: border-box;
   }
 
-  /* Two-column form grids → single column */
   [class*="form-row--two"],
   [class*="form-grid"] {
     grid-template-columns: 1fr;
     width: 100%;
   }
 
-  /* checkout-address__grid is already 1-col at ≤560px in
-     Checkout.css — reinforce for 561–767px */
   .checkout-address__grid {
     grid-template-columns: 1fr;
   }
 }
 
 
-/* ── 9 · LONG-TEXT SAFETY NETS ─────────────────────────────────
-   Emails, order IDs, addresses, product names.
-   Applied globally below md so any page benefits.
+/* ── 11 · LONG-TEXT SAFETY NETS ────────────────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Order IDs, emails, long names anywhere */
   .order-card__id,
   .order-card__value,
   .order-detail__title,
@@ -572,13 +611,9 @@
 }
 
 
-/* ── 10 · TABLET ADJUSTMENTS (768 – 1023 px) ──────────────────
-   Tablet gets 2-column checkout and order-detail grids.
-   Product grid stays 2–3 columns (handled by Tailwind sm/md
-   classes on ProductGrid.jsx).
+/* ── 12 · TABLET ADJUSTMENTS (768 – 1023 px) ──────────────────
    ─────────────────────────────────────────────────────────── */
 @media (min-width: 768px) and (max-width: 1023px) {
-  /* Checkout: single column on tablet (sidebar too narrow) */
   .checkout-page__grid {
     grid-template-columns: 1fr;
   }
@@ -587,23 +622,15 @@
     position: static;
   }
 
-  /* Order detail grid: narrower sidebar on tablet */
   .order-detail__grid {
     grid-template-columns: 1fr 240px;
   }
-
-  /* pdp-grid on tablet: already handled in ProductDetail.css
-     (300px 1fr) — no override needed */
 }
 
 
-/* ── 11 · UNIVERSAL OVERFLOW SAFETY NET ───────────────────────
-   Last-resort: any element with a Tailwind min-w-* class that
-   could cause overflow on mobile gets reset to 0.
-   Applied only on phones.
+/* ── 13 · UNIVERSAL OVERFLOW SAFETY NET ───────────────────────
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Tables: horizontal scroll */
   table {
     display: block;
     overflow-x: auto;
@@ -612,12 +639,10 @@
     max-width: 100%;
   }
 
-  /* Any Tailwind min-w-[...] that might blow out the viewport */
   [class*="min-w-"] {
     min-width: 0 !important;
   }
 
-  /* Any fixed-width page wrapper that wasn't caught above */
   [class*="-page"],
   [class*="__container"],
   [class*="__wrapper"] {

@@ -56,10 +56,12 @@ function Navbar() {
       <div style={{ backgroundColor: "var(--navbar-bg)" }}>
         <div className="container-app flex h-14 items-center gap-3">
 
-          {/* Logo — plain Link, no nested interactive elements */}
+          {/* Logo — clickable, navigates home */}
           <Link
             to={PATHS.HOME}
-            className="flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
+            className="navbar-logo flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white transition"
+            style={{ cursor: "pointer" }}
+            aria-label="ShopApp Home"
           >
             <span className="text-[18px] font-extrabold text-white tracking-tight leading-none">
               shop<span style={{ color: "var(--accent)" }}>App</span>
@@ -67,7 +69,7 @@ function Navbar() {
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
-          {/* Search — form submit only, no navigate on input change */}
+          {/* Search — form submit only */}
           <form onSubmit={handleSearch} className="flex flex-1">
             <div className="flex w-full overflow-hidden rounded-sm" style={{ outline: "2px solid var(--accent)" }}>
               <input
@@ -104,7 +106,6 @@ function Navbar() {
                   Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
                 </Link>
                 <hr style={{ borderColor: "var(--border-color)" }} />
-                {/* FIX: button inside dropdown div — stopPropagation prevents bubbling to parent div */}
                 <button
                   onClick={(e) => { e.stopPropagation(); handleLogout(); }}
                   className="block w-full px-4 py-2 text-left text-sm hover:opacity-80 transition"
@@ -173,12 +174,28 @@ function Navbar() {
         </div>
       </div>
 
-      {/* ── Secondary / category bar ────────────────────────────────────── */}
+      {/* ── Secondary / category bar ─────────────────────────────────────
+          - overflow-x-auto + scrollbar-hide so categories are swipeable
+          - white-space: nowrap on the inner flex container prevents wrap
+          - every item has flex-shrink: 0 so nothing gets squished
+      ──────────────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
-        <div className="container-app flex items-center overflow-x-auto scrollbar-hide">
+        <div
+          className="navbar-category-bar container-app"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+            scrollbarWidth: "none",          /* Firefox */
+            msOverflowStyle: "none",         /* IE/Edge */
+            gap: "0",
+          }}
+        >
+          {/* All — hamburger icon link */}
           <Link
             to={PATHS.PRODUCTS}
-            className="flex flex-shrink-0 items-center gap-1.5 border border-transparent px-3 py-2 text-sm font-bold text-white hover:border-white transition"
+            className="navbar-cat-item flex flex-shrink-0 items-center gap-1.5 border border-transparent px-3 py-2 text-sm font-bold text-white hover:border-white transition"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 5h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm0 4h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm0 4h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2z" clipRule="evenodd" />
@@ -189,11 +206,9 @@ function Navbar() {
           {NAV_LINKS.map((link) =>
             link.dropdown ? (
               <div key={link.label} className="group relative flex-shrink-0">
-                {/* FIX: outer <div> is NOT a Link — dropdown trigger is just a div */}
-                {/* The inner dropdown items are proper Links with stopPropagation */}
                 <Link
                   to={link.path}
-                  className="flex flex-shrink-0 items-center gap-1 border border-transparent px-3 py-2 text-sm font-medium text-white hover:border-white transition"
+                  className="navbar-cat-item flex flex-shrink-0 items-center gap-1 border border-transparent px-3 py-2 text-sm font-medium text-white hover:border-white transition"
                 >
                   {link.label}
                   <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -220,7 +235,7 @@ function Navbar() {
               <Link
                 key={link.label}
                 to={link.path}
-                className="flex-shrink-0 border border-transparent px-3 py-2 text-sm font-medium text-white hover:border-white transition"
+                className="navbar-cat-item flex-shrink-0 border border-transparent px-3 py-2 text-sm font-medium text-white hover:border-white transition"
               >
                 {link.label}
               </Link>
