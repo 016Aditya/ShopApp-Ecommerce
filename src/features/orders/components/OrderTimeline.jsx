@@ -1,20 +1,22 @@
 /**
  * OrderTimeline — Unified Horizontal Timeline
  *
- * Changes (polish only — no logic change):
- * 1. Timeline wrapper capped at max-width 1000px, centred.
- * 2. "↩ Returns" divider node injected between DELIVERED and RETURN_REQUESTED.
- *    The divider is purely decorative — it is not a stage, has no dot, and
- *    never affects activeIdx calculation.
- * 3. Dot size reduced to 32px for tighter feel on large screens.
+ * Polish pass (spec v2):
+ * 1. Desktop: no scrollbar — overflow-visible; mobile/tablet: overflow-x-auto
+ * 2. Divider simplified: “Delivery Completed | Return Process”, subtle, 0.85rem
+ * 3. Gap between Delivered → divider → Return Requested reduced to ~20px
+ * 4. Return labels: 12px, line-height 1.2, max-width 80px
+ * 5. Active return step: box-shadow 0 0 0 4px rgba(245,158,11,.18) + scale(1.05)
+ * 6. Connector colors: delivery done → #22c55e, return done → #f59e0b
+ * 7. max-width 1200px, margin 0 auto
  */
 
 const DELIVERY_STAGES = [
   { key: "PENDING",   label: "Order Placed", icon: "📋", type: "delivery" },
-  { key: "CONFIRMED", label: "Confirmed",    icon: "✅", type: "delivery" },
-  { key: "PACKED",    label: "Packed",       icon: "📦", type: "delivery" },
-  { key: "SHIPPED",   label: "Shipped",      icon: "🚚", type: "delivery" },
-  { key: "DELIVERED", label: "Delivered",    icon: "🎉", type: "delivery" },
+  { key: "CONFIRMED", label: "Confirmed",    icon: "✓",    type: "delivery" },
+  { key: "PACKED",    label: "Packed",       icon: "📦",   type: "delivery" },
+  { key: "SHIPPED",   label: "Shipped",      icon: "🚚",   type: "delivery" },
+  { key: "DELIVERED", label: "Delivered",    icon: "🎉",   type: "delivery" },
 ];
 
 const RETURN_STAGES = [
@@ -26,28 +28,21 @@ const RETURN_STAGES = [
   { key: "RETURN_SUCCESSFUL", label: "Return Successful", icon: "✓",  type: "return" },
 ];
 
-const RETURN_FLOW_STATUSES = new Set([
-  "RETURN_REQUESTED",
-  "RETURN_APPROVED",
-  "PICKUP_SCHEDULED",
-  "PICKED_UP",
-  "REFUND_PROCESSED",
-  "RETURN_SUCCESSFUL",
-]);
-
-/** Thin horizontal divider injected between delivery and return segments */
+/**
+ * Slim inline divider between delivery end and return start.
+ * Not a step — aria-hidden, never affects activeIdx.
+ */
 const ReturnFlowDivider = () => (
   <div className="order-timeline__return-divider" aria-hidden="true">
-    <span className="order-timeline__return-divider-line" />
-    <span className="order-timeline__return-divider-label">↩ Returns</span>
-    <span className="order-timeline__return-divider-line" />
+    <span className="order-timeline__return-divider-text">
+      Delivery Completed&nbsp;│&nbsp;Return Process
+    </span>
   </div>
 );
 
 const OrderTimeline = ({ status, isReturnFlow }) => {
   const upperStatus = (status ?? "PENDING").toUpperCase();
 
-  // ── Cancelled ────────────────────────────────────────────────────
   if (upperStatus === "CANCELLED") {
     return (
       <div className="order-timeline order-timeline--cancelled">
@@ -57,7 +52,7 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
     );
   }
 
-  const stages    = isReturnFlow ? [...DELIVERY_STAGES, ...RETURN_STAGES] : DELIVERY_STAGES;
+  const stages     = isReturnFlow ? [...DELIVERY_STAGES, ...RETURN_STAGES] : DELIVERY_STAGES;
   const currentIdx = stages.findIndex((s) => s.key === upperStatus);
   const activeIdx  = currentIdx === -1 ? 0 : currentIdx;
 
@@ -71,35 +66,43 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
           const isTerminalReturn =
             (stage.key === "RETURN_SUCCESSFUL" || stage.key === "REFUND_PROCESSED") && isDone;
 
-          let dotClass   = "order-timeline__dot";
-          let labelClass = "order-timeline__label";
-
+          // Dot modifier
+          let dotClass = "order-timeline__dot";
           if (isDone) {
-            if (isTerminalReturn) {
-              dotClass   += " order-timeline__dot--success";
-              labelClass += " order-timeline__label--success";
-            } else if (isReturn) {
-              dotClass   += " order-timeline__dot--return-done";
-              labelClass += " order-timeline__label--return-done";
-            } else {
-              dotClass   += " order-timeline__dot--done";
-              labelClass += " order-timeline__label--done";
-            }
+            dotClass += isTerminalReturn
+              ? " order-timeline__dot--success"
+              : isReturn
+              ? " order-timeline__dot--return-done"
+              : " order-timeline__dot--done";
           }
-
           if (isCurrent) {
-            if (isTerminalReturn) {
-              dotClass   += " order-timeline__dot--success-current";
-              labelClass += " order-timeline__label--success-current";
-            } else if (isReturn) {
-              dotClass   += " order-timeline__dot--return-current";
-              labelClass += " order-timeline__label--return-current";
-            } else {
-              dotClass   += " order-timeline__dot--current";
-              labelClass += " order-timeline__label--current";
-            }
+            dotClass += isTerminalReturn
+              ? " order-timeline__dot--success-current"
+              : isReturn
+              ? " order-timeline__dot--return-current"
+              : " order-timeline__dot--current";
           }
 
+          // Label modifier
+          let labelClass = "order-timeline__label";
+          if (isDone) {
+            labelClass += isTerminalReturn
+              ? " order-timeline__label--success"
+              : isReturn
+              ? " order-timeline__label--return-done"
+              : " order-timeline__label--done";
+          }
+          if (isCurrent) {
+            labelClass += isTerminalReturn
+              ? " order-timeline__label--success-current"
+              : isReturn
+              ? " order-timeline__label--return-current"
+              : " order-timeline__label--current";
+          }
+          // Compact font for return labels
+          if (isReturn) labelClass += " order-timeline__label--return";
+
+          // Connector line
           let lineClass = "order-timeline__line";
           if (idx < activeIdx) {
             lineClass += isReturn
@@ -107,7 +110,6 @@ const OrderTimeline = ({ status, isReturnFlow }) => {
               : " order-timeline__line--done";
           }
 
-          // Inject the divider between the last delivery stage and first return stage
           const isFirstReturn = isReturn && idx === DELIVERY_STAGES.length;
 
           return (
