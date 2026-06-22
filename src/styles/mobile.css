@@ -1,0 +1,811 @@
+/* ============================================================
+   mobile.css — Pre-Production Mobile Responsiveness Fix
+   Scope: All pages. Desktop styles are NOT overridden.
+   All rules are inside @media (max-width: 767px) or
+   @media (max-width: 1023px) — safe from desktop regression.
+   ============================================================ */
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 1 · NAVBAR
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* Root navbar container — never overflow */
+  .navbar,
+  header,
+  nav {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Inner navbar flex row */
+  .navbar__inner,
+  .navbar__row,
+  .nav-inner {
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  /* Logo — always visible, never pushed off */
+  .navbar__logo,
+  .nav-logo {
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  /* Search bar shrinks, never overflows */
+  .navbar__search,
+  .nav-search,
+  .search-bar {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .navbar__search input,
+  .nav-search input,
+  .search-bar input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Icon group — shrink, don't overflow */
+  .navbar__actions,
+  .nav-actions,
+  .navbar__icons {
+    flex-shrink: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Individual nav icon buttons */
+  .navbar__icon-btn,
+  .nav-icon-btn {
+    padding: 4px 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+}
+
+/* Hide account label text on very small screens */
+@media (max-width: 380px) {
+  .navbar__account-label,
+  .nav-account-label {
+    display: none;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 2 · HOMEPAGE — Hero Banner
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* Hero container */
+  .hero-banner,
+  .hero,
+  .home-hero {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    height: auto !important;
+    min-height: unset !important;
+  }
+
+  /* Hero image */
+  .hero-banner img,
+  .hero img,
+  .home-hero img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  /* Hero text */
+  .hero-banner__text,
+  .hero__content,
+  .home-hero__content {
+    padding: 12px 16px;
+  }
+
+  .hero-banner__title,
+  .hero__title {
+    font-size: clamp(1.1rem, 5vw, 1.75rem);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-banner__subtitle,
+  .hero__subtitle {
+    font-size: clamp(0.8rem, 3.5vw, 1rem);
+    white-space: normal;
+  }
+
+  /* Hero buttons — stack vertically */
+  .hero-banner__actions,
+  .hero__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .hero-banner__actions button,
+  .hero-banner__actions a,
+  .hero__actions button,
+  .hero__actions a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 3 · PRODUCT GRID (All pages)
+   ────────────────────────────────────────────────────────────── */
+
+/* Product grid responsive columns */
+.products-grid,
+.product-grid,
+.products-list {
+  display: grid !important;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 639px) {
+  .products-grid,
+  .product-grid,
+  .products-list {
+    grid-template-columns: repeat(1, 1fr) !important;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .products-grid,
+  .product-grid,
+  .products-list {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .products-grid,
+  .product-grid,
+  .products-list {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .products-grid,
+  .product-grid,
+  .products-list {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .products-grid,
+  .product-grid,
+  .products-list {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+/* Product Card — always constrained */
+.product-card,
+.ProductCard,
+[class*="product-card"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Card image */
+.product-card img,
+.ProductCard img,
+[class*="product-card"] img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  object-fit: contain;
+  display: block;
+}
+
+/* Card text — no overflow */
+.product-card__name,
+.product-card__title,
+[class*="product-card__name"],
+[class*="product-card__title"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+@media (max-width: 767px) {
+  /* Card button — full width on mobile */
+  .product-card__btn,
+  .product-card button,
+  [class*="product-card__btn"] {
+    width: 100%;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 4 · FEATURED PRODUCTS (Homepage)
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .featured-products__grid,
+  .featured-grid,
+  [class*="featured"] .products-grid {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .featured-products__grid,
+  .featured-grid,
+  [class*="featured"] .products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .featured-products__grid,
+  .featured-grid,
+  [class*="featured"] .products-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 5 · PRODUCT DETAILS PAGE
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* Main detail container */
+  .product-detail,
+  .product-details,
+  [class*="product-detail__container"] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  /* Two-column layout → single column */
+  .product-detail__grid,
+  .product-detail__layout,
+  [class*="product-detail__grid"] {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  /* Force stacking order: Image → Info → Buttons → Specs */
+  .product-detail__image-col,
+  [class*="product-detail__image"] {
+    order: 1;
+    width: 100%;
+  }
+
+  .product-detail__info-col,
+  [class*="product-detail__info"] {
+    order: 2;
+    width: 100%;
+  }
+
+  /* Product detail image */
+  .product-detail__image,
+  .product-detail img,
+  [class*="product-detail__img"] {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 300px;
+    object-fit: contain;
+  }
+
+  /* Price text — wraps properly */
+  .product-detail__price,
+  [class*="product-price"] {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: clamp(1rem, 5vw, 1.5rem);
+  }
+
+  /* Action buttons — full width stacked */
+  .product-detail__actions,
+  [class*="product-detail__btn-group"] {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .product-detail__actions button,
+  .product-detail__actions a,
+  [class*="product-detail__btn"] {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* Specifications — no overflow */
+  .product-detail__specs,
+  [class*="product-specs"] {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Similar products — horizontal scroll allowed */
+  .similar-products,
+  [class*="similar-products"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 6 · CHECKOUT PAGE
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .checkout-page {
+    padding: 12px 12px 40px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Disable sticky on summary aside */
+  .checkout-page__aside {
+    position: static !important;
+    width: 100%;
+  }
+
+  /* Single column layout */
+  .checkout-page__grid {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  /* Address form — 1 column */
+  .checkout-address__grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Inputs — full width */
+  .input,
+  .checkout-address input,
+  .checkout-address select,
+  .checkout-address textarea {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Item name — prevent overflow */
+  .checkout-items__name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Price — allow wrap */
+  .checkout-items__price {
+    white-space: normal;
+    flex-shrink: 0;
+  }
+
+  /* Summary button — full width */
+  .order-summary__btn {
+    width: 100%;
+  }
+
+  /* Item row image — don't grow */
+  .checkout-items__img {
+    flex-shrink: 0;
+  }
+
+  /* Item meta — shrink to fit */
+  .checkout-items__meta {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 7 · ORDERS PAGE
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .orders-page {
+    padding: 16px 12px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Order card — full width */
+  .order-card {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Card header — stack left/right */
+  .order-card__header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .order-card__header-left {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    flex: 1;
+  }
+
+  .order-card__header-right {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Order ID — allow wrapping */
+  .order-card__id,
+  .order-card__value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Card body — stack: Image → Status → Count → Button */
+  .order-card__body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  /* Product name in card */
+  .order-card__product-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  /* Actions — full width button */
+  .order-card__actions {
+    width: 100%;
+  }
+
+  .order-card__btn {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* Status badge — allow wrap */
+  .order-card__status-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .order-status-badge {
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 8 · ORDER DETAILS PAGE
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* Disable sticky right panel */
+  .order-detail__right {
+    position: static !important;
+  }
+
+  /* Grid → single column */
+  .order-detail__grid {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  /* Header row — stack */
+  .order-detail__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .order-detail__title {
+    font-size: clamp(1rem, 5vw, 1.25rem);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Action row buttons — full width */
+  .order-detail__action-row {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .order-detail__cancel-btn,
+  .order-detail__return-btn {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* ── Timeline: horizontally scrollable on mobile ── */
+  .order-detail__timeline {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 8px;
+  }
+
+  .order-timeline-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .order-timeline {
+    min-width: max-content;
+    padding: 12px 0;
+  }
+
+  /* Section cards */
+  .order-detail__section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Items list */
+  .order-items-list__row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .order-items-list__name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  .order-items-list__pricing {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  /* Shipping address text */
+  .shipping-info__name,
+  .shipping-info__line,
+  .shipping-info__phone {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Product preview card */
+  .order-detail__product-preview {
+    display: flex !important;
+    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 9 · SAVED ADDRESSES PAGE
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* Address grid → single column */
+  .addresses-grid,
+  .saved-addresses__grid,
+  [class*="address-grid"],
+  [class*="addresses__grid"] {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  /* Address card — full width */
+  .address-card,
+  [class*="address-card"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Address text — no overflow */
+  .address-card__line,
+  .address-card__name,
+  [class*="address-card__line"],
+  [class*="address-card__name"] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  /* Action buttons — wrap, full width */
+  .address-card__actions,
+  [class*="address-card__actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .address-card__actions button,
+  .address-card__actions a,
+  [class*="address-card__btn"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 10 · AUTH & FORMS
+   (Login / Register / Forgot Password / Address Form)
+   ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* Form page containers */
+  .auth-page,
+  .login-page,
+  .register-page,
+  .forgot-password-page,
+  .address-form-page,
+  [class*="auth-container"],
+  [class*="form-page"] {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px 12px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Form card/box */
+  .auth-card,
+  .auth-box,
+  .form-card,
+  [class*="auth-card"],
+  [class*="auth-box"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 20px 16px;
+    box-sizing: border-box;
+  }
+
+  /* All inputs, selects, textareas */
+  .auth-page input,
+  .auth-page select,
+  .auth-page textarea,
+  .register-page input,
+  .login-page input,
+  .forgot-password-page input,
+  .address-form-page input,
+  .address-form-page select,
+  .address-form-page textarea,
+  [class*="auth-"] input,
+  [class*="auth-"] select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* All form submit / primary buttons */
+  .auth-page button[type="submit"],
+  .register-page button[type="submit"],
+  .login-page button[type="submit"],
+  .forgot-password-page button[type="submit"],
+  .address-form-page button[type="submit"],
+  [class*="auth-btn"],
+  [class*="form-btn"] {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* Two-column form rows → single column */
+  .form-row--two-col,
+  [class*="form-row--two"],
+  [class*="form-grid"] {
+    grid-template-columns: 1fr !important;
+    display: grid;
+    width: 100%;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 11 · TABLET (768–1023px) ADJUSTMENTS
+   ────────────────────────────────────────────────────────────── */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Checkout — single column on tablet too */
+  .checkout-page__grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .checkout-page__aside {
+    position: static !important;
+  }
+
+  /* Order detail grid on tablet */
+  .order-detail__grid {
+    grid-template-columns: 1fr 240px;
+  }
+
+  /* Order cards on tablet — keep horizontal */
+  .order-card__body {
+    align-items: center;
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION 12 · UNIVERSAL SAFETY NETS
+   ────────────────────────────────────────────────────────────── */
+
+/* All page-level containers */
+.page,
+[class*="-page"],
+[class*="__container"],
+[class*="__wrapper"],
+[class*="__inner"] {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tables — horizontal scroll on mobile */
+@media (max-width: 767px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Remove any min-width that can cause overflow */
+@media (max-width: 767px) {
+  [class*="min-w-"] {
+    min-width: 0 !important;
+  }
+}

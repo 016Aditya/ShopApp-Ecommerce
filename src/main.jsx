@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { initThemeEarly } from '@/store/themeStore';
 import App from './app/App';
 import './index.css';
+import './styles/mobile.css';
 
 // ── Apply persisted theme synchronously BEFORE first render ──────────────
 // This eliminates any flash-of-wrong-theme on page load / refresh.
