@@ -1,35 +1,42 @@
+/**
+ * LoginForm — production-quality UI upgrade
+ *
+ * Changes vs previous version:
+ *   + PasswordField (show/hide eye toggle)
+ *   + react-hot-toast success toast on login  ("Welcome back, {firstName}")
+ *   + react-hot-toast error toast on failure
+ *   + Loading label "Signing in…" on button
+ *   + Registration success banner (unchanged logic)
+ *   + Fully theme-variable styled — dark mode safe
+ *   - Hardcoded Tailwind colour classes removed from inputs
+ *
+ * Business logic: UNCHANGED (useAuth hook, routes, APIs)
+ */
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
-import Button from "@/components/common/Button";
-import Input  from "@/components/common/Input";
-import useAuth from "@/features/auth/hooks/useAuth";
-import { PATHS } from "@/routes/paths";
+import { useState }          from "react";
+import toast                 from "react-hot-toast";
+import Button                from "@/components/common/Button";
+import Input                 from "@/components/common/Input";
+import PasswordField         from "./PasswordField";
+import useAuth               from "@/features/auth/hooks/useAuth";
+import { PATHS }             from "@/routes/paths";
 
 function LoginForm() {
-  const { login, loading, error } = useAuth();
+  const { login, loading, error, clearError } = useAuth();
   const location = useLocation();
 
-  /**
-   * Registration success state — passed via React Router location.state
-   * from RegisterForm after a successful Create Account.
-   * Shape: { registered: true, firstName: string }
-   *
-   * We read it once on mount (initial state); the user can dismiss it.
-   * It never survives a page refresh (state is not in the URL) — correct
-   * behaviour: the banner is a one-time confirmation.
-   */
-  const regState = location.state;
-  const [showBanner, setShowBanner] = useState(
-    () => !!(regState?.registered)
-  );
-  const registeredName = regState?.firstName ?? '';
+  const regState        = location.state;
+  const [showBanner, setShowBanner] = useState(() => !!(regState?.registered));
+  const registeredName  = regState?.firstName ?? "";
 
-  const [formData, setFormData]   = useState({ email: "", password: "" });
+  const [formData, setFormData]     = useState({ email: "", password: "" });
   const [formErrors, setFormErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name]) setFormErrors((p) => ({ ...p, [name]: "" }));
+    if (error) clearError?.();
   };
 
   const validate = () => {
@@ -43,119 +50,161 @@ function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    try { await login(formData); } catch { /* error surfaced via useAuth */ }
+    try {
+      const user = await login(formData);
+      const name = user?.firstName || "";
+      toast.success(
+        name ? `Welcome back, ${name}! 👋` : "Welcome back!",
+        { duration: 3500 }
+      );
+    } catch (err) {
+      toast.error(err?.message || "Invalid email or password", { duration: 4000 });
+    }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-md space-y-5 rounded-2xl p-6 shadow-lg"
+    <div
+      className="w-full max-w-md rounded-2xl p-8 shadow-xl"
       style={{
         backgroundColor: "var(--card-bg-elevated)",
         border: "1px solid var(--border-color)",
       }}
     >
-      <div>
-        <h2
-          className="text-2xl font-bold"
-          style={{ color: "var(--text-primary)" }}
+      {/* Logo mark */}
+      <div className="mb-6 flex flex-col items-center gap-1">
+        <div
+          className="mb-1 flex h-10 w-10 items-center justify-center rounded-xl text-lg font-black"
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "var(--accent-text)",
+          }}
         >
-          Login
-        </h2>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          Welcome back. Sign in to continue.
+          S
+        </div>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+          Welcome back
+        </h1>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          Sign in to your ShopApp account
         </p>
       </div>
 
-      {/*
-        Registration success banner.
-        Shown only when navigated from RegisterForm with state.registered=true.
-        Dismissible via the × button.
-        Uses .auth-success-banner from Orders.css (shared styles).
-      */}
+      {/* Registration success banner */}
       {showBanner && (
-        <div className="auth-success-banner" role="alert" aria-live="polite">
-          <span className="auth-success-banner__icon" aria-hidden="true">✓</span>
-          <div className="auth-success-banner__body">
-            <p className="auth-success-banner__title">
+        <div
+          className="mb-5 flex items-start gap-3 rounded-xl p-3.5"
+          style={{
+            background: "rgba(34,197,94,.12)",
+            border: "1px solid rgba(34,197,94,.3)",
+          }}
+          role="alert"
+          aria-live="polite"
+        >
+          <span className="mt-0.5 text-sm" style={{ color: "#22c55e" }}>✓</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: "#22c55e" }}>
               Account Created Successfully
             </p>
-            <p className="auth-success-banner__sub">
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
               {registeredName
-                ? `Welcome, ${registeredName}! Please sign in using your email and password.`
+                ? `Welcome, ${registeredName}! Please sign in.`
                 : "Please sign in using your email and password."}
             </p>
           </div>
           <button
             type="button"
-            className="auth-success-banner__dismiss"
             onClick={() => setShowBanner(false)}
             aria-label="Dismiss"
+            className="ml-1 text-lg leading-none opacity-50 hover:opacity-80 transition-opacity"
+            style={{ color: "var(--text-primary)" }}
           >
             ×
           </button>
         </div>
       )}
 
-      <Input
-        label="Email"
-        name="email"
-        type="email"
-        placeholder="Enter your email"
-        value={formData.email}
-        onChange={handleChange}
-        error={formErrors.email}
-      />
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <Input
+          label="Email address"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          value={formData.email}
+          onChange={handleChange}
+          error={formErrors.email}
+          autoComplete="email"
+          aria-label="Email address"
+        />
 
-      <Input
-        label="Password"
-        name="password"
-        type="password"
-        placeholder="Enter your password"
-        value={formData.password}
-        onChange={handleChange}
-        error={formErrors.password}
-      />
+        <div className="space-y-1.5">
+          <PasswordField
+            label="Password"
+            name="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={handleChange}
+            error={formErrors.password}
+            autoComplete="current-password"
+          />
+          <div className="flex justify-end">
+            <Link
+              to={PATHS.FORGOT_PASSWORD}
+              className="text-xs font-medium hover:underline"
+              style={{ color: "var(--accent)" }}
+            >
+              Forgot password?
+            </Link>
+          </div>
+        </div>
 
-      {/* Forgot Password link */}
-      <div className="flex justify-end -mt-2">
-        <Link
-          to={PATHS.FORGOT_PASSWORD}
-          className="text-sm font-medium hover:underline"
-          style={{ color: "var(--accent)" }}
-        >
-          Forgot Password?
-        </Link>
-      </div>
+        {/* API-level error (not a toast — keeps inline pattern for field errors) */}
+        {error && (
+          <p
+            className="rounded-xl px-3.5 py-2.5 text-sm"
+            style={{
+              backgroundColor: "var(--error-bg)",
+              color: "var(--error-text)",
+              border: "1px solid var(--error-border)",
+            }}
+          >
+            {error}
+          </p>
+        )}
 
-      {error && (
-        <p
-          className="rounded-lg px-3 py-2 text-sm"
+        <Button
+          type="submit"
+          fullWidth
+          loading={loading}
+          size="lg"
+          className="mt-1"
           style={{
-            backgroundColor: "var(--error-bg)",
-            color: "var(--error-text)",
-            border: "1px solid var(--error-border)",
+            backgroundColor: "var(--button-primary)",
+            color: "var(--button-primary-text)",
+            borderColor: "var(--button-primary)",
           }}
         >
-          {error}
-        </p>
-      )}
+          {loading ? "Signing in…" : "Sign In"}
+        </Button>
+      </form>
 
-      <Button type="submit" fullWidth loading={loading}>
-        Sign In
-      </Button>
+      {/* Divider */}
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1" style={{ backgroundColor: "var(--border-color)" }} />
+        <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>or</span>
+        <div className="h-px flex-1" style={{ backgroundColor: "var(--border-color)" }} />
+      </div>
 
       <p className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
         Don&apos;t have an account?{" "}
         <Link
           to={PATHS.REGISTER}
-          className="font-medium hover:underline"
+          className="font-semibold hover:underline"
           style={{ color: "var(--accent)" }}
         >
-          Register
+          Create account
         </Link>
       </p>
-    </form>
+    </div>
   );
 }
 
