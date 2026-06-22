@@ -1,12 +1,12 @@
 /* ============================================================
-   mobile.css — Production Mobile Optimisation Pass v2
+   mobile.css — Production Mobile Optimisation Pass v3
 
    Strategy
    --------
-   • Every rule targets ACTUAL class names used in the JSX / CSS
-     files (verified by source-reading the whole codebase).
-   • Desktop styles are never touched — every rule lives inside
-     a max-width media query.
+   • Every rule targets ACTUAL class names used in JSX / CSS files.
+   • Desktop styles are never touched — every rule lives inside a
+     max-width media query (except the scrollbar-hide which must be
+     global for -webkit-scrollbar to work in Chrome/Safari).
    • No colour changes, no redesign, no business-logic changes.
 
    Breakpoints
@@ -17,10 +17,7 @@
    ============================================================ */
 
 
-/* ── 0 · CONTAINER-APP ─────────────────────────────────────────
-   utilities.css:  width: min(100% - 2rem, 1200px)
-   On mobile: override to width:100% + inline padding instead.
-   ─────────────────────────────────────────────────────────── */
+/* ── 0 · CONTAINER-APP ──────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .container-app {
     width: 100%;
@@ -29,36 +26,32 @@
 }
 
 
-/* ── 1 · NAVBAR (PRIMARY BAR) ──────────────────────────────────
-   JSX structure (Navbar.jsx):
-   <header>
-     <div style=navbar-bg>
-       <div class="container-app flex h-14 items-center gap-3">
-         Logo  Search-form  Account  Orders  Wishlist  Cart  Toggle
-       </div>
-     </div>
-     <div style=navbar-secondary-bg>
-       <div class="navbar-category-bar container-app ...">
-   </header>
-   ─────────────────────────────────────────────────────────── */
+/* ── 1 · NAVBAR PRIMARY BAR ─────────────────────────────────────────
+   Navbar.jsx primary-bar container class: .navbar-primary-inner
+   Mobile layout:
+     Row 1 → Logo  ············  [Account] [Wishlist] [Cart] [Theme]
+     Row 2 → Search bar (full width) via .navbar-search
+   Desktop (md+): single h-14 row — untouched by these rules.
+   ─────────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Primary bar inner container: allow wrap */
-  header > div:first-child > .container-app {
+  /* Primary bar inner: allow rows to wrap */
+  .navbar-primary-inner {
     flex-wrap: wrap;
-    height: auto;
+    height: auto !important;
     min-height: 56px;
     padding-block: 6px;
     gap: 6px;
+    align-items: center;
   }
 
-  /* Search form: full-width second row */
-  header > div:first-child > .container-app > form {
+  /* Search form: drop to its own full-width second row */
+  .navbar-search {
     order: 10;
     flex: 1 1 100%;
     min-width: 0;
   }
 
-  /* Logo: stays first, never shrinks, hover opacity */
+  /* Logo: always first, never shrinks */
   .navbar-logo {
     flex-shrink: 0 !important;
     order: 1;
@@ -68,52 +61,25 @@
     opacity: 0.9;
   }
 
-  /* Icon links and account group — shrink but stay in top row */
-  header > div:first-child > .container-app > a,
-  header > div:first-child > .container-app > div.group {
-    flex-shrink: 0;
-    padding-inline: 6px;
-  }
-
-  /* ThemeToggle */
-  header > div:first-child > .container-app > button {
+  /* ThemeToggle button inside primary bar */
+  .navbar-primary-inner > button {
     flex-shrink: 0;
     padding: 4px;
   }
 }
 
-/* At very small phones (<= 480px) hide verbose text labels */
-@media (max-width: 480px) {
-  header > div:first-child > .container-app > a > span,
-  header > div:first-child > .container-app > div.group > div > span,
-  header > div:first-child > .container-app > a[href] > span {
-    display: none;
-  }
-
-  header > div:first-child > .container-app > a > div,
-  header > div:first-child > .container-app > a > svg {
-    display: flex;
-  }
-
-  header > div:first-child > .container-app .mb-1 {
-    display: none;
-  }
-}
-
-/* ── Category bar: horizontal swipe, no wrap, scrollbar hidden ── */
-/* (Also applied on desktop via the inline styles in JSX, but
-   the -webkit-scrollbar hide needs a CSS rule.) */
+/* Category bar: hide scrollbar in Chrome/Safari (must be global) */
 .navbar-category-bar::-webkit-scrollbar {
   display: none;
 }
 
 @media (max-width: 767px) {
-  /* Inner container padding reset */
+  /* Inner container padding reset on category bar wrapper */
   header > div:last-child > .container-app {
     padding-block: 0;
   }
 
-  /* Every category item: no shrink, normal whitespace */
+  /* Every category item: no shrink, keep text on one line */
   .navbar-cat-item {
     flex-shrink: 0;
     white-space: nowrap;
@@ -121,57 +87,43 @@
 }
 
 
-/* ── 2 · HERO BANNER ───────────────────────────────────────────
-   HeroBanner.jsx uses .hero-banner as the root and
-   .hero-banner__content / .hero-banner__cta / .hero-banner__emoji
-   ─────────────────────────────────────────────────────────── */
+/* ── 2 · HERO BANNER ──────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Banner: full width, no overflow */
   .hero-banner {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
   }
 
-  /* Inner gradient div: stretch to full width */
   .hero-banner > div:first-child {
     width: 100%;
   }
 
-  /* Content block: full width, wrap if needed */
   .hero-banner__content {
     max-width: 100%;
     width: 100%;
   }
 
-  /* Title + subtitle: wrap naturally */
   .hero-banner__title,
   .hero-banner__subtitle {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
-  /* CTA button: full width on mobile */
   .hero-banner__cta {
     width: 100%;
     text-align: center;
     display: block;
   }
 
-  /* Emoji: hidden on phones < 480px (already hidden via sm:block
-     but override here for phones between 480–640px too) */
   .hero-banner__emoji {
     display: none !important;
   }
 }
 
 
-/* ── 3 · FEATURED PRODUCTS ─────────────────────────────────────
-   FeaturedProducts.jsx now uses a CSS Grid (grid-cols-1 etc.).
-   Add safety nets for the section container and card internals.
-   ─────────────────────────────────────────────────────────── */
+/* ── 3 · FEATURED PRODUCTS ───────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Section + shell: no overflow */
   .featured-section {
     width: 100%;
     max-width: 100%;
@@ -184,46 +136,39 @@
     max-width: 100%;
     overflow: hidden;
     box-sizing: border-box;
-    padding: 12px 12px !important; /* tighter on phone */
+    padding: 12px 12px !important;
   }
 
-  /* Cards: fill column, no overflow */
-  .featured-section article,
-  .featured-section > div > div > article {
+  .featured-section article {
     width: 100%;
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
   }
 
-  /* Card images: contain, no fixed height override */
   .featured-section img {
     max-width: 100%;
     height: auto;
   }
 
-  /* Card name: wrap properly */
   .featured-card__name {
     overflow-wrap: anywhere;
     word-break: break-word;
     white-space: normal;
-    -webkit-line-clamp: 3; /* allow 3 lines on mobile */
+    -webkit-line-clamp: 3;
   }
 
-  /* Price row: wrap if original price is long */
   .featured-section .flex.items-baseline {
     flex-wrap: wrap;
   }
 
-  /* Category pills: wrap */
   .featured-section .flex.flex-wrap {
     flex-wrap: wrap;
   }
 }
 
 
-/* ── 4 · PRODUCT DETAIL PAGE (pdp-*) ──────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 4 · PRODUCT DETAIL PAGE ──────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .pdp-page {
     width: 100%;
@@ -282,8 +227,7 @@
 }
 
 
-/* ── 5 · CHECKOUT PAGE ─────────────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 5 · CHECKOUT PAGE ─────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .checkout-page {
     padding: 10px 12px 40px;
@@ -328,8 +272,7 @@
 }
 
 
-/* ── 6 · CART PAGE ─────────────────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 6 · CART PAGE ──────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .lg\:col-span-1 {
     position: static !important;
@@ -344,8 +287,7 @@
 }
 
 
-/* ── 7 · ORDERS PAGE ───────────────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 7 · ORDERS PAGE ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .orders-page {
     padding: 16px 12px;
@@ -417,8 +359,7 @@
 }
 
 
-/* ── 8 · ORDER DETAILS PAGE ────────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 8 · ORDER DETAILS PAGE ──────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .order-detail__right {
     position: static !important;
@@ -513,8 +454,7 @@
 }
 
 
-/* ── 9 · SAVED ADDRESSES PAGE ──────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 9 · SAVED ADDRESSES PAGE ─────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .addresses-grid,
   .saved-addresses__grid,
@@ -559,8 +499,7 @@
 }
 
 
-/* ── 10 · AUTH PAGES ───────────────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 10 · AUTH PAGES ────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .auth-card,
   .auth-box,
@@ -592,8 +531,7 @@
 }
 
 
-/* ── 11 · LONG-TEXT SAFETY NETS ────────────────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 11 · LONG-TEXT SAFETY NETS ───────────────────────────────────────────── */
 @media (max-width: 767px) {
   .order-card__id,
   .order-card__value,
@@ -611,8 +549,7 @@
 }
 
 
-/* ── 12 · TABLET ADJUSTMENTS (768 – 1023 px) ──────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 12 · TABLET ADJUSTMENTS (768 – 1023 px) ────────────────────────────── */
 @media (min-width: 768px) and (max-width: 1023px) {
   .checkout-page__grid {
     grid-template-columns: 1fr;
@@ -628,8 +565,7 @@
 }
 
 
-/* ── 13 · UNIVERSAL OVERFLOW SAFETY NET ───────────────────────
-   ─────────────────────────────────────────────────────────── */
+/* ── 13 · UNIVERSAL OVERFLOW SAFETY NET ────────────────────────────────── */
 @media (max-width: 767px) {
   table {
     display: block;
