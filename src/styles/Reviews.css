@@ -1,9 +1,5 @@
 /* ==========================================================
-   Reviews.css - Dark Theme
-========================================================== */
-
-/* ==========================================================
-   Section
+   Reviews.css — Theme-aware
 ========================================================== */
 
 .review-section {
@@ -13,7 +9,7 @@
 .review-section__title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
   margin-bottom: 20px;
 }
 
@@ -26,8 +22,8 @@
   gap: 32px;
   flex-wrap: wrap;
   padding: 24px;
-  background: #111827;
-  border: 1px solid #334155;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   margin-bottom: 28px;
 }
@@ -42,7 +38,7 @@
 .review-summary__avg {
   font-size: 3rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   line-height: 1;
 }
 
@@ -54,7 +50,7 @@
 
 .review-summary__total {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .review-summary__bars {
@@ -76,14 +72,14 @@
 
 .star-bar__label {
   width: 32px;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .star-bar__track {
   flex: 1;
   height: 10px;
-  background: #1e293b;
+  background: var(--bg-tertiary);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -96,7 +92,7 @@
 
 .star-bar__count {
   width: 24px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
@@ -118,15 +114,15 @@
 ========================================================== */
 
 .review-card {
-  background: #111827;
-  border: 1px solid #334155;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
   transition: all 0.25s ease;
 }
 
 .review-card:hover {
-  border-color: #475569;
+  border-color: var(--accent);
   transform: translateY(-2px);
 }
 
@@ -145,8 +141,8 @@
   height: 48px;
   min-width: 48px;
   border-radius: 50%;
-  background: #1e293b;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--accent-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -164,7 +160,7 @@
 
 .review-card__username {
   display: block;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 6px;
@@ -182,7 +178,7 @@
 }
 
 .review-card__rating-label {
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -192,7 +188,7 @@
 
 .review-card__date {
   margin-left: auto;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   white-space: nowrap;
 }
@@ -202,7 +198,7 @@
 ========================================================== */
 
 .review-card__comment {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   line-height: 1.7;
   margin-top: 16px;
@@ -254,12 +250,12 @@
 
 .review-action-btn--cancel {
   background: transparent;
-  border: 1px solid #64748b;
-  color: #cbd5e1;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 .review-action-btn--cancel:hover {
-  background: rgba(100, 116, 139, 0.15);
+  background: var(--bg-tertiary);
 }
 
 /* ==========================================================
@@ -270,13 +266,13 @@
   margin-top: 18px;
   margin-left: 62px;
   padding: 16px;
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
 }
 
 .review-card__confirm-delete p {
-  color: #f8fafc;
+  color: var(--text-primary);
   margin-bottom: 14px;
 }
 
@@ -285,15 +281,15 @@
 ========================================================== */
 
 .review-form {
-  background: #111827;
-  border: 1px solid #334155;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 28px;
 }
 
 .review-form__title {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 16px;
@@ -301,7 +297,7 @@
 
 .review-form__label {
   display: block;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
@@ -309,22 +305,109 @@
   width: 100%;
   min-height: 110px;
   resize: vertical;
-  background: #0f172a;
-  border: 1px solid #475569;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 10px;
   padding: 12px;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .review-form__textarea:focus {
   outline: none;
-  border-color: #f59e0b;
+  border-color: var(--accent);
+}
+
+.review-form__char-count {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin-top: 4px;
 }
 
 .review-form__actions {
   display: flex;
   gap: 12px;
   margin-top: 16px;
+}
+
+/* ==========================================================
+   Submit / Update / Cancel Buttons in Form
+========================================================== */
+
+.review-submit-btn {
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: var(--button-primary);
+  border: 2px solid var(--button-primary);
+  color: var(--button-primary-text);
+}
+
+.review-submit-btn:hover {
+  background: var(--button-primary-hover);
+  border-color: var(--button-primary-hover);
+}
+
+.review-cancel-btn {
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 2px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.review-cancel-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-secondary);
+}
+
+/* ==========================================================
+   Interactive Star Rating (Write/Edit form)
+========================================================== */
+
+.star-rating {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.star-rating__star {
+  font-size: 1.6rem;       /* bigger stars */
+  cursor: pointer;
+  color: var(--text-tertiary);   /* default: grey */
+  transition: color 0.15s ease, transform 0.1s ease;
+  user-select: none;
+  line-height: 1;
+}
+
+.star-rating__star:hover,
+.star-rating__star--hovered {
+  color: #f59e0b;           /* orange on hover */
+  transform: scale(1.15);
+}
+
+.star-rating__star--selected {
+  color: #f59e0b;           /* orange when clicked/selected */
+}
+
+/* display-only stars (review summary + review cards) */
+.review-star {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.review-star--filled {
+  color: #f59e0b;
+}
+
+.review-star--empty {
+  color: var(--text-tertiary);
 }
 
 /* ==========================================================
@@ -377,8 +460,11 @@
     flex-wrap: wrap;
   }
 
-  .review-action-btn {
+  .review-action-btn,
+  .review-submit-btn,
+  .review-cancel-btn {
     flex: 1;
     min-width: 120px;
+    text-align: center;
   }
 }
