@@ -124,7 +124,7 @@
 }
 
 /* ==========================================================
-   Action Buttons (Edit / Delete / Cancel on cards)
+   Action Buttons (Edit / Delete on cards)
 ========================================================== */
 
 .review-card__actions {
@@ -261,7 +261,7 @@
 .review-form__char-count {
   display: block;
   font-size: 0.8rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
@@ -280,7 +280,9 @@
 }
 
 /* ==========================================================
-   Form Action Buttons — Submit / Update / Cancel
+   Form Action Buttons — Submit / Update Review / Cancel
+   Hardcoded colours so these work regardless of whether
+   --button-primary / --button-primary-text are in theme.css.
 ========================================================== */
 
 .review-form__actions {
@@ -290,31 +292,37 @@
   flex-wrap: wrap;
 }
 
-/* Submit & Update share the same filled-orange style */
+/* ── Submit Review & Update Review — filled orange pill ── */
 .review-form__submit {
   cursor: pointer;
   border-radius: 999px;
   padding: 10px 28px;
   font-size: 0.95rem;
   font-weight: 600;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-  background: var(--button-primary);
-  border: 2px solid var(--button-primary);
-  color: var(--button-primary-text);
+  transition: background 0.2s ease, transform 0.15s ease;
+  background: #f59e0b;
+  border: 2px solid #f59e0b;
+  color: #ffffff;
 }
 
 .review-form__submit:hover:not(:disabled) {
-  background: var(--button-primary-hover);
-  border-color: var(--button-primary-hover);
+  background: #d97706;
+  border-color: #d97706;
   transform: translateY(-1px);
 }
 
+.review-form__submit:active:not(:disabled) {
+  background: #b45309;
+  border-color: #b45309;
+  transform: translateY(0);
+}
+
 .review-form__submit:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* Cancel — ghost style */
+/* ── Cancel — slate ghost pill (different from orange) ── */
 .review-form__cancel {
   cursor: pointer;
   border-radius: 999px;
@@ -323,17 +331,18 @@
   font-weight: 600;
   transition: background 0.2s ease, border-color 0.2s ease;
   background: transparent;
-  border: 2px solid var(--border-color);
-  color: var(--text-secondary);
+  border: 2px solid #6b7280;
+  color: #9ca3af;
 }
 
 .review-form__cancel:hover:not(:disabled) {
-  background: var(--bg-tertiary);
-  border-color: var(--text-secondary);
+  background: rgba(107, 114, 128, 0.15);
+  border-color: #9ca3af;
+  color: #d1d5db;
 }
 
 .review-form__cancel:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -349,7 +358,7 @@
 .star-picker {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   margin-bottom: 4px;
 }
 
@@ -357,23 +366,26 @@
   background: none;
   border: none;
   padding: 2px;
-  font-size: 1.8rem;        /* bigger, easier to click */
+  /* Hardcoded size — not relying on any CSS variable so it always works */
+  font-size: 2.2rem;
   line-height: 1;
   cursor: pointer;
-  color: var(--text-tertiary);  /* default grey */
-  transition: color 0.15s ease, transform 0.1s ease;
+  /* Grey by default — hardcoded so it shows even if --text-tertiary is missing */
+  color: #4b5563;
+  transition: color 0.12s ease, transform 0.1s ease;
   user-select: none;
 }
 
+/* Orange on hover OR when star is selected (.star-picker__star--on) */
 .star-picker__star:hover,
 .star-picker__star--on {
-  color: #f59e0b;           /* orange on hover OR selected */
-  transform: scale(1.2);
+  color: #f59e0b;
+  transform: scale(1.25);
 }
 
 .star-picker__label {
-  margin-left: 8px;
-  font-size: 0.9rem;
+  margin-left: 10px;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   font-weight: 500;
 }
