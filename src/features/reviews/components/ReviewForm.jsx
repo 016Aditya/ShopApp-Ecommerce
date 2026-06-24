@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "../styles/Reviews.css";
 // Ensure RATING_MIN and RATING_MAX are exported from your constants file!
 import { RATING_MIN, RATING_MAX } from "@/utils/constants"; 
 
@@ -52,7 +53,7 @@ const ReviewForm = ({ productId, initialData = { rating: 0, comment: "" }, revie
       ? { rating, comment: comment.trim() }
       : { productId, rating, comment: comment.trim() };
       
-    onSubmit(payload); // Actually trigger the passed function!
+    onSubmit(payload);
   };
 
   const shownError = localError || actionError;
