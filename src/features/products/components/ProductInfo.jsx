@@ -1,27 +1,120 @@
+import { useRef } from "react";
 import { formatCurrency } from "@/utils/currency";
 import "../styles/ProductDetail.css";
 
 /**
- * ProductInfo — center column.
- * Shows brand, name, rating, price, description, features.
+ * StarRating — SVG-based partial-fill stars.
+ * Renders 5 stars where each star fills proportionally.
+ * value: 0–5 (supports decimals like 4.3)
  */
-const StarRating = ({ value }) => {
-  const full  = Math.floor(value);
-  const half  = value - full >= 0.5;
-  const empty = 5 - full - (half ? 1 : 0);
+const StarRating = ({ value, size = 15 }) => {
+  const clampedValue = Math.min(5, Math.max(0, value ?? 0));
+  const id = useRef(`sr-${Math.random().toString(36).slice(2)}`).current;
+
   return (
-    <span className="pdp-stars" aria-label={`${value} out of 5 stars`}>
-      {Array(full).fill("★").join("")}
-      {half ? "⯨" : ""}
-      {Array(empty).fill("☆").join("")}
+    <span
+      className="pdp-stars"
+      aria-label={`${clampedValue.toFixed(1)} out of 5 stars`}
+      role="img"
+      style={{ "--star-size": `${size}px` }}
+    >
+      {/* Hidden SVG defs for clipPaths */}
+      <svg width="0" height="0" style={{ position: "absolute" }}>
+        <defs>
+          {[1, 2, 3, 4, 5].map((i) => {
+            const fill = Math.min(1, Math.max(0, clampedValue - (i - 1)));
+            return (
+              <clipPath key={i} id={`${id}-clip-${i}`}>
+                <rect x="0" y="0" width={`${fill * 100}%`} height="100%" />
+              </clipPath>
+            );
+          })}
+        </defs>
+      </svg>
+
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span key={i} className="pdp-star" aria-hidden="true">
+          {/* Grey background star */}
+          <span className="pdp-star__bg">★</span>
+          {/* Orange foreground star clipped to fill % */}
+          <span
+            className="pdp-star__fg"
+            style={{ clipPath: `url(#${id}-clip-${i})` }}
+          >
+            ★
+          </span>
+        </span>
+      ))}
     </span>
   );
 };
 
-const ProductInfo = ({ product }) => {
+/**
+ * Formats review count:
+ *  - Desktop: 1,234 (comma separated)
+ *  - Controlled by prop `compact`
+ *  - compact: 99866 → "99.8k"
+ */
+const formatCount = (n, compact = false) => {
+  if (!n || n === 0) return "0";
+  if (compact && n >= 1000) {
+    return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  }
+  return n.toLocaleString("en-IN");
+};
+
+/**
+ * ProductRating — the full rating row shown in ProductInfo.
+ * Shows: ★★★★☆  4.5  (99,866)
+ * On mobile: ★★★★☆  4.5 · 99.8k reviews
+ */
+const ProductRating = ({ averageRating, reviewCount, onScrollToReviews }) => {
+  const rating = averageRating ?? 0;
+  const count  = reviewCount  ?? 0;
+
+  return (
+    <div className="pdp-rating">
+      {/* Stars */}
+      <StarRating value={rating} size={15} />
+
+      {/* Numeric score */}
+      <span className="pdp-rating__score">
+        {rating > 0 ? rating.toFixed(1) : "0.0"}
+      </span>
+
+      {/* Separator — visible on mobile only */}
+      <span className="pdp-rating__sep" aria-hidden="true">·</span>
+
+      {/* Review count — clickable, scrolls to reviews */}
+      <button
+        type="button"
+        className="pdp-rating__count"
+        onClick={onScrollToReviews}
+        aria-label={`${count.toLocaleString("en-IN")} ratings — click to see reviews`}
+      >
+        {/* Desktop: (99,866) */}
+        <span className="pdp-rating__count--desktop">
+          ({count > 0 ? formatCount(count) : "0"})
+        </span>
+        {/* Mobile: 99.8k reviews */}
+        <span className="pdp-rating__count--mobile">
+          {formatCount(count, true)} reviews
+        </span>
+      </button>
+    </div>
+  );
+};
+
+const ProductInfo = ({ product, reviewsSectionRef }) => {
   const discount = product.originalPrice && product.originalPrice > product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
+
+  const scrollToReviews = () => {
+    if (reviewsSectionRef?.current) {
+      reviewsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <div className="pdp-info">
@@ -44,13 +137,12 @@ const ProductInfo = ({ product }) => {
       {/* Divider */}
       <hr className="pdp-info__divider" />
 
-      {/* Rating row */}
-      <div className="pdp-info__rating-row">
-        <StarRating value={product.averageRating ?? 0} />
-        <span className="pdp-info__review-count">
-          {product.reviewCount ?? 0} ratings
-        </span>
-      </div>
+      {/* ── Rating row ── */}
+      <ProductRating
+        averageRating={product.averageRating}
+        reviewCount={product.reviewCount}
+        onScrollToReviews={scrollToReviews}
+      />
 
       {/* Price row */}
       <div className="pdp-info__price-row">

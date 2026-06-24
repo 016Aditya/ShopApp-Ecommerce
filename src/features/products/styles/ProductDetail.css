@@ -140,14 +140,149 @@
   margin: 12px 0;
 }
 
-.pdp-info__rating-row {
+/* ================================================================
+   RATING COMPONENT — Amazon/Flipkart premium style
+   ★★★★☆  4.5  (99,866)
+   ================================================================ */
+
+.pdp-rating {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: nowrap;
 }
-.pdp-stars { color: var(--accent); font-size: 1.1rem; letter-spacing: 1px; }
-.pdp-info__review-count { font-size: 0.875rem; color: var(--info-text); }
+
+/* ── Stars wrapper ── */
+.pdp-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+/* ── Single star (layered bg + fg) ── */
+.pdp-star {
+  position: relative;
+  display: inline-block;
+  font-size: var(--star-size, 15px);
+  line-height: 1;
+  width: 1em;
+  height: 1em;
+}
+
+.pdp-star__bg,
+.pdp-star__fg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+  transition: filter 0.2s ease, color 0.2s ease;
+}
+
+/* Empty star — grey */
+.pdp-star__bg {
+  color: #c8c8c8;
+}
+
+/* Filled star — orange/golden */
+.pdp-star__fg {
+  color: #f59e0b;
+  overflow: hidden;
+}
+
+/* Hover — entire stars group brightens */
+.pdp-rating:hover .pdp-star__fg {
+  filter: brightness(1.15);
+  color: #fbbf24;
+}
+.pdp-rating:hover .pdp-star__bg {
+  color: #b0b0b0;
+}
+
+/* ── Numeric score ── */
+.pdp-rating__score {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--info-text, #0066c0);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+/* ── Mobile separator dot ── */
+.pdp-rating__sep {
+  display: none; /* hidden on desktop */
+  color: var(--text-tertiary, #94a3b8);
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0 1px;
+}
+
+/* ── Review count button ── */
+.pdp-rating__count {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--info-text, #0066c0);
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.pdp-rating__count:hover {
+  color: var(--accent, #f59e0b);
+  text-decoration: underline;
+}
+
+/* Desktop: show (99,866) / Mobile: hide */
+.pdp-rating__count--desktop { display: inline; }
+.pdp-rating__count--mobile  { display: none; }
+
+/* ── Mobile: compact layout ── */
+@media (max-width: 480px) {
+  .pdp-rating {
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+
+  /* Show the dot separator on mobile */
+  .pdp-rating__sep {
+    display: inline;
+  }
+
+  /* Swap count format */
+  .pdp-rating__count--desktop { display: none; }
+  .pdp-rating__count--mobile  { display: inline; }
+
+  .pdp-rating__score {
+    font-size: 0.875rem;
+  }
+}
+
+/* ── Dark mode contrast adjustments ── */
+@media (prefers-color-scheme: dark) {
+  .pdp-star__bg {
+    color: #4a4a4a;
+  }
+  .pdp-star__fg {
+    color: #f59e0b;
+  }
+  .pdp-rating:hover .pdp-star__bg {
+    color: #5a5a5a;
+  }
+}
+
+/* Explicit dark-mode via data-theme attribute (if used) */
+[data-theme="dark"] .pdp-star__bg { color: #4a4a4a; }
+[data-theme="dark"] .pdp-star__fg { color: #f59e0b; }
+[data-theme="dark"] .pdp-rating:hover .pdp-star__bg { color: #5a5a5a; }
+
+/* ================================================================ */
 
 .pdp-info__price-row {
   display: flex;
