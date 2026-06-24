@@ -1,4 +1,10 @@
 /* ==========================================================
+   src/features/reviews/styles/Reviews.css
+   Theme-aware — uses CSS variables from theme.css.
+   Never hardcode dark hex colours here.
+========================================================== */
+
+/* ==========================================================
    Review List
 ========================================================== */
 
@@ -15,17 +21,17 @@
 ========================================================== */
 
 .review-card {
-  background: #111827;
-  border: 1px solid #1f2937;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
   transition: all 0.25s ease;
 }
 
 .review-card:hover {
-  border-color: #334155;
+  border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-md);
 }
 
 /* ==========================================================
@@ -47,8 +53,8 @@
   height: 48px;
   min-width: 48px;
   border-radius: 50%;
-  background: #1e293b;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--accent-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,7 +72,7 @@
 
 .review-card__username {
   display: block;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 6px;
@@ -88,7 +94,7 @@
 }
 
 .review-card__rating-label {
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -99,7 +105,7 @@
 
 .review-card__date {
   margin-left: auto;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   white-space: nowrap;
 }
@@ -111,14 +117,14 @@
 .review-card__comment {
   margin-top: 16px;
   margin-left: 62px;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   line-height: 1.7;
   word-break: break-word;
 }
 
 /* ==========================================================
-   Action Buttons
+   Action Buttons (Edit / Delete / Cancel on cards)
 ========================================================== */
 
 .review-card__actions {
@@ -127,10 +133,6 @@
   margin-top: 18px;
   margin-left: 62px;
 }
-
-/* ==========================================================
-   Shared Button Styles
-========================================================== */
 
 .review-action-btn {
   border: none;
@@ -143,10 +145,6 @@
   transition: all 0.2s ease;
 }
 
-/* ==========================================================
-   Edit Button
-========================================================== */
-
 .review-action-btn--edit {
   background: transparent;
   border: 1px solid #06b6d4;
@@ -157,10 +155,6 @@
   background: rgba(6, 182, 212, 0.15);
   transform: translateY(-1px);
 }
-
-/* ==========================================================
-   Delete Button
-========================================================== */
 
 .review-action-btn--delete {
   background: transparent;
@@ -173,18 +167,14 @@
   transform: translateY(-1px);
 }
 
-/* ==========================================================
-   Cancel Button
-========================================================== */
-
 .review-action-btn--cancel {
   background: transparent;
-  border: 1px solid #64748b;
-  color: #cbd5e1;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 .review-action-btn--cancel:hover {
-  background: rgba(100, 116, 139, 0.15);
+  background: var(--bg-tertiary);
 }
 
 /* ==========================================================
@@ -195,24 +185,197 @@
   margin-top: 18px;
   margin-left: 62px;
   padding: 16px;
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
 }
 
 .review-card__confirm-delete p {
-  color: #f8fafc;
+  color: var(--text-primary);
   margin-bottom: 14px;
 }
 
 /* ==========================================================
-   Editing State
+   Editing State Wrapper
 ========================================================== */
 
 .review-card--editing {
   padding: 0;
   background: transparent;
   border: none;
+}
+
+/* ==========================================================
+   Review Form
+========================================================== */
+
+.review-form {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.review-form__title {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.review-form__group {
+  margin-bottom: 16px;
+}
+
+.review-form__label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.review-form__textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.review-form__textarea::placeholder {
+  color: var(--input-placeholder);
+}
+
+.review-form__textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.review-form__char-count {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+.review-form__char-count--warn {
+  color: #ef4444;
+}
+
+.review-form__error {
+  color: var(--error-text);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+/* ==========================================================
+   Form Action Buttons — Submit / Update / Cancel
+========================================================== */
+
+.review-form__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* Submit & Update share the same filled-orange style */
+.review-form__submit {
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 10px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  background: var(--button-primary);
+  border: 2px solid var(--button-primary);
+  color: var(--button-primary-text);
+}
+
+.review-form__submit:hover:not(:disabled) {
+  background: var(--button-primary-hover);
+  border-color: var(--button-primary-hover);
+  transform: translateY(-1px);
+}
+
+.review-form__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Cancel — ghost style */
+.review-form__cancel {
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  background: transparent;
+  border: 2px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.review-form__cancel:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--text-secondary);
+}
+
+.review-form__cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
+   Star Picker — interactive (Write / Edit form)
+   Classes emitted by StarPicker in ReviewForm.jsx:
+     .star-picker                wrapper
+     .star-picker__star          each star <button>
+     .star-picker__star--on      filled (selected or hovered)
+     .star-picker__label         text label ("Excellent" etc.)
+========================================================== */
+
+.star-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.star-picker__star {
+  background: none;
+  border: none;
+  padding: 2px;
+  font-size: 1.8rem;        /* bigger, easier to click */
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-tertiary);  /* default grey */
+  transition: color 0.15s ease, transform 0.1s ease;
+  user-select: none;
+}
+
+.star-picker__star:hover,
+.star-picker__star--on {
+  color: #f59e0b;           /* orange on hover OR selected */
+  transform: scale(1.2);
+}
+
+.star-picker__label {
+  margin-left: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* ==========================================================
@@ -238,15 +401,16 @@
     margin-left: 0;
   }
 
-  .review-card__actions {
+  .review-card__actions,
+  .review-form__actions {
     flex-wrap: wrap;
   }
 
-  .review-action-btn {
+  .review-action-btn,
+  .review-form__submit,
+  .review-form__cancel {
     width: 100%;
+    text-align: center;
     justify-content: center;
   }
-  .review-card {
-  background: red !important;
-}
 }
