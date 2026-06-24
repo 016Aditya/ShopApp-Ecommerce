@@ -1,6 +1,17 @@
 // ─── API ──────────────────────────────────────────────────────────────────────
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
+// ─── API Endpoints ────────────────────────────────────────────────────────────
+export const API_ENDPOINTS = {
+  // Assuming your other endpoints look something like this:
+  USERS: "/users",
+  PRODUCTS: "/products",
+  ORDERS: "/orders",
+  
+  REVIEWS: "/reviews", 
+  CART: "/cart",
+};
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const USER_ROLES = {
   ADMIN: "ADMIN",

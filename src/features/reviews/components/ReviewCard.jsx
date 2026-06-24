@@ -3,6 +3,7 @@ import ReviewForm from "./ReviewForm";
 
 const STAR_LABELS = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
+// Helper component for static display
 const StarDisplay = ({ value, size = "md" }) => {
   const stars = Array.from({ length: 5 }, (_, i) => i + 1);
   const sz = size === "sm" ? "1rem" : "1.2rem";
@@ -24,14 +25,7 @@ const StarDisplay = ({ value, size = "md" }) => {
   );
 };
 
-const ReviewCard = ({
-  review,
-  currentUserId,
-  onEdit,
-  onDelete,
-  submitting,
-  actionError,
-}) => {
+const ReviewCard = ({ review, currentUserId, onEdit, onDelete, submitting, actionError }) => {
   const [editing, setEditing] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const isOwner = currentUserId && currentUserId === review.userId;
@@ -43,9 +37,7 @@ const ReviewCard = ({
 
   const formattedDate = review.createdAt
     ? new Date(review.createdAt).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+        year: "numeric", month: "short", day: "numeric",
       })
     : "";
 
@@ -79,29 +71,17 @@ const ReviewCard = ({
             <span className="review-card__rating-label">{STAR_LABELS[review.rating]}</span>
           </div>
         </div>
-        {formattedDate && (
-          <span className="review-card__date">{formattedDate}</span>
-        )}
+        {formattedDate && <span className="review-card__date">{formattedDate}</span>}
       </div>
 
       <p className="review-card__comment">{review.comment}</p>
 
       {isOwner && !showDelete && (
         <div className="review-card__actions">
-          <button
-            type="button"
-            className="review-action-btn review-action-btn--edit"
-            onClick={() => setEditing(true)}
-            disabled={submitting}
-          >
+          <button type="button" className="review-action-btn review-action-btn--edit" onClick={() => setEditing(true)} disabled={submitting}>
             ✎ Edit
           </button>
-          <button
-            type="button"
-            className="review-action-btn review-action-btn--delete"
-            onClick={() => setShowDelete(true)}
-            disabled={submitting}
-          >
+          <button type="button" className="review-action-btn review-action-btn--delete" onClick={() => setShowDelete(true)} disabled={submitting}>
             🗑 Delete
           </button>
         </div>
@@ -111,19 +91,10 @@ const ReviewCard = ({
         <div className="review-card__confirm-delete">
           <p>Are you sure you want to delete this review?</p>
           <div className="review-card__actions">
-            <button
-              type="button"
-              className="review-action-btn review-action-btn--delete"
-              onClick={() => onDelete(review.id)}
-              disabled={submitting}
-            >
+            <button type="button" className="review-action-btn review-action-btn--delete" onClick={() => onDelete(review.id)} disabled={submitting}>
               Yes, Delete
             </button>
-            <button
-              type="button"
-              className="review-action-btn review-action-btn--cancel"
-              onClick={() => setShowDelete(false)}
-            >
+            <button type="button" className="review-action-btn review-action-btn--cancel" onClick={() => setShowDelete(false)}>
               Cancel
             </button>
           </div>
