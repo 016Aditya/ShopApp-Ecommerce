@@ -2,15 +2,8 @@ import { useNavigate } from "react-router-dom";
 import PATHS from "@/routes/paths";
 import OrderCard from "../components/OrderCard";
 import { useOrders } from "../hooks/useOrders";
+import { OrderCardSkeleton } from "@/components/skeleton";
 import "../styles/Orders.css";
-
-const OrderSkeleton = () => (
-  <div className="order-skeleton">
-    {[1, 2, 3].map((item) => (
-      <div key={item} className="order-skeleton__card skeleton" />
-    ))}
-  </div>
-);
 
 const OrdersPage = () => {
   const { orders, loading, error, fetchOrders } = useOrders();
@@ -19,8 +12,11 @@ const OrdersPage = () => {
   if (loading) {
     return (
       <div className="orders-page">
-        <h1 className="orders-page__title">My Orders</h1>
-        <OrderSkeleton />
+        <div className="sk mb-4" style={{ height: 24, width: 130 }} />
+        <div className="sk mb-6" style={{ height: 14, width: 80 }} />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <OrderCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -32,9 +28,7 @@ const OrdersPage = () => {
         <div className="orders-error">
           <span>Unable to load orders.</span>
           <p>{error}</p>
-          <button className="btn btn--primary" onClick={fetchOrders}>
-            Retry
-          </button>
+          <button className="btn btn--primary" onClick={fetchOrders}>Retry</button>
         </div>
       </div>
     );
@@ -57,7 +51,7 @@ const OrdersPage = () => {
   }
 
   return (
-    <div className="orders-page">
+    <div className="orders-page sk-loaded">
       <h1 className="orders-page__title">My Orders</h1>
       <p className="orders-page__count">
         {orders.length} order{orders.length !== 1 ? "s" : ""}

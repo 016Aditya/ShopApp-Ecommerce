@@ -8,6 +8,7 @@ import ProductInfo from "../components/ProductInfo";
 import PurchaseCard from "../components/PurchaseCard";
 import ReviewList from "@/features/reviews/components/ReviewList";
 import SimilarProducts from "../components/SimilarProducts";
+import { ProductDetailSkeleton } from "@/components/skeleton";
 import PATHS from "@/routes/paths";
 import "../styles/ProductDetail.css";
 
@@ -17,6 +18,8 @@ const ProductDetailPage = () => {
   const { product, loading, error } = useProduct(id);
   const { user } = useAuth();
   const [toast, setToast] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -25,41 +28,31 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = async () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
+    setAddingToCart(true);
     try {
-      // Pass full product object so cartStore can snapshot name/image/price
       await useCartStore.getState().addToCart(product, 1);
       showToast("Added to cart! 🛒");
     } catch {
       showToast("Failed to add to cart.", "error");
+    } finally {
+      setAddingToCart(false);
     }
   };
 
   const handleBuyNow = async () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
+    setBuyingNow(true);
     try {
       await useCartStore.getState().addToCart(product, 1);
       navigate(PATHS.CART);
     } catch {
       showToast("Failed. Please try again.", "error");
+    } finally {
+      setBuyingNow(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="pdp-page">
-        <div className="pdp-skeleton">
-          <div className="pdp-skeleton__img skeleton" />
-          <div className="pdp-skeleton__info">
-            <div className="skeleton skeleton-heading" />
-            <div className="skeleton skeleton-text" />
-            <div className="skeleton skeleton-text" style={{ width: "60%" }} />
-            <div className="skeleton skeleton-text" style={{ width: "40%" }} />
-          </div>
-          <div className="pdp-skeleton__card skeleton" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <ProductDetailSkeleton />;
 
   if (error) {
     return (
@@ -77,7 +70,7 @@ const ProductDetailPage = () => {
   if (!product) return null;
 
   return (
-    <div className="pdp-page">
+    <div className="pdp-page sk-loaded">
       <button className="pdp-back" onClick={() => navigate(PATHS.PRODUCTS)}>← Back to Products</button>
 
       <nav className="pdp-breadcrumb" aria-label="breadcrumb">
@@ -103,6 +96,8 @@ const ProductDetailPage = () => {
             product={product}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
+            addingToCart={addingToCart}
+            buyingNow={buyingNow}
           />
         </div>
       </div>

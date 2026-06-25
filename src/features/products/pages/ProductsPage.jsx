@@ -4,32 +4,8 @@ import { useProducts } from "../hooks/useProducts";
 import ProductGrid from "../components/ProductGrid";
 import ProductSearch from "../components/ProductSearch";
 import ProductFilter from "../components/ProductFilter";
+import { ProductCardSkeleton } from "@/components/skeleton";
 
-/**
- * ProductsPage
- *
- * Single source of truth: URL search params drive everything.
- * All navigation handlers are memoised and only update the specific
- * param(s) they own — no handler ever wipes unrelated params.
- *
- * Handler contracts
- * ─────────────────
- * handleSearch(keyword)
- *   Merges ?search=keyword into existing params (preserves category).
- *   Clears ?subcategory when a new search starts.
- *   Guard: skips setSearchParams when the URL already has this value.
- *
- * handleClearSearch()
- *   Removes ONLY the ?search param. Category + subcategory are preserved.
- *   Guard: skips when there is no search param to remove.
- *
- * handleCategorySelect(category)
- *   Replaces the entire param set with just ?category= (or {} for "All").
- *   A category click always resets search and subcategory — intentional.
- *
- * handleSubcategorySelect(sub)
- *   Keeps ?category= and replaces/removes ?subcategory=.
- */
 const ProductsPage = () => {
   const {
     products,
@@ -47,9 +23,6 @@ const ProductsPage = () => {
   const activeSub    = searchParams.get("subcategory") ?? null;
   const activeSearch = searchParams.get("search")      ?? "";
 
-  // ── Fetch when URL params change ──────────────────────────────────────
-  // Depend on the serialised string so the effect is stable and only runs
-  // when an actual URL value changes (not on every render).
   useEffect(() => {
     if (activeSearch) {
       fetchBySearch(activeSearch);
@@ -60,26 +33,17 @@ const ProductsPage = () => {
     } else {
       fetchAll();
     }
-    // fetchAll / fetchByCategory etc. are stable useCallback refs from
-    // useProducts — safe to omit from the array; the serialised
-    // searchParams string is the only real trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString()]);
 
-  // ── Stable handlers ───────────────────────────────────────────────────
-
   const handleSearch = useCallback(
     (keyword) => {
-      // Guard: skip if URL already has this exact search value.
       if (searchParams.get("search") === keyword) return;
-
-      // Merge search into current params — preserve ?category=.
-      // Clear ?subcategory so the search isn't accidentally scoped.
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (keyword) {
           next.set("search", keyword);
-          next.delete("subcategory"); // search overrides subcategory
+          next.delete("subcategory");
         } else {
           next.delete("search");
         }
@@ -90,11 +54,7 @@ const ProductsPage = () => {
   );
 
   const handleClearSearch = useCallback(() => {
-    // Guard: skip if there is no search param — avoids a no-op navigation
-    // that would still trigger a re-render cycle.
     if (!searchParams.has("search")) return;
-
-    // Remove ONLY the search key; preserve category + subcategory.
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete("search");
@@ -104,7 +64,6 @@ const ProductsPage = () => {
 
   const handleCategorySelect = useCallback(
     (category) => {
-      // Category click is a deliberate reset — clear search + subcategory.
       setSearchParams(category === "All" ? {} : { category });
     },
     [setSearchParams]
@@ -161,15 +120,6 @@ const ProductsPage = () => {
           }}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {/*
-              key={activeSearch} — when the search param changes externally
-              (e.g. user clicks a category or Clear), React unmounts and
-              remounts ProductSearch with the correct initialValue instead
-              of trying to sync it through a useEffect inside the child.
-
-              The mountedRef inside ProductSearch ensures this remount does
-              NOT fire onClear automatically — solving the param-wipe loop.
-            */}
             <ProductSearch
               key={activeSearch}
               onSearch={handleSearch}
@@ -185,17 +135,11 @@ const ProductsPage = () => {
           />
         </div>
 
+        {/* ── Skeleton grid ── */}
         {loading && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-72 animate-pulse rounded-sm shadow-sm"
-                style={{
-                  backgroundColor: "var(--card-bg)",
-                  border: "1px solid var(--border-color)",
-                }}
-              />
+            {Array.from({ length: 10 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         )}
@@ -214,12 +158,12 @@ const ProductsPage = () => {
         )}
 
         {!loading && !error && (
-          <>
+          <div className="sk-loaded">
             <p className="mb-3 text-sm" style={{ color: "var(--text-secondary)" }}>
               {products.length} product{products.length !== 1 ? "s" : ""} found
             </p>
             <ProductGrid products={products} />
-          </>
+          </div>
         )}
       </div>
     </div>
