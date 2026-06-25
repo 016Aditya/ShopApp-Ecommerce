@@ -25,9 +25,11 @@ const ProductCard = ({ product, compact = false }) => {
     }
   };
 
-  const discount = product.originalPrice && product.originalPrice > product.price
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : null;
+  // Use ternary (not &&) so discount=0 never renders a stray "0" text node
+  const discount =
+    product.originalPrice && product.originalPrice > product.price
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : null;
 
   /* ─── COMPACT variant ─── */
   if (compact) {
@@ -40,28 +42,32 @@ const ProductCard = ({ product, compact = false }) => {
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
       >
-        {/* Image container — fixed height, image sits inside with padding */}
+        {/* Image container — same aspect-ratio + gradient background as FeaturedCard */}
         <div
-          className="flex h-32 w-full items-center justify-center rounded mb-2 overflow-hidden relative"
-          style={{ backgroundColor: "var(--bg-tertiary)", padding: "10px" }}
+          className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
+          style={{
+            aspectRatio: "1 / 1",
+            padding: "8px",
+            background: "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
+            borderRadius: "8px",
+          }}
         >
-          {discount && (
+          {discount ? (
             <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
               {discount}% OFF
             </div>
-          )}
+          ) : null}
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={product.name}
               style={{
-                maxHeight: "100%",
-                maxWidth: "100%",
-                width: "auto",
-                height: "auto",
+                width: "100%",
+                height: "100%",
                 objectFit: "contain",
-                display: "block",
+                transition: "transform 220ms ease",
               }}
+              className="group-hover:scale-[1.04]"
               loading="lazy"
             />
           ) : (
@@ -96,39 +102,40 @@ const ProductCard = ({ product, compact = false }) => {
       onKeyDown={(e) => e.key === "Enter" && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
     >
       {/*
-        Image container — fixed height box.
-        padding: 14px gives a visible background margin on all 4 sides,
-        so no image ever bleeds to the card edge regardless of aspect ratio.
-        The <img> uses max-height/max-width with auto dimensions so it
-        scales down to fit inside the padded area without ever being
-        stretched, cropped, or filling the full box.
+        Image container — copied from FeaturedCard:
+        - aspectRatio 1:1 so the box is always square and scales with card width
+        - margin + calc width so the image box floats inside the card with a visible gap
+        - gradient background matches Featured section
+        - padding 8px keeps the image away from all edges
+        - img uses width/height 100% + objectFit:contain — never cropped
       */}
       <div
-        className="flex h-44 w-full items-center justify-center overflow-hidden relative"
+        className="relative flex w-full items-center justify-center overflow-hidden"
         style={{
-          backgroundColor: "var(--bg-tertiary)",
-          padding: "14px",
+          aspectRatio: "1 / 1",
+          margin: "7px",
+          width: "calc(100% - 14px)",
+          borderRadius: "8px",
+          padding: "8px",
+          background: "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
         }}
       >
-        {discount && (
+        {discount ? (
           <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
             {discount}% OFF
           </div>
-        )}
+        ) : null}
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
             style={{
-              maxHeight: "100%",
-              maxWidth: "100%",
-              width: "auto",
-              height: "auto",
+              width: "100%",
+              height: "100%",
               objectFit: "contain",
-              display: "block",
-              transition: "transform 0.2s ease",
+              transition: "transform 220ms ease",
             }}
-            className="group-hover:scale-105"
+            className="group-hover:scale-[1.04]"
             loading="lazy"
           />
         ) : (
@@ -153,18 +160,18 @@ const ProductCard = ({ product, compact = false }) => {
           <p style={{ fontSize: "18px", fontWeight: 700, color: "#22c55e" }}>
             {formatCurrency(product.price)}
           </p>
-          {product.originalPrice && product.originalPrice > product.price && (
+          {product.originalPrice && product.originalPrice > product.price ? (
             <p className="text-xs line-through" style={{ color: "var(--text-tertiary)" }}>
               {formatCurrency(product.originalPrice)}
             </p>
-          )}
+          ) : null}
         </div>
 
         <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
 
-        {product.inStock === false && (
+        {product.inStock === false ? (
           <p className="text-xs font-semibold text-red-500">Out of Stock</p>
-        )}
+        ) : null}
 
         <div className="flex items-center gap-1 flex-wrap">
           <span
@@ -173,14 +180,14 @@ const ProductCard = ({ product, compact = false }) => {
           >
             {product.category}
           </span>
-          {product.subcategory && (
+          {product.subcategory ? (
             <span
               className="w-fit rounded-full px-2 py-0.5"
               style={{ fontSize: "10px", color: "var(--text-secondary)", backgroundColor: "var(--badge-bg)" }}
             >
               {product.subcategory}
             </span>
-          )}
+          ) : null}
         </div>
       </div>
 

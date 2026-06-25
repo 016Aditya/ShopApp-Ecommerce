@@ -4,7 +4,6 @@ import { formatCurrency } from "@/utils/currency";
 import RatingBadge from "@/components/common/RatingBadge";
 import PATHS, { buildPath } from "@/routes/paths";
 
-/* ── Skeleton ──────────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
     <div
@@ -16,7 +15,6 @@ function SkeletonCard() {
         boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
       }}
     >
-      {/* Aspect-ratio image placeholder */}
       <div
         className="animate-pulse w-full"
         style={{
@@ -24,8 +22,7 @@ function SkeletonCard() {
           margin: "7px",
           width: "calc(100% - 14px)",
           borderRadius: "8px",
-          background:
-            "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
+          background: "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
         }}
       />
       <div className="flex flex-col gap-1.5 px-3 pb-3 pt-1">
@@ -39,10 +36,15 @@ function SkeletonCard() {
   );
 }
 
-/* ── Featured card ─────────────────────────────────────────────────────────── */
 function FeaturedCard({ product }) {
   const navigate = useNavigate();
   const openProduct = () => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
+
+  // Use ternary so a 0% discount never renders a stray "0" text node
+  const discount =
+    product.originalPrice && product.originalPrice > product.price
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : null;
 
   return (
     <article
@@ -66,7 +68,7 @@ function FeaturedCard({ product }) {
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && openProduct()}
     >
-      {/* ── Image — aspect-ratio 1:1, scales with column width ── */}
+      {/* Image — aspect-ratio 1:1, scales with column width */}
       <div
         className="relative flex w-full items-center justify-center overflow-hidden"
         style={{
@@ -75,8 +77,7 @@ function FeaturedCard({ product }) {
           width: "calc(100% - 14px)",
           borderRadius: "8px",
           padding: "8px",
-          background:
-            "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
+          background: "linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)",
         }}
       >
         {product.imageUrl ? (
@@ -97,22 +98,20 @@ function FeaturedCard({ product }) {
         )}
       </div>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="flex flex-1 flex-col gap-1.5 px-3 pb-3 pt-1.5">
-        {/* Name — max 2 lines, wraps properly */}
         <p
           className="featured-card__name line-clamp-2 text-sm font-semibold leading-snug"
           style={{
             color: "var(--text-primary)",
             overflowWrap: "anywhere",
             wordBreak: "break-word",
-            minHeight: "2.4em", /* reserve 2 lines so cards align */
+            minHeight: "2.4em",
           }}
         >
           {product.name}
         </p>
 
-        {/* Rating */}
         <div className="mt-0.5">
           <RatingBadge
             rating={product.averageRating || 0}
@@ -120,52 +119,45 @@ function FeaturedCard({ product }) {
           />
         </div>
 
-        {/* Price — green */}
         <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
           <span style={{ fontSize: "15px", fontWeight: 700, color: "#22c55e" }}>
             {formatCurrency(product.price)}
           </span>
-          {product.originalPrice && product.originalPrice > product.price && (
+          {product.originalPrice && product.originalPrice > product.price ? (
             <span className="text-xs line-through" style={{ color: "var(--text-tertiary)" }}>
               {formatCurrency(product.originalPrice)}
             </span>
-          )}
+          ) : null}
+          {discount ? (
+            <span className="text-xs font-semibold" style={{ color: "var(--color-error, #e53e3e)" }}>
+              {discount}% off
+            </span>
+          ) : null}
         </div>
 
-        {/* Free Delivery */}
         <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
 
-        {/* Category chips */}
-        {(product.category || product.subcategory) && (
+        {(product.category || product.subcategory) ? (
           <div className="flex flex-wrap items-center gap-1">
-            {product.category && (
+            {product.category ? (
               <span
                 className="w-fit rounded-full px-2 py-0.5"
-                style={{
-                  fontSize: "10px",
-                  color: "var(--text-secondary)",
-                  backgroundColor: "var(--badge-bg)",
-                }}
+                style={{ fontSize: "10px", color: "var(--text-secondary)", backgroundColor: "var(--badge-bg)" }}
               >
                 {product.category}
               </span>
-            )}
-            {product.subcategory && (
+            ) : null}
+            {product.subcategory ? (
               <span
                 className="w-fit rounded-full px-2 py-0.5"
-                style={{
-                  fontSize: "10px",
-                  color: "var(--text-secondary)",
-                  backgroundColor: "var(--badge-bg)",
-                }}
+                style={{ fontSize: "10px", color: "var(--text-secondary)", backgroundColor: "var(--badge-bg)" }}
               >
                 {product.subcategory}
               </span>
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
 
-        {/* CTA — pushed to bottom, full width, 40px min-height for touch */}
         <button
           className="mt-auto w-full rounded-md text-xs font-bold transition-opacity hover:opacity-90"
           style={{
@@ -187,19 +179,10 @@ function FeaturedCard({ product }) {
   );
 }
 
-/* ── Section ───────────────────────────────────────────────────────────────── */
 function FeaturedProducts() {
   const { products, loading, error } = useFeaturedProducts();
   const navigate = useNavigate();
 
-  /*
-   * Grid breakpoints (Tailwind):
-   *   grid-cols-2        — phones (< 640 px)   → 2 cards / row  [Amazon style]
-   *   sm:grid-cols-2     — small tablet (640+)  → 2 cards / row
-   *   md:grid-cols-3     — tablet (768+)        → 3 cards / row
-   *   lg:grid-cols-4     — desktop (1024+)      → 4 cards / row
-   *   xl:grid-cols-5     — wide desktop (1280+) → 5 cards / row
-   */
   const gridClass =
     "grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
 
@@ -212,18 +195,13 @@ function FeaturedProducts() {
         className="featured-shell overflow-hidden"
         style={{
           padding: "15px 16px",
-          background:
-            "linear-gradient(180deg, var(--featured-shell-start) 0%, var(--featured-shell-end) 100%)",
+          background: "linear-gradient(180deg, var(--featured-shell-start) 0%, var(--featured-shell-end) 100%)",
           border: "1px solid var(--border-color)",
           borderRadius: "16px",
           boxShadow: "var(--shadow-md)",
         }}
       >
-        {/* Header row */}
-        <div
-          className="flex items-center justify-between gap-4"
-          style={{ marginBottom: "13px" }}
-        >
+        <div className="flex items-center justify-between gap-4" style={{ marginBottom: "13px" }}>
           <div>
             <h2
               className="text-lg font-bold sm:text-xl"
@@ -235,7 +213,6 @@ function FeaturedProducts() {
               Discover our most popular and trending products.
             </p>
           </div>
-
           <button
             type="button"
             className="inline-flex shrink-0 items-center gap-1 text-xs font-medium transition-all duration-200 hover:-translate-y-0.5"
@@ -253,17 +230,15 @@ function FeaturedProducts() {
           </button>
         </div>
 
-        {/* Loading skeletons */}
-        {loading && (
+        {loading ? (
           <div className={gridClass}>
             {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
-        )}
+        ) : null}
 
-        {/* Error */}
-        {!loading && error && (
+        {!loading && error ? (
           <div
             className="rounded-xl border px-4 py-6 text-center text-sm"
             style={{
@@ -273,35 +248,28 @@ function FeaturedProducts() {
             }}
           >
             <p className="font-semibold">Could not load featured products.</p>
-            <p className="mt-1" style={{ color: "var(--text-secondary)" }}>
-              {error}
-            </p>
+            <p className="mt-1" style={{ color: "var(--text-secondary)" }}>{error}</p>
           </div>
-        )}
+        ) : null}
 
-        {/* Empty */}
-        {!loading && !error && products.length === 0 && (
+        {!loading && !error && products.length === 0 ? (
           <div
             className="rounded-xl border px-4 py-6 text-center text-sm"
-            style={{
-              backgroundColor: "var(--bg-tertiary)",
-              borderColor: "var(--border-color)",
-            }}
+            style={{ backgroundColor: "var(--bg-tertiary)", borderColor: "var(--border-color)" }}
           >
             <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
               Featured products will appear here soon.
             </p>
           </div>
-        )}
+        ) : null}
 
-        {/* Cards grid */}
-        {!loading && !error && products.length > 0 && (
+        {!loading && !error && products.length > 0 ? (
           <div className={gridClass}>
             {products.map((product) => (
               <FeaturedCard key={product.id} product={product} />
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
