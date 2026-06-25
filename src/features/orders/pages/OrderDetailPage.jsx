@@ -137,11 +137,20 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Loading ───────────────────────────────────────────────────────
+  // ── Loading state — themed, no white flash ─────────────────────
+  // Fix: wrap skeleton in a themed container so the page background
+  // matches --bg-primary in both light and dark mode.
   if (loading) {
     return (
-      <div className="orders-page">
-        <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
+      <div
+        className="orders-page"
+        style={{ backgroundColor: "var(--bg-primary)", minHeight: "60vh" }}
+      >
+        <button
+          className="orders-back"
+          onClick={() => navigate(PATHS.ORDERS)}
+          aria-label="Back to Orders"
+        >
           ← Back to Orders
         </button>
         <div className="order-detail-skeleton">
@@ -155,7 +164,10 @@ const OrderDetailPage = () => {
 
   if (error) {
     return (
-      <div className="orders-page">
+      <div
+        className="orders-page"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
         <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
           ← Back to Orders
         </button>
@@ -166,7 +178,10 @@ const OrderDetailPage = () => {
 
   if (!order) {
     return (
-      <div className="orders-page">
+      <div
+        className="orders-page"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
         <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
           ← Back to Orders
         </button>
@@ -226,12 +241,6 @@ const OrderDetailPage = () => {
           <h1 className="order-detail__title">Order #{shortId}</h1>
           <p className="order-detail__date">Placed on {date}</p>
 
-          {/*
-            Product-preview card:
-            CSS class .order-detail__product-preview now styles this as an
-            inline-flex card (var(--card-bg), border, border-radius 12px,
-            padding 12px 16px). No markup changes — purely CSS-driven.
-          */}
           {firstItem && (
             <div className="order-detail__product-preview">
               <img
@@ -256,11 +265,6 @@ const OrderDetailPage = () => {
           )}
         </div>
 
-        {/*
-          Status badge (top-right of header).
-          In return flow the badge shows the return status.
-          .order-detail__return-meta shows the requested-on date below the badge.
-        */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
           <OrderStatusBadge status={currentStatus} />
           {isReturnFlow && returnRequestedOn && (

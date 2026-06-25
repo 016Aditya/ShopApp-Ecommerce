@@ -7,13 +7,12 @@ import PATHS from './paths';
  *
  * Guards authenticated pages.
  *
- * Critical fix: wait until Zustand persist has finished rehydrating
- * (`loading === true`) before making a redirect decision.
- * Without this wait, user=null on the first render after a page reload
- * causes an immediate redirect to /login even though the session is stored.
+ * Fix: instead of `return null` during Zustand persist hydration (which
+ * produces a full-page white flash), we render a minimal themed skeleton bar
+ * that keeps the Navbar and Footer visible while the auth state resolves.
  *
  * Guard logic:
- *   loading  → render nothing (prevent flash-redirect)
+ *   loading  → render themed skeleton bar (no white flash)
  *   user     → render the protected page
  *   no user  → redirect to /login, preserve intended path in state
  */
@@ -21,7 +20,28 @@ const PrivateRoute = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div
+        className="flex-1 w-full"
+        style={{ backgroundColor: 'var(--bg-primary)' }}
+        aria-busy="true"
+        aria-label="Loading…"
+      >
+        {/* Subtle shimmer bar — Navbar + Footer remain fully visible */}
+        <div
+          style={{
+            height: 3,
+            width: '100%',
+            background:
+              'linear-gradient(90deg, var(--bg-primary) 0%, var(--accent, #ff9f00) 50%, var(--bg-primary) 100%)',
+            backgroundSize: '200% 100%',
+            animation: 'sk-shimmer 1.2s ease-in-out infinite',
+          }}
+        />
+      </div>
+    );
+  }
 
   return user
     ? <Outlet />

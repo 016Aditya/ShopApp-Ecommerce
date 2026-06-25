@@ -1,11 +1,15 @@
 /**
- * PageLoader — full-page centered spinner used during React.lazy() Suspense
- * boundaries. Lightweight; does not rely on any CSS skeleton classes.
+ * PageLoader — centered spinner used during React.lazy() Suspense boundaries.
+ *
+ * Fix: replaced `min-h-screen` with `flex-1` so it fills only the <main>
+ * content area provided by PageWrapper, never the full viewport. Using
+ * `min-h-screen` caused it to push Navbar/Footer off screen on Suspense
+ * boundaries, effectively creating a full-page white/themed takeover.
  */
 const PageLoader = () => (
   <div
-    className="flex min-h-screen items-center justify-center"
-    style={{ background: "var(--bg-primary)" }}
+    className="flex flex-1 items-center justify-center py-24"
+    style={{ backgroundColor: "var(--bg-primary)" }}
     role="status"
     aria-label="Loading page…"
   >

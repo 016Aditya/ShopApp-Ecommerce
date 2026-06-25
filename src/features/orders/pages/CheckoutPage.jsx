@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import useCart from "@/features/cart/hooks/useCart";
@@ -16,6 +16,14 @@ const CheckoutPage = () => {
   const { placeOrder, loading, error }  = usePlaceOrder();
   const navigate                        = useNavigate();
 
+  // Fix: redirect unauthenticated users via useEffect so we never return null
+  // (which produced a white flash before the navigate() side-effect ran).
+  useEffect(() => {
+    if (user === null) {
+      navigate(PATHS.LOGIN);
+    }
+  }, [user, navigate]);
+
   const [address, setAddress] = useState({
     ...EMPTY_ADDRESS,
     name:    user?.name  ?? "",
@@ -23,14 +31,27 @@ const CheckoutPage = () => {
     country: "India",
   });
 
+  // While auth is still hydrating (user === undefined) or we are about to
+  // redirect (user === null), render a themed placeholder so the page
+  // background stays consistent — no white flash.
   if (!user) {
-    navigate(PATHS.LOGIN);
-    return null;
+    return (
+      <div
+        className="checkout-page"
+        style={{ backgroundColor: "var(--bg-primary)", minHeight: "60vh" }}
+        aria-busy="true"
+      />
+    );
   }
 
+  // Fix: empty-cart state now uses themed CSS vars instead of bare minHeight:100vh
+  // which caused a full-viewport white block when the cart was empty.
   if (items.length === 0) {
     return (
-      <div className="checkout-page checkout-page--empty" style={{ minHeight: "100vh" }}>
+      <div
+        className="checkout-page checkout-page--empty"
+        style={{ backgroundColor: "var(--bg-primary)" }}
+      >
         <div className="checkout-empty">
           <div className="checkout-empty__icon">🛒</div>
           <h2>Cart is Empty</h2>
@@ -60,7 +81,6 @@ const CheckoutPage = () => {
       return;
     }
 
-    // normalizeToStore maps frontend keys → backend DTO keys
     const backendAddress = normalizeToStore(address);
 
     const orderPayload = {
