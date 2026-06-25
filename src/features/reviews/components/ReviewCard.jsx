@@ -3,19 +3,24 @@ import ReviewForm from "./ReviewForm";
 
 const STAR_LABELS = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
-// Helper component for static display
+/**
+ * StarDisplay — solid integer stars for individual reviews.
+ * size="sm"  → 18px  (used in review cards)
+ * size="md"  → 22px  (default)
+ */
 const StarDisplay = ({ value, size = "md" }) => {
-  const stars = Array.from({ length: 5 }, (_, i) => i + 1);
-  const sz = size === "sm" ? "1rem" : "1.2rem";
+  const sz = size === "sm" ? "1.125rem" : "1.375rem"; // 18px / 22px
   return (
     <span className="review-stars-display" aria-label={`${value} out of 5 stars`}>
-      {stars.map((s) => (
+      {[1, 2, 3, 4, 5].map((s) => (
         <span
           key={s}
           style={{
             fontSize: sz,
-            color: s <= value ? "#e77600" : "#ddd",
+            color: s <= value ? "#e77600" : "#d5d5d5",
             marginRight: "1px",
+            lineHeight: 1,
+            display: "inline-block",
           }}
         >
           ★

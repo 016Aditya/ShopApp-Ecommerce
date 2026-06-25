@@ -1,50 +1,26 @@
-import { useRef } from "react";
 import { formatCurrency } from "@/utils/currency";
 import "../styles/ProductDetail.css";
 
 /**
  * StarRating — CSS linear-gradient partial-fill technique.
  *
- * No SVG, no DOM IDs. Each star gets a precise fill %:
+ * No SVG, no DOM IDs, no glow. Each star gets a precise fill %:
  *   - rating 4.3 → stars 1-4 = 100%, star 5 = 30%
- *   - star N fill = clamp(0, rating - (N-1), 1) * 100
- *
- * Glow colour and intensity scale with the rating:
- *   0–2  → no glow (poor)
- *   2–3  → faint amber glow
- *   3–4  → warm amber glow
- *   4–4.5 → bright gold glow
- *   4.5–5  → vivid gold + white-core glow ("excellent")
+ *   - pct = clamp(0, rating - (i-1), 1) * 100
  */
 const StarRating = ({ value, size = 22 }) => {
   const rating = Math.min(5, Math.max(0, value ?? 0));
-
-  // Glow filter strength that scales with rating
-  const glowColor = "#f59e0b";
-  const glowFilter =
-    rating >= 4.5
-      ? `drop-shadow(0 0 5px ${glowColor}) drop-shadow(0 0 10px ${glowColor})`
-      : rating >= 4
-      ? `drop-shadow(0 0 4px ${glowColor})`
-      : rating >= 3
-      ? `drop-shadow(0 0 2px #fbbf24)`
-      : "none";
 
   return (
     <span
       className="pdp-stars"
       aria-label={`${rating.toFixed(1)} out of 5 stars`}
       role="img"
-      style={{
-        "--star-size": `${size}px`,
-        filter: glowFilter,
-        transition: "filter 0.3s ease",
-      }}
+      style={{ "--star-size": `${size}px` }}
     >
       {[1, 2, 3, 4, 5].map((i) => {
-        // How much of this star is filled (0 to 1)
         const fill = Math.min(1, Math.max(0, rating - (i - 1)));
-        const pct = Math.round(fill * 100);
+        const pct  = Math.round(fill * 100);
 
         return (
           <span
@@ -52,8 +28,6 @@ const StarRating = ({ value, size = 22 }) => {
             className="pdp-star-v2"
             aria-hidden="true"
             style={{
-              // Single ★ character coloured by gradient:
-              // 0..pct% = gold, pct..100% = grey
               background: `linear-gradient(90deg, #f59e0b ${pct}%, #c8c8c8 ${pct}%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -61,9 +35,6 @@ const StarRating = ({ value, size = 22 }) => {
               fontSize: `${size}px`,
               lineHeight: 1,
               display: "inline-block",
-              // Slight scale-up for high-rated stars
-              transform: fill === 1 ? "scale(1.08)" : "scale(1)",
-              transition: "transform 0.2s ease",
             }}
           >
             ★
