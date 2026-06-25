@@ -8,6 +8,19 @@
     <title>ecom-frontend</title>
 
     <!--
+      STAGE 1 — Network optimisation:
+      preconnect tells the browser to open the TCP/TLS handshake to the API
+      origin immediately, so the first API call after React mounts has zero
+      connection latency. dns-prefetch is a lighter fallback for browsers
+      that don't support preconnect.
+
+      Only the backend API origin is listed here — no unnecessary third-party
+      connections.
+    -->
+    <link rel="preconnect" href="https://ecommerce-backend-springboot-production.up.railway.app" crossorigin />
+    <link rel="dns-prefetch" href="https://ecommerce-backend-springboot-production.up.railway.app" />
+
+    <!--
       CRITICAL: Inline theme script — executes synchronously during HTML
       parsing, BEFORE any external CSS or JS loads. This is the earliest
       possible point to read the persisted theme and apply it, which is
@@ -39,12 +52,13 @@
         var bg = theme === 'dark' ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT;
         var fg = theme === 'dark' ? '#f5f7fa' : '#0f0f11';
 
-        // Apply data-theme so CSS variables resolve correctly
+        // Apply data-theme so CSS variables resolve correctly from first paint
         document.documentElement.setAttribute('data-theme', theme);
 
-        // Paint the background immediately — prevents white flash
+        // Paint the background immediately — prevents white flash on refresh
         document.documentElement.style.backgroundColor = bg;
         document.documentElement.style.color = fg;
+        document.body && (document.body.style.backgroundColor = bg);
 
         // Update theme-color meta for browser chrome
         var meta = document.querySelector('meta[name="theme-color"]');
@@ -66,8 +80,7 @@
         background-color: var(--bg-primary, #f4f6f8);
         color: var(--text-primary, #0f0f11);
       }
-      [data-theme="dark"] html,
-      [data-theme="dark"] body,
+      /* Dark mode — applied before any stylesheet loads */
       html[data-theme="dark"],
       html[data-theme="dark"] body,
       html[data-theme="dark"] #root {
