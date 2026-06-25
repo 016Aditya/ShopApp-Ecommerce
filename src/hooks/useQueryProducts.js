@@ -6,7 +6,7 @@
  * Rules:
  *  - Never import Axios directly. Always go through productService.
  *  - Each hook exposes only what callers need.
- *  - staleTime overrides match the Phase 2A spec:
+ *  - staleTime overrides:
  *      All / Featured / Detail / Category → 5 min
  *      Search                             → 30 sec
  */
@@ -49,11 +49,21 @@ export function useProductDetailQuery(id) {
     queryFn:  () => getProductById(id),
     enabled:  Boolean(id),
     staleTime: STALE_PRODUCTS,
-    // When the product was prefetched (e.g. on hover), show the cached data
-    // instantly while a background revalidation runs.
-    // When the product is NOT in cache, placeholderData is undefined so the
-    // component sees isLoading=true and shows the skeleton correctly.
-    placeholderData: (previousData) => previousData ?? undefined,
+    // NO placeholderData here.
+    //
+    // With placeholderData present, TanStack Query v5 sets status='success'
+    // and isLoading=false immediately on mount — even for a brand-new ID
+    // that has never been fetched. This means the component skips the
+    // skeleton and renders whatever stale data the callback returns.
+    //
+    // Without placeholderData:
+    //   - Cold product (not in cache) → isLoading=true → skeleton shown
+    //   - Prefetched product (already in cache as real data) → isLoading=false
+    //     → renders immediately with correct data — no skeleton needed
+    //
+    // Prefetching via usePrefetchProductDetail populates the cache as a
+    // real cache entry, so those products still show instantly with no
+    // loading state. placeholderData is not needed for that use case.
   });
 }
 
@@ -88,20 +98,14 @@ export function useProductSearchQuery(keyword) {
     queryFn:  () => searchProducts(normalised),
     enabled,
     staleTime: STALE_SEARCH,
+    // Search keeps placeholderData so the grid doesn't flash empty
+    // between keystrokes — this is intentional and safe because search
+    // results never leak into a different product's detail page.
     placeholderData: (prev) => prev,
   });
 }
 
 // ── Prefetch helper ───────────────────────────────────────────────────────────────────────────
-/**
- * usePrefetchProductDetail
- *
- * Returns a stable callback for imperative callers (onMouseEnter,
- * IntersectionObserver) to prefetch a product detail page.
- *
- * Respects staleTime — if data is already fresh in cache, no network
- * request is made.
- */
 export function usePrefetchProductDetail() {
   const qc = useQueryClient();
   return function prefetch(id) {
