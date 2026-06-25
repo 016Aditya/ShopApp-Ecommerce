@@ -1,56 +1,89 @@
-import { useState, useCallback } from "react";
+/**
+ * useProfile.js — Phase 2C
+ *
+ * Public-facing profile hook. All pages import from here.
+ * Implementation is delegated entirely to TanStack Query hooks in
+ * src/hooks/useQueryProfile.js — zero useState/useEffect for server state.
+ *
+ * Public API (unchanged from legacy):
+ *   { profile, loading, error, success, updateProfile, fetchProfile }
+ *
+ * Changes from legacy:
+ *   - profile    now comes from TQ cache (GET /api/users/:id), not useState
+ *   - loading    maps to TQ isPending / isFetching
+ *   - error      extracted from TQ error object
+ *   - updateProfile triggers the TQ mutation; syncs AuthContext on success
+ *   - fetchProfile is now a refetch() reference (no-op if called unnecessarily)
+ *   - success    is derived from mutation state, cleared on next mutation
+ */
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { updateUserProfile } from "@/services/profileService";
+import {
+  useProfileQuery,
+  useUpdateProfileMutation,
+} from "@/hooks/useQueryProfile";
 
 const useProfile = () => {
   const { user, updateUser } = useAuth();
+  const userId = user?.id ?? user?._id;
 
-  const [profile, setProfile]   = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState(null);
-  const [success, setSuccess]   = useState(false);
+  // ── Read ──────────────────────────────────────────────────────────────────
+  const {
+    data:    profileData,
+    isLoading,
+    isFetching,
+    error:   queryError,
+    refetch,
+  } = useProfileQuery(userId);
 
-  // fetchProfile kept as a no-op for components that call it explicitly.
-  const fetchProfile = useCallback(async () => {}, []);
+  // ── Write ─────────────────────────────────────────────────────────────────
+  const mutation = useUpdateProfileMutation(userId);
 
+  // ── Derived state (mirrors legacy API) ───────────────────────────────────
+  const [success, setSuccess] = useState(false);
+
+  const loading = isLoading || isFetching || mutation.isPending;
+
+  const error =
+    mutation.error
+      ? (mutation.error.response?.data?.error ??
+         mutation.error.response?.data?.message ??
+         mutation.error.message ??
+         "Failed to update profile")
+      : queryError
+      ? (queryError.response?.data?.message ?? queryError.message ?? "Failed to load profile")
+      : null;
+
+  // ── updateProfile — public action ─────────────────────────────────────────
   const updateProfile = async (profileData) => {
-    // Guard: user must be in context and have a valid id.
-    const userId = user?.id ?? user?._id;
-    if (!userId) {
-      setError("Session expired. Please log in again.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+    if (!userId) return;
     setSuccess(false);
-
     try {
-      const updated = await updateUserProfile(userId, profileData);
-      setProfile(updated);
-
-      // Sync all editable fields back into AuthContext + localStorage.
+      const updated = await mutation.mutateAsync(profileData);
+      // Sync editable fields back into AuthContext + localStorage
       updateUser({
-        firstName:   updated.firstName   ?? profileData.firstName,
-        lastName:    updated.lastName    ?? profileData.lastName,
-        phoneNumber: updated.phoneNumber ?? profileData.phoneNumber,
+        firstName:   updated?.firstName   ?? profileData.firstName,
+        lastName:    updated?.lastName    ?? profileData.lastName,
+        phoneNumber: updated?.phoneNumber ?? profileData.phoneNumber,
       });
       setSuccess(true);
-    } catch (err) {
-      // Backend returns { error: "..." } — NOT { message: "..." }.
-      // Also handle 422 validation errors which have { error, errors }.
-      const backendMsg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to update profile";
-      setError(backendMsg);
-    } finally {
-      setLoading(false);
+    } catch {
+      // error is surfaced through the `error` field above
     }
   };
 
-  return { profile, loading, error, success, updateProfile, fetchProfile };
+  // fetchProfile kept as a stable refetch reference for components that call
+  // it explicitly (backwards-compatible no-op pattern from Phase 2A/2B).
+  const fetchProfile = refetch;
+
+  return {
+    profile:       profileData ?? null,
+    loading,
+    error,
+    success,
+    updateProfile,
+    fetchProfile,
+  };
 };
 
 export default useProfile;

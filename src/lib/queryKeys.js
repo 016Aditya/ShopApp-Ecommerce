@@ -1,5 +1,5 @@
 /**
- * queryKeys.js — Phase 2A + 2B
+ * queryKeys.js — Phase 2A + 2B + 2C (Final)
  *
  * Centralized query key factory for all TanStack Query keys.
  *
@@ -10,18 +10,14 @@
  *  3. Keys are pure functions — no side effects, no imports.
  *
  * Usage:
- *   queryKeys.products.all()                        → ['products']
- *   queryKeys.products.detail(42)                   → ['products', 'detail', 42]
- *   queryKeys.orders.byUser('u1')                   → ['orders', 'user', 'u1']
- *   queryKeys.orders.detail('o1')                   → ['orders', 'detail', 'o1']
- *   queryKeys.reviews.byProduct('p5')               → ['reviews', 'product', 'p5']
- *
- * Phase 2C will add:
- *   queryKeys.profile.*
- *   queryKeys.wishlist.*
- *   queryKeys.savedAddresses.*
+ *   queryKeys.products.detail(42)              → ['products', 'detail', 42]
+ *   queryKeys.orders.byUser('u1')              → ['orders', 'user', 'u1']
+ *   queryKeys.reviews.byProduct('p5')          → ['reviews', 'product', 'p5']
+ *   queryKeys.profile.me('u1')                 → ['profile', 'me', 'u1']
+ *   queryKeys.returns.byOrder('o1')            → ['returns', 'order', 'o1']
  */
 export const queryKeys = {
+  // ── Products (Phase 2A) ──────────────────────────────────────────────────
   products: {
     /** Root key — invalidates ALL product queries */
     all: () => ['products'],
@@ -50,6 +46,7 @@ export const queryKeys = {
     search: (keyword) => ['products', 'search', keyword?.trim().toLowerCase()],
   },
 
+  // ── Orders (Phase 2B) ────────────────────────────────────────────────────
   orders: {
     /** Root key — invalidates ALL order queries */
     all: () => ['orders'],
@@ -61,11 +58,30 @@ export const queryKeys = {
     detail: (id) => ['orders', 'detail', String(id)],
   },
 
+  // ── Reviews (Phase 2B) ───────────────────────────────────────────────────
   reviews: {
     /** Root key — invalidates ALL review queries */
     all: () => ['reviews'],
 
     /** GET /api/reviews/product/:productId */
     byProduct: (productId) => ['reviews', 'product', String(productId)],
+  },
+
+  // ── Profile (Phase 2C) ───────────────────────────────────────────────────
+  profile: {
+    /** Root key — invalidates ALL profile queries */
+    all: () => ['profile'],
+
+    /** GET /api/users/:userId */
+    me: (userId) => ['profile', 'me', String(userId)],
+  },
+
+  // ── Returns (Phase 2C) ───────────────────────────────────────────────────
+  returns: {
+    /** Root key — invalidates ALL return queries */
+    all: () => ['returns'],
+
+    /** GET /api/orders/:orderId/return */
+    byOrder: (orderId) => ['returns', 'order', String(orderId)],
   },
 };

@@ -1,53 +1,74 @@
-import { useCallback, useState } from "react";
-import { initiateReturn, getReturnStatus } from "@/services/returnService";
-
 /**
- * useReturn
+ * useReturn.js — Phase 2C
  *
- * Hook for the return flow on a single order.
+ * Public-facing return hook. All pages import from here.
+ * Implementation delegated to TanStack Query hooks in
+ * src/hooks/useQueryReturn.js.
  *
- * - requestReturn(): calls PATCH /api/orders/{id}/return (no body)
- * - fetchReturnStatus(): calls GET /api/orders/{id}/return
- *   404 is silenced — return not yet initiated is a valid state.
+ * Public API (unchanged from legacy):
+ *   { returnStatus, loading, error, fetchReturnStatus, requestReturn }
+ *
+ * Changes from legacy:
+ *   - returnStatus    now comes from TQ cache (GET /api/orders/:id/return)
+ *   - loading         maps to TQ isLoading / isPending
+ *   - error           extracted from TQ error object
+ *   - requestReturn   triggers the TQ mutation
+ *   - fetchReturnStatus is now refetch() (no-op if data is fresh)
+ *
+ * 404 handling:
+ *   useReturnStatusQuery treats 404 as null (return not initiated) — it never
+ *   surfaces as an error, preserving the legacy behaviour.
  */
+import {
+  useReturnStatusQuery,
+  useInitiateReturnMutation,
+} from "@/hooks/useQueryReturn";
+
 export const useReturn = (orderId) => {
-  const [returnStatus, setReturnStatus] = useState(null);
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState(null);
+  // ── Read ──────────────────────────────────────────────────────────────────
+  const {
+    data:    returnStatus,
+    isLoading,
+    error:   queryError,
+    refetch,
+  } = useReturnStatusQuery(orderId);
 
-  const fetchReturnStatus = useCallback(async () => {
-    if (!orderId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getReturnStatus(orderId);
-      setReturnStatus(data?.status ?? null);
-    } catch (err) {
-      // 404 = return not initiated yet — not an error worth surfacing
-      if (err.response?.status !== 404) {
-        setError(err.response?.data?.message || "Failed to fetch return status");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [orderId]);
+  // ── Write ─────────────────────────────────────────────────────────────────
+  const mutation = useInitiateReturnMutation(orderId);
 
-  const requestReturn = useCallback(async () => {
+  // ── Derived state ─────────────────────────────────────────────────────────
+  const loading = isLoading || mutation.isPending;
+
+  const error =
+    mutation.error
+      ? (mutation.error.response?.data?.message ??
+         mutation.error.message ??
+         "Failed to initiate return")
+      : queryError
+      ? (queryError.response?.data?.message ?? queryError.message ?? null)
+      : null;
+
+  // ── requestReturn — public action ─────────────────────────────────────────
+  // Matches legacy: returns the server response, throws on failure.
+  const requestReturn = async () => {
     if (!orderId) throw new Error("Order ID is required");
-    setLoading(true);
-    setError(null);
     try {
-      const data = await initiateReturn(orderId);
-      setReturnStatus(data?.status ?? "RETURN_REQUESTED");
-      return data;
+      return await mutation.mutateAsync();
     } catch (err) {
-      const message = err.response?.data?.message || "Failed to initiate return";
-      setError(message);
+      const message =
+        err.response?.data?.message ?? err.message ?? "Failed to initiate return";
       throw new Error(message, { cause: err });
-    } finally {
-      setLoading(false);
     }
-  }, [orderId]);
+  };
 
-  return { returnStatus, loading, error, fetchReturnStatus, requestReturn };
+  // fetchReturnStatus is a stable refetch reference for backwards compat.
+  const fetchReturnStatus = refetch;
+
+  return {
+    returnStatus: returnStatus ?? null,
+    loading,
+    error,
+    fetchReturnStatus,
+    requestReturn,
+  };
 };
