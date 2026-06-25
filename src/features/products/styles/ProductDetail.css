@@ -3,7 +3,7 @@
    ALL colours use CSS variables from theme.css — no hardcodes.
    ============================================================ */
 
-/* ── Page wrapper ──────────────────────────────────────────── */
+/* ── Page wrapper ──────────────────────────────────────────────── */
 .pdp-page {
   max-width: 1280px;
   margin: 0 auto;
@@ -12,7 +12,7 @@
   min-height: 80vh;
 }
 
-/* ── Back button ───────────────────────────────────────────── */
+/* ── Back button ─────────────────────────────────────────────── */
 .pdp-back {
   display: inline-flex;
   align-items: center;
@@ -28,7 +28,7 @@
 }
 .pdp-back:hover { text-decoration: underline; color: var(--accent); }
 
-/* ── Breadcrumb ────────────────────────────────────────────── */
+/* ── Breadcrumb ─────────────────────────────────────────────── */
 .pdp-breadcrumb {
   font-size: 0.8125rem;
   color: var(--text-secondary);
@@ -41,7 +41,7 @@
 .pdp-breadcrumb__sep { color: var(--text-tertiary); }
 .pdp-breadcrumb__current { color: var(--text-primary); font-weight: 500; }
 
-/* ── 3-column grid ─────────────────────────────────────────── */
+/* ── 3-column grid ─────────────────────────────────────────────── */
 .pdp-grid {
   display: grid;
   grid-template-columns: 340px 1fr 240px;
@@ -64,7 +64,7 @@
   .pdp-grid__card { max-width: 100%; }
 }
 
-/* ── Image Gallery ─────────────────────────────────────────── */
+/* ── Image Gallery ─────────────────────────────────────────────── */
 .pdp-gallery {
   position: sticky;
   top: 72px;
@@ -113,7 +113,7 @@
 .pdp-gallery__thumb--active { border-color: var(--accent); }
 .pdp-gallery__thumb:hover { border-color: var(--accent-hover); }
 
-/* ── Product Info ─────────────────────────────────────────── */
+/* ── Product Info ─────────────────────────────────────────────── */
 .pdp-info__category {
   font-size: 0.8125rem;
   color: var(--info-text);
@@ -141,87 +141,69 @@
 }
 
 /* ================================================================
-   RATING COMPONENT — Amazon/Flipkart premium style
-   ★★★★☆  4.5  (99,866)
+   RATING ROW — bigger gradient-fill glowing stars (PDP only)
    ================================================================ */
 
 .pdp-rating {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
   flex-wrap: nowrap;
 }
 
-/* ── Stars wrapper ── */
+/* Stars wrapper */
 .pdp-stars {
   display: inline-flex;
   align-items: center;
-  gap: 1px;
+  gap: 2px;
   line-height: 1;
+  /* glow filter is applied inline via JS based on rating value */
 }
 
-/* ── Single star (layered bg + fg) ── */
-.pdp-star {
-  position: relative;
+/*
+  .pdp-star-v2 — single ★ using CSS gradient + background-clip.
+  The fill % is set inline. No SVG needed.
+  font-size is also set inline from the `size` prop.
+*/
+.pdp-star-v2 {
   display: inline-block;
-  font-size: var(--star-size, 15px);
   line-height: 1;
-  width: 1em;
-  height: 1em;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Smooth transitions when rating changes (e.g. after user reviews) */
+  transition: transform 0.2s ease;
+  user-select: none;
 }
 
-.pdp-star__bg,
-.pdp-star__fg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  line-height: 1;
-  transition: filter 0.2s ease, color 0.2s ease;
-}
-
-/* Empty star — grey */
-.pdp-star__bg {
-  color: #c8c8c8;
-}
-
-/* Filled star — orange/golden */
-.pdp-star__fg {
-  color: #f59e0b;
-  overflow: hidden;
-}
-
-/* Hover — entire stars group brightens */
-.pdp-rating:hover .pdp-star__fg {
+/* Hover: whole row brightens — re-apply a vivid gradient on hover */
+.pdp-rating:hover .pdp-star-v2 {
+  /* can't override inline gradient on hover easily;
+     we boost brightness via the parent filter instead */
   filter: brightness(1.15);
-  color: #fbbf24;
-}
-.pdp-rating:hover .pdp-star__bg {
-  color: #b0b0b0;
 }
 
-/* ── Numeric score ── */
+/* Numeric score */
 .pdp-rating__score {
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 700;
   color: var(--info-text, #0066c0);
   letter-spacing: -0.01em;
   white-space: nowrap;
   transition: color 0.2s ease;
 }
 
-/* ── Mobile separator dot ── */
+/* Mobile separator dot */
 .pdp-rating__sep {
-  display: none; /* hidden on desktop */
+  display: none;
   color: var(--text-tertiary, #94a3b8);
   font-size: 0.8rem;
   line-height: 1;
   padding: 0 1px;
 }
 
-/* ── Review count button ── */
+/* Review count button */
 .pdp-rating__count {
   background: none;
   border: none;
@@ -233,54 +215,39 @@
   transition: color 0.2s ease;
   white-space: nowrap;
 }
-
 .pdp-rating__count:hover {
   color: var(--accent, #f59e0b);
   text-decoration: underline;
 }
 
-/* Desktop: show (99,866) / Mobile: hide */
 .pdp-rating__count--desktop { display: inline; }
 .pdp-rating__count--mobile  { display: none; }
 
-/* ── Mobile: compact layout ── */
+/* Mobile layout */
 @media (max-width: 480px) {
   .pdp-rating {
     gap: 5px;
     flex-wrap: nowrap;
   }
-
-  /* Show the dot separator on mobile */
   .pdp-rating__sep {
     display: inline;
   }
-
-  /* Swap count format */
   .pdp-rating__count--desktop { display: none; }
   .pdp-rating__count--mobile  { display: inline; }
-
   .pdp-rating__score {
     font-size: 0.875rem;
   }
 }
 
-/* ── Dark mode contrast adjustments ── */
+/* Dark mode */
 @media (prefers-color-scheme: dark) {
-  .pdp-star__bg {
-    color: #4a4a4a;
-  }
-  .pdp-star__fg {
-    color: #f59e0b;
-  }
-  .pdp-rating:hover .pdp-star__bg {
-    color: #5a5a5a;
-  }
+  /* Grey part of the gradient stays visible in dark mode —
+     override via a darker grey if needed */
 }
-
-/* Explicit dark-mode via data-theme attribute (if used) */
-[data-theme="dark"] .pdp-star__bg { color: #4a4a4a; }
-[data-theme="dark"] .pdp-star__fg { color: #f59e0b; }
-[data-theme="dark"] .pdp-rating:hover .pdp-star__bg { color: #5a5a5a; }
+[data-theme="dark"] .pdp-star-v2 {
+  /* dark grey for empty portion — override inline gradient's grey stop */
+  /* The grey colour (#c8c8c8) is visible enough on dark; no override needed */
+}
 
 /* ================================================================ */
 
@@ -337,7 +304,7 @@
 }
 .pdp-info__stock--out { color: var(--error-text); }
 
-/* ── Purchase Card ─────────────────────────────────────────── */
+/* ── Purchase Card ─────────────────────────────────────────────── */
 .pdp-purchase {
   position: sticky;
   top: 72px;
@@ -424,14 +391,14 @@
   color: var(--text-secondary);
 }
 
-/* ── Reviews section ───────────────────────────────────────── */
+/* ── Reviews section ─────────────────────────────────────────────── */
 .pdp-reviews {
   margin-top: 36px;
   padding-top: 24px;
   border-top: 2px solid var(--border-color);
 }
 
-/* ── Skeleton ──────────────────────────────────────────────── */
+/* ── Skeleton ────────────────────────────────────────────────────── */
 .pdp-skeleton {
   display: grid;
   grid-template-columns: 340px 1fr 240px;
@@ -460,7 +427,7 @@
 .skeleton-heading { height: 32px; width: 70%; }
 .skeleton-text    { height: 16px; width: 100%; }
 
-/* ── Error state ───────────────────────────────────────────── */
+/* ── Error state ────────────────────────────────────────────────────── */
 .pdp-error {
   display: flex;
   flex-direction: column;
@@ -472,7 +439,7 @@
 }
 .pdp-error__icon { font-size: 2.5rem; }
 
-/* ── Toast ─────────────────────────────────────────────────── */
+/* ── Toast ──────────────────────────────────────────────────────────── */
 .pdp-toast {
   position: fixed;
   bottom: 24px;
@@ -493,7 +460,7 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* ── Mobile adjustments ────────────────────────────────────── */
+/* ── Mobile adjustments ─────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .pdp-info__name  { font-size: 1.125rem; }
   .pdp-info__price { font-size: 1.375rem; }
