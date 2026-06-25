@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PATHS from "@/routes/paths";
-import { cancelOrder } from "@/services/orderService";
 import { formatCurrency } from "@/utils/currency";
 import { useOrderStore } from "@/store/orderStore";
 import OrderItemsList from "../components/OrderItemsList";
@@ -10,7 +9,7 @@ import OrderSummary from "../components/OrderSummary";
 import OrderTimeline from "../components/OrderTimeline";
 import ReturnModal from "../components/ReturnModal";
 import ShippingInfo from "../components/ShippingInfo";
-import { useOrder } from "../hooks/useOrders";
+import { useOrder, useCancelOrder } from "../hooks/useOrders";
 import { useReturn } from "../hooks/useReturn";
 import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
 import "../styles/Orders.css";
@@ -72,9 +71,13 @@ const OrderDetailPage = () => {
   const { order, loading, error } = useOrder(id);
   const { returnStatus, requestReturn } = useReturn(id);
 
-  const [cancelling,  setCancelling]  = useState(false);
-  const [cancelError, setCancelError] = useState(null);
-  const [cancelled,   setCancelled]   = useState(false);
+  // Cancel — now powered by TanStack Query via useCancelOrder
+  const {
+    cancelOrder:   cancelOrderAction,
+    loading:       cancelling,
+    error:         cancelError,
+  } = useCancelOrder();
+  const [cancelled, setCancelled] = useState(false);
 
   const [localReturnStatus, setLocalReturnStatus] = useState(null);
   const [returnModalOpen,   setReturnModalOpen]   = useState(false);
@@ -99,22 +102,18 @@ const OrderDetailPage = () => {
     if (url) setPreviewImgSrc(url);
   }, [order]);
 
-  // ── Cancel ───────────────────────────────────────────────────────
+  // ── Cancel ───────────────────────────────────────────────────────────────
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
-    setCancelling(true);
-    setCancelError(null);
     try {
-      await cancelOrder(id);
+      await cancelOrderAction(id);
       setCancelled(true);
-    } catch (err) {
-      setCancelError(err.response?.data?.message || "Failed to cancel order.");
-    } finally {
-      setCancelling(false);
+    } catch {
+      // cancelError is surfaced via useCancelOrder().error and rendered below
     }
   };
 
-  // ── Return ───────────────────────────────────────────────────────
+  // ── Return ───────────────────────────────────────────────────────────────
   const handleReturnRequest = async () => {
     setReturnLoading(true);
     setReturnError(null);
@@ -137,9 +136,7 @@ const OrderDetailPage = () => {
     }
   };
 
-  // ── Loading state — themed, no white flash ─────────────────────
-  // Fix: wrap skeleton in a themed container so the page background
-  // matches --bg-primary in both light and dark mode.
+  // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div
@@ -193,7 +190,7 @@ const OrderDetailPage = () => {
     );
   }
 
-  // ── Derived display state ─────────────────────────────────────────────
+  // ── Derived display state ─────────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
   const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
 
@@ -299,95 +296,84 @@ const OrderDetailPage = () => {
             <OrderItemsList items={order.items} />
           </div>
 
-          {/* Order Information */}
-          <div className="order-detail__section">
-            <h3 className="order-detail__section-title">Order Information</h3>
-            <div className="shipping-info">
-              <p className="shipping-info__line">Status: {displayStatus}</p>
-              <p className="shipping-info__line">Items: {order.quantity}</p>
-              <p className="shipping-info__line">Order date: {date}</p>
-            </div>
-          </div>
+          {/* Cancel error */}
+          {cancelError && (
+            <p className="error-text" style={{ marginTop: 8 }}>
+              {cancelError}
+            </p>
+          )}
 
-          {/* Return Information — only in return flow */}
-          {isReturnFlow && (
-            <div className="order-detail__section order-detail__return-info">
-              <h3 className="order-detail__section-title">Return Information</h3>
-              <div className="shipping-info">
-                <p className="shipping-info__line">
-                  <span className="order-detail__return-info-label">Return Status:</span>{" "}
-                  <span className="order-detail__return-info-value">
-                    {STATUS_LABELS[localReturnStatus] ?? localReturnStatus}
-                  </span>
-                </p>
-                {returnRequestedOn && (
-                  <p className="shipping-info__line">
-                    <span className="order-detail__return-info-label">Requested On:</span>{" "}
-                    {returnRequestedOn}
-                  </p>
-                )}
-                {returnCompletedOn && (
-                  <p className="shipping-info__line">
-                    <span className="order-detail__return-info-label">Return Completed On:</span>{" "}
-                    {returnCompletedOn}
-                  </p>
-                )}
-                <p className="shipping-info__line">
-                  <span className="order-detail__return-info-label">Refund Status:</span>{" "}
-                  <span className="order-detail__return-info-value">
-                    {displayRefund}
-                  </span>
-                </p>
-              </div>
-            </div>
+          {/* Return error */}
+          {returnError && (
+            <p className="error-text" style={{ marginTop: 8 }}>
+              {returnError}
+            </p>
+          )}
+
+          {/* Return success toast */}
+          {returnSuccess && (
+            <p className="success-text" style={{ marginTop: 8 }}>
+              Return request submitted successfully.
+            </p>
           )}
 
           {/* Action buttons */}
-          <div className="order-detail__section">
-            <div className="order-detail__action-row">
+          <div className="order-detail__actions">
+            {CANCELLABLE.has(upperStatus) && !cancelled && (
               <button
-                className="btn order-detail__cancel-btn"
+                className="btn btn-danger order-detail__cancel-btn"
                 onClick={handleCancel}
                 disabled={cancelDisabled}
-                aria-label="Cancel this order"
               >
                 {cancelling ? "Cancelling…" : "Cancel Order"}
               </button>
+            )}
 
+            {RETURNABLE.has(upperStatus) && !cancelled && !isReturnFlow && (
               <button
-                className={[
-                  "btn order-detail__return-btn",
-                  localReturnStatus ? "order-detail__return-btn--requested" : "",
-                ].filter(Boolean).join(" ")}
+                className="btn btn-secondary order-detail__return-btn"
                 onClick={() => setReturnModalOpen(true)}
                 disabled={returnDisabled}
-                aria-label="Request a return for this order"
               >
                 {returnBtnLabel}
               </button>
-            </div>
+            )}
 
-            {cancelled     && <p className="order-detail__cancelled-msg">Order has been cancelled.</p>}
-            {returnSuccess && <p className="order-detail__success-msg">✓ Return request submitted successfully!</p>}
-            {cancelError   && <p className="error-text">{cancelError}</p>}
-            {returnError   && <p className="error-text">{returnError}</p>}
+            {isReturnFlow && (
+              <div className="order-detail__return-status">
+                <span className="order-status-badge order-status-badge--return">
+                  {STATUS_LABELS[localReturnStatus] ?? localReturnStatus}
+                </span>
+                {returnCompletedOn && (
+                  <p className="order-detail__return-meta">
+                    Completed on {returnCompletedOn}
+                  </p>
+                )}
+                {order.refundStatus && (
+                  <p className="order-detail__return-meta">
+                    Refund: {displayRefund}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Pricing Summary */}
-        <aside className="order-detail__right">
+        {/* Right — Order Summary */}
+        <div className="order-detail__right">
           <div className="order-detail__section">
-            <h3 className="order-detail__section-title">Pricing Summary</h3>
-            <OrderSummary items={order.items} cartTotal={order.totalPrice} />
+            <h3 className="order-detail__section-title">Order Summary</h3>
+            <OrderSummary order={order} />
           </div>
-        </aside>
+        </div>
       </div>
 
+      {/* Return Modal */}
       <ReturnModal
-        isOpen={returnModalOpen}
+        open={returnModalOpen}
         onClose={() => setReturnModalOpen(false)}
         onConfirm={handleReturnRequest}
-        isLoading={returnLoading}
+        loading={returnLoading}
       />
     </div>
   );

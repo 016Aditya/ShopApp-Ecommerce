@@ -35,9 +35,14 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, submitting, actio
   const [showDelete, setShowDelete] = useState(false);
   const isOwner = currentUserId && currentUserId === review.userId;
 
+  // Pass productId through so useReviewActions can target the correct cache key
   const handleEditSubmit = (payload) => {
-    onEdit(review.id, payload);
+    onEdit(review.id, { ...payload, productId: review.productId });
     setEditing(false);
+  };
+
+  const handleDelete = () => {
+    onDelete(review.id, review.productId);
   };
 
   const formattedDate = review.createdAt
@@ -96,7 +101,7 @@ const ReviewCard = ({ review, currentUserId, onEdit, onDelete, submitting, actio
         <div className="review-card__confirm-delete">
           <p>Are you sure you want to delete this review?</p>
           <div className="review-card__actions">
-            <button type="button" className="review-action-btn review-action-btn--delete" onClick={() => onDelete(review.id)} disabled={submitting}>
+            <button type="button" className="review-action-btn review-action-btn--delete" onClick={handleDelete} disabled={submitting}>
               Yes, Delete
             </button>
             <button type="button" className="review-action-btn review-action-btn--cancel" onClick={() => setShowDelete(false)}>

@@ -1,5 +1,5 @@
 /**
- * queryKeys.js — Phase 2A
+ * queryKeys.js — Phase 2A + 2B
  *
  * Centralized query key factory for all TanStack Query keys.
  *
@@ -11,18 +11,15 @@
  *
  * Usage:
  *   queryKeys.products.all()                        → ['products']
- *   queryKeys.products.lists()                      → ['products', 'list']
- *   queryKeys.products.featured()                   → ['products', 'featured']
  *   queryKeys.products.detail(42)                   → ['products', 'detail', 42]
- *   queryKeys.products.byCategory('Electronics')    → ['products', 'list', 'category', 'Electronics']
- *   queryKeys.products.byCatAndSub('Electronics', 'Phones')
- *                                                   → ['products', 'list', 'category', 'Electronics', 'sub', 'Phones']
- *   queryKeys.products.search('iphone')             → ['products', 'search', 'iphone']
+ *   queryKeys.orders.byUser('u1')                   → ['orders', 'user', 'u1']
+ *   queryKeys.orders.detail('o1')                   → ['orders', 'detail', 'o1']
+ *   queryKeys.reviews.byProduct('p5')               → ['reviews', 'product', 'p5']
  *
- * Phase 2B will add:
- *   queryKeys.orders.*
- *   queryKeys.reviews.*
+ * Phase 2C will add:
  *   queryKeys.profile.*
+ *   queryKeys.wishlist.*
+ *   queryKeys.savedAddresses.*
  */
 export const queryKeys = {
   products: {
@@ -51,5 +48,24 @@ export const queryKeys = {
 
     /** GET /api/products/search?keyword=... */
     search: (keyword) => ['products', 'search', keyword?.trim().toLowerCase()],
+  },
+
+  orders: {
+    /** Root key — invalidates ALL order queries */
+    all: () => ['orders'],
+
+    /** GET /api/orders/user/:userId */
+    byUser: (userId) => ['orders', 'user', String(userId)],
+
+    /** GET /api/orders/:id */
+    detail: (id) => ['orders', 'detail', String(id)],
+  },
+
+  reviews: {
+    /** Root key — invalidates ALL review queries */
+    all: () => ['reviews'],
+
+    /** GET /api/reviews/product/:productId */
+    byProduct: (productId) => ['reviews', 'product', String(productId)],
   },
 };
