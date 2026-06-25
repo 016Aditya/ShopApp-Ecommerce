@@ -69,9 +69,13 @@ const OrderDetailPage = () => {
   const { id }     = useParams();
   const navigate   = useNavigate();
   const { order, loading, error } = useOrder(id);
+
+  // Phase 2C: useReturn is now TQ-backed; returnStatus comes from the cache.
+  // localReturnStatus is kept for instant optimistic display while the
+  // mutation is in-flight, exactly as before.
   const { returnStatus, requestReturn } = useReturn(id);
 
-  // Cancel — now powered by TanStack Query via useCancelOrder
+  // Cancel — TanStack Query via useCancelOrder
   const {
     cancelOrder:   cancelOrderAction,
     loading:       cancelling,
@@ -87,10 +91,12 @@ const OrderDetailPage = () => {
 
   const [previewImgSrc, setPreviewImgSrc] = useState(ORDER_IMAGE_PLACEHOLDER);
 
+  // Sync TQ-backed returnStatus into local display state
   useEffect(() => {
     if (returnStatus) setLocalReturnStatus(returnStatus);
   }, [returnStatus]);
 
+  // Also derive return status from the order object itself (server-confirmed)
   useEffect(() => {
     if (order && RETURN_STATUSES.has(order.status?.toUpperCase())) {
       setLocalReturnStatus(order.status.toUpperCase());
@@ -117,10 +123,12 @@ const OrderDetailPage = () => {
   const handleReturnRequest = async () => {
     setReturnLoading(true);
     setReturnError(null);
+    // Optimistic: update local display state immediately
     setLocalReturnStatus("RETURN_REQUESTED");
     setReturnModalOpen(false);
     try {
       const updated = await requestReturn();
+      // Sync Zustand order store so other parts of the UI reflect the change
       useOrderStore.getState().updateOrderReturn(id, {
         status:            updated?.status            ?? "RETURN_REQUESTED",
         returnRequestedAt: updated?.returnRequestedAt ?? new Date().toISOString(),
@@ -129,6 +137,7 @@ const OrderDetailPage = () => {
       setReturnSuccess(true);
       setTimeout(() => setReturnSuccess(false), 5000);
     } catch (err) {
+      // Roll back optimistic update on failure
       setLocalReturnStatus(null);
       setReturnError(err.message || "Failed to initiate return. Please try again.");
     } finally {
