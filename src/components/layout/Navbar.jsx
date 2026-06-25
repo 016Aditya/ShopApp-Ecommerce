@@ -36,6 +36,7 @@ function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -57,7 +58,7 @@ function Navbar() {
 
       {/* ═══════════════════════════════════════════════════════════════════
           PRIMARY BAR
-          Desktop  (md+):  single h-14 flex row — Logo Search Account Orders Wishlist Cart Theme
+          Desktop  (md+):  single flex row — Logo Search Account Orders Wishlist Cart Theme
           Mobile   (<md):  wraps into 2 rows via .navbar-primary-inner CSS:
                            Row 1 → Logo  ·············  [Account] [Wishlist] [Cart] [Theme]
                            Row 2 → Search bar (full width)
@@ -65,11 +66,14 @@ function Navbar() {
       <div style={{ backgroundColor: "var(--navbar-bg)" }}>
         {/*
           navbar-primary-inner:
-            desktop: flex-nowrap h-14 items-center  (unchanged)
-            mobile:  flex-wrap gap-y-2 py-2          (rows wrap naturally)
+            desktop: flex-nowrap items-center  (unchanged)
+            mobile:  flex-wrap gap-y-2 py-2    (rows wrap naturally)
           See mobile.css for the @media rule.
         */}
-        <div className="navbar-primary-inner container-app flex items-center gap-3">
+        <div
+          className="navbar-primary-inner container-app flex items-center gap-3"
+          style={{ minHeight: "52px" }}
+        >
 
           {/* ── Logo — always visible, both breakpoints ── */}
           <Link
@@ -87,12 +91,25 @@ function Navbar() {
           {/* ── Search — desktop: flex-1 in the same row
                          mobile:  full-width row 2 via .navbar-search CSS ── */}
           <form onSubmit={handleSearch} className="navbar-search flex flex-1">
-            <div className="flex w-full overflow-hidden rounded-sm" style={{ outline: "2px solid var(--accent)" }}>
+            <div
+              className="flex w-full overflow-hidden rounded-sm"
+              style={{
+                outline: searchFocused
+                  ? "2px solid var(--accent)"
+                  : "2px solid var(--accent)",
+                boxShadow: searchFocused
+                  ? "0 0 0 3px rgba(255,159,0,0.28)"
+                  : "none",
+                transition: "box-shadow 0.2s ease",
+              }}
+            >
               <input
                 type="text"
                 placeholder="Search products, brands and more..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
                 className="flex-1 px-4 py-2 text-sm outline-none"
                 style={{ backgroundColor: "#fff", color: "#0f0f11", border: "none" }}
               />
@@ -116,8 +133,8 @@ function Navbar() {
             <>
               {/* Desktop account block — hidden on mobile */}
               <div className="group relative hidden md:flex flex-shrink-0 cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
-                <span className="text-[10px] text-slate-300">Hello, {displayName}</span>
-                <span className="text-sm font-bold text-white">Account</span>
+                <span className="text-[10px] text-slate-300" style={{ lineHeight: 1.4 }}>Hello, {displayName}</span>
+                <span className="text-sm font-bold text-white" style={{ lineHeight: 1.4 }}>Account</span>
                 <div className="absolute top-full right-0 z-50 hidden w-48 rounded shadow-xl group-hover:block" style={{ backgroundColor: "var(--modal-bg)", border: "1px solid var(--border-color)" }}>
                   <Link to={PATHS.PROFILE}  className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>Profile</Link>
                   <Link to={PATHS.ORDERS}   className="block px-4 py-2 text-sm hover:opacity-80 transition" style={{ color: "var(--text-primary)" }}>My Orders</Link>
@@ -141,10 +158,10 @@ function Navbar() {
                 className="flex-shrink-0 flex flex-col items-end rounded border border-transparent px-1 py-0.5 hover:border-white transition md:hidden"
                 aria-label="My Account"
               >
-                <span className="leading-none" style={{ fontSize: "0.7rem", color: "#cbd5e1" }}>
+                <span className="leading-none" style={{ fontSize: "0.7rem", color: "#cbd5e1", lineHeight: 1.4 }}>
                   Hello, {displayName}
                 </span>
-                <span className="font-semibold text-white leading-none" style={{ fontSize: "0.9rem" }}>
+                <span className="font-semibold text-white leading-none" style={{ fontSize: "0.9rem", lineHeight: 1.4 }}>
                   Account
                 </span>
               </Link>
@@ -154,8 +171,8 @@ function Navbar() {
               to={PATHS.LOGIN}
               className="flex-shrink-0 flex flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
             >
-              <span className="text-[10px] text-slate-300">Hello, sign in</span>
-              <span className="text-sm font-bold text-white">Account &amp; Lists</span>
+              <span className="text-[10px] text-slate-300" style={{ lineHeight: 1.4 }}>Hello, sign in</span>
+              <span className="text-sm font-bold text-white" style={{ lineHeight: 1.4 }}>Account &amp; Lists</span>
             </Link>
           )}
 
@@ -164,8 +181,8 @@ function Navbar() {
             to={PATHS.ORDERS}
             className="hidden md:flex flex-shrink-0 flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
           >
-            <span className="text-[10px] text-slate-300">Returns</span>
-            <span className="text-sm font-bold text-white">&amp; Orders</span>
+            <span className="text-[10px] text-slate-300" style={{ lineHeight: 1.4 }}>Returns</span>
+            <span className="text-sm font-bold text-white" style={{ lineHeight: 1.4 }}>&amp; Orders</span>
           </Link>
 
           {/* ── Wishlist icon — label hidden on mobile to save width ── */}
@@ -224,6 +241,7 @@ function Navbar() {
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             gap: "0",
+            minHeight: "40px",
           }}
         >
           <Link

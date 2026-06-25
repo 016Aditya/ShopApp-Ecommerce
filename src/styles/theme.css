@@ -144,7 +144,8 @@
   /* Surfaces */
   --card-bg:          #1b1f27;
   --card-bg-elevated: #20242c;
-  --navbar-bg:        #0a0a0c;
+  /* ── Navbar: lighter than page bg (#0f1115) for clear visual separation ── */
+  --navbar-bg:        #181c23;
   --footer-bg:        #0a0a0c;
   --footer-text:      #9ca3af;
 
@@ -191,8 +192,8 @@
   --warning-bg:   #431407; --warning-text:  #fbbf24; --warning-border: #92400e;
   --info-bg:      #0c1a3d; --info-text:     #60a5fa; --info-border:    #1d4ed8;
 
-  /* Navbar secondary bar */
-  --navbar-secondary-bg: #141418;
+  /* ── Category bar: distinctly darker than navbar for clear tier separation ── */
+  --navbar-secondary-bg: #20242c;
 
   /* Order / status badges — dark-adapted */
   --status-pending-bg:    #292107; --status-pending-text:    #fbbf24;
@@ -216,7 +217,8 @@
     --border-color:     #27272a;
     --border-subtle:    #18181b;
     --card-bg:          #1a1a1f;
-    --navbar-bg:        #0a0a0c;
+    /* ── Navbar lighter than page bg for contrast ── */
+    --navbar-bg:        #181c23;
     --footer-bg:        #0a0a0c;
     --footer-text:      #9ca3af;
     --input-bg:         #1e1e24;
@@ -247,7 +249,8 @@
     --error-bg:     #450a0a; --error-text:    #f87171; --error-border:   #991b1b;
     --warning-bg:   #431407; --warning-text:  #fbbf24; --warning-border: #92400e;
     --info-bg:      #0c1a3d; --info-text:     #60a5fa; --info-border:    #1d4ed8;
-    --navbar-secondary-bg: #141418;
+    /* ── Category bar: distinct tier from navbar ── */
+    --navbar-secondary-bg: #20242c;
     --status-pending-bg:    #292107; --status-pending-text:    #fbbf24;
     --status-processing-bg: #0c1a3d; --status-processing-text: #60a5fa;
     --status-shipped-bg:    #1a1042; --status-shipped-text:    #a5b4fc;
