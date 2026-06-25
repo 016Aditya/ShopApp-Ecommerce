@@ -1,36 +1,15 @@
 /**
  * useProducts.js — Phase 2A
  *
- * What changed:
- *   The imperative useState + useEffect + manual loading/error pattern has
- *   been replaced with TanStack Query hooks from useQueryProducts.js.
+ * Wraps TanStack Query hooks and exposes the same public API that
+ * ProductsPage.jsx and ProductDetailPage.jsx have always consumed.
  *
- * What stayed the same (public API contract):
- *   useProducts() still returns:
- *     { products, loading, error, fetchAll, fetchByCategory,
- *       fetchByCategoryAndSubcategory, fetchBySearch }
- *
- *   useProduct(id) still returns:
- *     { product, loading, error }
- *
- *   ProductsPage.jsx and ProductDetailPage.jsx are NOT modified — they
- *   continue calling these hooks exactly as before.
- *
- * How the imperative fetch* functions work after migration:
- *   ProductsPage calls fetchAll() / fetchByCategory() / etc. imperatively
- *   inside a useEffect triggered by URL params. Those calls are now no-ops
- *   (empty functions) because TanStack Query fires automatically based on
- *   the `enabled` flag of the active query.
- *
- *   The hook internally activates the correct TanStack Query by reading the
- *   same URL params that ProductsPage reads, so the right query fires
- *   automatically without any changes to ProductsPage.
- *
- * Why this approach:
- *   - Zero changes required in ProductsPage.jsx or ProductDetailPage.jsx.
- *   - Full caching, deduplication, and background refetch from TanStack Query.
- *   - The legacy fetchAll/fetchByCategory API is preserved in case any other
- *     consumer depends on it.
+ * Key invariant for useProduct(id):
+ *   We must NEVER render product data from a previous route param.
+ *   TanStack Query can return cached data for a different product ID
+ *   on the very first render after a key= remount (cache hit for a
+ *   previously visited / prefetched product). The explicit id-match
+ *   guard below is the only airtight way to prevent that.
  */
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -41,25 +20,19 @@ import {
   useProductDetailQuery,
 } from '@/hooks/useQueryProducts';
 
-// ─── All products + filter variants ───────────────────────────────────────────
+// ── All products + filter variants ──────────────────────────────────────────────────
 export const useProducts = () => {
-  // Read the URL params here so the hook can auto-activate the right query.
-  // ProductsPage also reads these params and calls fetchX() imperatively,
-  // but those calls are now no-ops — the query is already firing from here.
   const [searchParams] = useSearchParams();
   const activeCat    = searchParams.get('category')    ?? 'All';
   const activeSub    = searchParams.get('subcategory') ?? null;
   const activeSearch = (searchParams.get('search')     ?? '').trim();
 
-  // Determine which mode is active (same logic as ProductsPage)
   const mode =
     activeSearch           ? 'search'      :
     activeSub              ? 'subcategory' :
     activeCat !== 'All'    ? 'category'    :
     'all';
 
-  // All four queries are instantiated, but only the active one has
-  // `enabled: true` — the others stay dormant and cost nothing.
   const allQ    = useAllProductsQuery();
   const catQ    = useProductsByCategoryQuery(mode === 'category'    ? activeCat : null);
   const subQ    = useProductsByCatAndSubQuery(
@@ -68,7 +41,6 @@ export const useProducts = () => {
   );
   const searchQ = useProductSearchQuery(mode === 'search' ? activeSearch : null);
 
-  // Pick the active result set
   const active =
     mode === 'search'      ? searchQ :
     mode === 'subcategory' ? subQ    :
@@ -81,11 +53,6 @@ export const useProducts = () => {
     error:    active.isError
       ? (active.error?.message ?? 'Failed to load products')
       : null,
-
-    // ── Legacy imperative API ─────────────────────────────────────────────
-    // ProductsPage calls these functions inside a useEffect. They are now
-    // intentional no-ops because TanStack Query fires automatically.
-    // Keeping them prevents any "is not a function" errors in callers.
     fetchAll:                      () => {},
     fetchByCategory:               () => {},
     fetchByCategoryAndSubcategory: () => {},
@@ -93,12 +60,28 @@ export const useProducts = () => {
   };
 };
 
-// ─── Single product detail ─────────────────────────────────────────────────────
+// ── Single product detail ────────────────────────────────────────────────────────────────────
 export const useProduct = (id) => {
-  const { data, isLoading, isError, error } = useProductDetailQuery(id);
+  const numericId = Number(id);
+  const { data, isLoading, isPending, isError, error } = useProductDetailQuery(id);
+
+  // • TQ may return cached data from a *different* product on the first
+  //   render after a route change (e.g. a previously visited / prefetched
+  //   product that shares nothing with the current id).
+  // • We only expose data to the component once it is confirmed to belong
+  //   to the current route id.
+  // • This guard fires only in the brief window between mount and the
+  //   cache lookup settling. Once data.id === numericId, it stays that way.
+  const isCorrectData = data != null && data.id === numericId;
+
   return {
-    product: data  ?? null,
-    loading: isLoading,
-    error:   isError ? (error?.message ?? 'Product not found') : null,
+    product: isCorrectData ? data : null,
+    // Show skeleton when:
+    //   1. TQ itself is loading (no cache entry for this id), OR
+    //   2. Cache returned data but it belongs to a different product.
+    loading: isLoading || !isCorrectData,
+    error:   isCorrectData && isError
+      ? (error?.message ?? 'Product not found')
+      : null,
   };
 };
