@@ -6,7 +6,7 @@ const PLACEHOLDER = 'https://placehold.co/400x400/f3f4f6/9ca3af?text=No+Image';
 /**
  * ProductImageGallery
  * Displays a main image + thumbnail row.
- * Stage 1: hero image uses eager loading + fetchpriority=high to improve LCP.
+ * Hero image uses eager loading + fetchPriority="high" to improve LCP.
  * Thumbnail images use lazy loading since they are below the fold.
  */
 const ProductImageGallery = ({ imageUrl, name }) => {
@@ -28,7 +28,7 @@ const ProductImageGallery = ({ imageUrl, name }) => {
           src={src}
           alt={name}
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
           decoding="async"
           width={400}
           height={400}

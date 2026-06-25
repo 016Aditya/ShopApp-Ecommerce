@@ -2,28 +2,35 @@
  * useQueryProfile.js — Phase 2C
  *
  * Raw TanStack Query hooks for User Profile.
- * Never imported directly by pages — consumed through
- * src/features/profile/hooks/useProfile.js.
+ * Consumed through src/features/profile/hooks/useProfile.js.
  *
  * Cache strategy:
- *   staleTime : 5 minutes  — profile rarely changes mid-session
- *   gcTime    : 15 minutes — keep in memory for fast revisits to /profile
+ *   staleTime : 5 minutes
+ *   gcTime    : 15 minutes
  *
  * Retry policy:
- *   Queries  : network failures + HTTP 5xx only
- *   Mutations: retry: 0 (user action — show error immediately)
+ *   Queries  : network failures + HTTP 5xx only (401/403/404 never retried)
+ *   Mutations: retry: 0
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { getUserById, updateUserProfile } from "@/services/profileService";
-import { isRetryable } from "@/lib/queryClient";
 
 const PROFILE_STALE = 5 * 60 * 1000;   // 5 min
 const PROFILE_GC    = 15 * 60 * 1000;  // 15 min
 
+/** Returns true when the query should be retried for this error. */
+const shouldRetry = (failureCount, error) => {
+  if (failureCount >= 2) return false;
+  const status = error?.response?.status;
+  if (!status) return true;                               // network failure
+  if (status === 401 || status === 403 || status === 404) return false;
+  if (status >= 400 && status < 500) return false;        // other 4xx
+  return true;                                            // 5xx
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
-// useProfileQuery
-// GET /api/users/:userId
+// useProfileQuery — GET /api/users/:userId
 // ─────────────────────────────────────────────────────────────────────────────
 export const useProfileQuery = (userId) =>
   useQuery({
@@ -33,19 +40,17 @@ export const useProfileQuery = (userId) =>
     staleTime: PROFILE_STALE,
     gcTime:    PROFILE_GC,
     refetchOnWindowFocus: false,
-    retry: (failureCount, error) =>
-      isRetryable(error) && failureCount < 2,
+    retry: shouldRetry,
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// useUpdateProfileMutation
-// PUT /api/users/:userId
+// useUpdateProfileMutation — PUT /api/users/:userId
 //
 // Optimistic update flow:
-//   1. onMutate  — cancel in-flight queries, snapshot, patch cache immediately
-//   2. onError   — roll back to snapshot
-//   3. onSuccess — write server response into cache (no extra refetch needed)
-//   4. onSettled — invalidate so background sync confirms server state
+//   onMutate  → cancel in-flight, snapshot, patch cache immediately
+//   onError   → roll back to snapshot
+//   onSuccess → write server-confirmed object (no extra refetch)
+//   onSettled → background invalidation to confirm server state
 // ─────────────────────────────────────────────────────────────────────────────
 export const useUpdateProfileMutation = (userId) => {
   const qc = useQueryClient();
@@ -58,12 +63,7 @@ export const useUpdateProfileMutation = (userId) => {
       const key = queryKeys.profile.me(userId);
       await qc.cancelQueries({ queryKey: key });
       const snapshot = qc.getQueryData(key);
-
-      // Patch cache immediately so the UI reflects the change at once
-      qc.setQueryData(key, (old) =>
-        old ? { ...old, ...profileData } : old
-      );
-
+      qc.setQueryData(key, (old) => old ? { ...old, ...profileData } : old);
       return { snapshot };
     },
 
@@ -74,12 +74,10 @@ export const useUpdateProfileMutation = (userId) => {
     },
 
     onSuccess: (updated) => {
-      // Write the server-confirmed object so we don't need a refetch
       qc.setQueryData(queryKeys.profile.me(userId), updated);
     },
 
     onSettled: () => {
-      // Background sync — confirms server state without blocking the UI
       qc.invalidateQueries({ queryKey: queryKeys.profile.me(userId) });
     },
   });
