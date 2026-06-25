@@ -5,7 +5,7 @@
  *
  * Rules:
  *  - Never import Axios directly. Always go through productService.
- *  - Each hook exposes only what callers need — keep the surface minimal.
+ *  - Each hook exposes only what callers need.
  *  - staleTime overrides match the Phase 2A spec:
  *      All / Featured / Detail / Category → 5 min
  *      Search                             → 30 sec
@@ -24,7 +24,7 @@ import {
 const STALE_PRODUCTS = 5 * 60 * 1000;  // 5 min
 const STALE_SEARCH   = 30 * 1000;       // 30 sec
 
-// ── All Products ─────────────────────────────────────────────────────────────
+// ── All Products ─────────────────────────────────────────────────────────────────────────────
 export function useAllProductsQuery() {
   return useQuery({
     queryKey: queryKeys.products.allProducts(),
@@ -33,7 +33,7 @@ export function useAllProductsQuery() {
   });
 }
 
-// ── Featured Products ─────────────────────────────────────────────────────────
+// ── Featured Products ───────────────────────────────────────────────────────────────────────────
 export function useFeaturedProductsQuery() {
   return useQuery({
     queryKey: queryKeys.products.featured(),
@@ -42,19 +42,23 @@ export function useFeaturedProductsQuery() {
   });
 }
 
-// ── Product Detail ────────────────────────────────────────────────────────────
+// ── Product Detail ───────────────────────────────────────────────────────────────────────────
 export function useProductDetailQuery(id) {
   return useQuery({
     queryKey: queryKeys.products.detail(id),
     queryFn:  () => getProductById(id),
     enabled:  Boolean(id),
     staleTime: STALE_PRODUCTS,
+    // When the product was prefetched (e.g. on hover), show the cached data
+    // instantly while a background revalidation runs.
+    // When the product is NOT in cache, placeholderData is undefined so the
+    // component sees isLoading=true and shows the skeleton correctly.
+    placeholderData: (previousData) => previousData ?? undefined,
   });
 }
 
-// ── Products by Category ──────────────────────────────────────────────────────
+// ── Products by Category ─────────────────────────────────────────────────────────────────────────
 export function useProductsByCategoryQuery(category) {
-  // Disable when category is falsy or the sentinel 'All' value
   const enabled = Boolean(category) && category !== 'All';
   return useQuery({
     queryKey: queryKeys.products.byCategory(category),
@@ -64,7 +68,7 @@ export function useProductsByCategoryQuery(category) {
   });
 }
 
-// ── Products by Category + Subcategory ────────────────────────────────────────
+// ── Products by Category + Subcategory ────────────────────────────────────────────────────────────
 export function useProductsByCatAndSubQuery(category, subcategory) {
   const enabled = Boolean(category) && Boolean(subcategory);
   return useQuery({
@@ -75,9 +79,8 @@ export function useProductsByCatAndSubQuery(category, subcategory) {
   });
 }
 
-// ── Search ────────────────────────────────────────────────────────────────────
+// ── Search ──────────────────────────────────────────────────────────────────────────────────
 export function useProductSearchQuery(keyword) {
-  // Trim + lowercase so 'iPhone' and 'iphone' share the same cache entry
   const normalised = keyword?.trim();
   const enabled    = Boolean(normalised);
   return useQuery({
@@ -85,20 +88,18 @@ export function useProductSearchQuery(keyword) {
     queryFn:  () => searchProducts(normalised),
     enabled,
     staleTime: STALE_SEARCH,
-    // Keep previous data visible while a new search is in flight so the
-    // grid doesn't flash empty between keystrokes.
     placeholderData: (prev) => prev,
   });
 }
 
-// ── Prefetch helper ───────────────────────────────────────────────────────────
+// ── Prefetch helper ───────────────────────────────────────────────────────────────────────────
 /**
  * usePrefetchProductDetail
  *
- * Returns a stable callback that imperative callers (onMouseEnter,
- * IntersectionObserver) can invoke to prefetch a product detail page.
+ * Returns a stable callback for imperative callers (onMouseEnter,
+ * IntersectionObserver) to prefetch a product detail page.
  *
- * Respects staleTime — if data is already fresh in the cache, no network
+ * Respects staleTime — if data is already fresh in cache, no network
  * request is made.
  */
 export function usePrefetchProductDetail() {
