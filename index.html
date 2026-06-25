@@ -4,7 +4,77 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f6f8" />
     <title>ecom-frontend</title>
+
+    <!--
+      CRITICAL: Inline theme script — executes synchronously during HTML
+      parsing, BEFORE any external CSS or JS loads. This is the earliest
+      possible point to read the persisted theme and apply it, which is
+      the only reliable fix for the white-flash-on-refresh problem.
+
+      Why inline and not deferred?
+      A deferred/module script runs AFTER the browser has already painted
+      the initial frame (which would be white). An inline script runs
+      synchronously mid-parse and blocks painting until it finishes —
+      exactly what we want here (it's <1ms, so no perceptible delay).
+    -->
+    <script>
+      (function () {
+        var STORAGE_KEY = 'theme-preference';
+        var DEFAULT_BG_LIGHT = '#f4f6f8';
+        var DEFAULT_BG_DARK  = '#0f1115';
+
+        var theme = 'light';
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            theme = (parsed && parsed.state && parsed.state.theme) || 'light';
+          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            theme = 'dark';
+          }
+        } catch (e) { /* ignore */ }
+
+        var bg = theme === 'dark' ? DEFAULT_BG_DARK : DEFAULT_BG_LIGHT;
+        var fg = theme === 'dark' ? '#f5f7fa' : '#0f0f11';
+
+        // Apply data-theme so CSS variables resolve correctly
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // Paint the background immediately — prevents white flash
+        document.documentElement.style.backgroundColor = bg;
+        document.documentElement.style.color = fg;
+
+        // Update theme-color meta for browser chrome
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', bg);
+      })();
+    </script>
+
+    <!--
+      Inline critical CSS: ensures html/body/#root always carry the correct
+      background even during the gap between HTML-parse and CSS-load.
+      These rules use the same variable names as theme.css so once the
+      stylesheet loads they are seamlessly overridden by the full tokens.
+    -->
+    <style>
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: var(--bg-primary, #f4f6f8);
+        color: var(--text-primary, #0f0f11);
+      }
+      [data-theme="dark"] html,
+      [data-theme="dark"] body,
+      html[data-theme="dark"],
+      html[data-theme="dark"] body,
+      html[data-theme="dark"] #root {
+        background-color: #0f1115;
+        color: #f5f7fa;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

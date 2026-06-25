@@ -4,38 +4,24 @@
  * Thin wrapper around useAuthStore so every component that calls
  * useAuth() continues to work without import changes.
  *
- * Key fix: expose a stable `loading` boolean that is `true` until
- * Zustand persist has finished rehydrating from localStorage.
- * Without this, PrivateRoute / PublicRoute both see user=null on
- * the first render after a page reload and immediately redirect to
- * /login — even when a session is stored.
+ * Hydration loading:
+ * Zustand's onRehydrateStorage fires synchronously during the same
+ * microtask as localStorage reads (no network involved). By the time
+ * React renders the first component tree, _hydrated is already true
+ * in almost all cases. We keep the loading flag for the rare edge case
+ * where it isn't yet, but avoid the expensive subscribe/polling pattern.
  */
-import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 
 export const useAuth = () => {
   const store = useAuthStore();
 
-  /**
-   * `_hydrated` is set to true by onRehydrateStorage in authStore.
-   * We mirror it as a local `loading` flag so route guards can wait.
-   */
-  const [loading, setLoading] = useState(!store._hydrated);
-
-  useEffect(() => {
-    if (store._hydrated) {
-      setLoading(false);
-      return;
-    }
-    // Poll until hydration completes (usually < 1 frame)
-    const unsub = useAuthStore.subscribe(
-      (s) => s._hydrated,
-      (hydrated) => {
-        if (hydrated) setLoading(false);
-      }
-    );
-    return unsub;
-  }, [store._hydrated]);
+  // _hydrated is set synchronously by onRehydrateStorage in authStore.js.
+  // Using it directly (no extra useState/useEffect) means:
+  //   - zero extra renders on initial mount
+  //   - no subscribe() overhead
+  //   - loading is false on the very first render in the vast majority of cases
+  const loading = !store._hydrated;
 
   return {
     user:        store.user,

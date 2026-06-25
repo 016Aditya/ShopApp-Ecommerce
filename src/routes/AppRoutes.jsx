@@ -1,77 +1,103 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import PATHS from "./paths";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 
-// Layouts
+// Layouts — always in the critical bundle (renders on every page)
 import PageWrapper from "@/components/layout/PageWrapper";
+import PageLoader from "@/components/skeleton/PageLoader";
 
-// Auth pages
-import Login          from "@/features/auth/pages/Login";
-import Register       from "@/features/auth/pages/Register";
-import OAuth2Success  from "@/features/auth/pages/OAuth2Success";
-import ForgotPassword from "@/features/auth/pages/ForgotPassword";
-import ResetPassword  from "@/features/auth/pages/ResetPassword";
+// ─── Eagerly loaded ─────────────────────────────────────────────────────────
+// HomePage is the most-visited page and must be in the critical bundle.
+import HomePage from "@/features/home/pages/HomePage";
 
-// Core pages (public)
-import HomePage          from "@/features/home/pages/HomePage";
-import ProductsPage      from "@/features/products/pages/ProductsPage";
-import ProductDetailPage from "@/features/products/pages/ProductDetailPage";
-import CustomerServicePage from "@/features/customerService/pages/CustomerServicePage";
-import WishlistPage      from "@/features/wishlist/pages/WishlistPage";
+// ─── Lazily loaded ──────────────────────────────────────────────────────────
+// Everything else is split into async chunks. They are downloaded only when
+// the user navigates to that route — this shrinks the initial JS bundle
+// significantly and speeds up the first paint on all pages.
+
+// Auth
+const Login          = lazy(() => import("@/features/auth/pages/Login"));
+const Register       = lazy(() => import("@/features/auth/pages/Register"));
+const OAuth2Success  = lazy(() => import("@/features/auth/pages/OAuth2Success"));
+const ForgotPassword = lazy(() => import("@/features/auth/pages/ForgotPassword"));
+const ResetPassword  = lazy(() => import("@/features/auth/pages/ResetPassword"));
+
+// Public product pages
+const ProductsPage      = lazy(() => import("@/features/products/pages/ProductsPage"));
+const ProductDetailPage = lazy(() => import("@/features/products/pages/ProductDetailPage"));
+const CustomerServicePage = lazy(() => import("@/features/customerService/pages/CustomerServicePage"));
+const WishlistPage      = lazy(() => import("@/features/wishlist/pages/WishlistPage"));
 
 // Protected pages
-import CartPage            from "@/features/cart/pages/CartPage";
-import CheckoutPage        from "@/features/orders/pages/CheckoutPage";
-import OrdersPage          from "@/features/orders/pages/OrdersPage";
-import OrderDetailPage     from "@/features/orders/pages/OrderDetailPage";
-import OrderSuccessPage    from "@/features/orders/pages/OrderSuccessPage";
-import ProfilePage         from "@/features/profile/pages/ProfilePage";
-import SavedAddressesPage  from "@/features/profile/pages/SavedAddressesPage";
+const CartPage           = lazy(() => import("@/features/cart/pages/CartPage"));
+const CheckoutPage       = lazy(() => import("@/features/orders/pages/CheckoutPage"));
+const OrdersPage         = lazy(() => import("@/features/orders/pages/OrdersPage"));
+const OrderDetailPage    = lazy(() => import("@/features/orders/pages/OrderDetailPage"));
+const OrderSuccessPage   = lazy(() => import("@/features/orders/pages/OrderSuccessPage"));
+const ProfilePage        = lazy(() => import("@/features/profile/pages/ProfilePage"));
+const SavedAddressesPage = lazy(() => import("@/features/profile/pages/SavedAddressesPage"));
 
 // Errors
-import NotFound from "@/errors/NotFound";
+const NotFound = lazy(() => import("@/errors/NotFound"));
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* OAuth2 callback — no layout wrapper */}
-      <Route path={PATHS.OAUTH2_SUCCESS} element={<OAuth2Success />} />
+const AppRoutes = () => (
+  <Routes>
+    {/* OAuth2 callback — no layout wrapper */}
+    <Route
+      path={PATHS.OAUTH2_SUCCESS}
+      element={
+        <Suspense fallback={null}>
+          <OAuth2Success />
+        </Suspense>
+      }
+    />
 
-      {/* All other routes share the PageWrapper (Navbar + Footer) */}
-      <Route element={<PageWrapper />}>
+    {/* All other routes share the PageWrapper (Navbar + Footer) */}
+    <Route element={<PageWrapper />}>
+      {/* Wrap all lazy routes in a single Suspense boundary here.
+          PageLoader fills only <main> — Navbar + Footer stay visible. */}
+      <Route
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* dummy — actual outlet is provided by the inner Routes below */}
+            </Routes>
+          </Suspense>
+        }
+      />
 
-        {/* Public-only routes (blocked when already logged in) */}
-        <Route element={<PublicRoute />}>
-          <Route path={PATHS.LOGIN}           element={<Login />} />
-          <Route path={PATHS.REGISTER}        element={<Register />} />
-          <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
-          <Route path={PATHS.RESET_PASSWORD}  element={<ResetPassword />} />
-        </Route>
-
-        {/* Open routes */}
-        <Route path={PATHS.HOME}           element={<HomePage />} />
-        <Route path={PATHS.PRODUCTS}       element={<ProductsPage />} />
-        <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
-        <Route path={PATHS.CUSTOMER_SERVICE} element={<CustomerServicePage />} />
-        <Route path={PATHS.WISHLIST}       element={<WishlistPage />} />
-
-        {/* Protected routes */}
-        <Route element={<PrivateRoute />}>
-          <Route path={PATHS.CART}             element={<CartPage />} />
-          <Route path={PATHS.CHECKOUT}         element={<CheckoutPage />} />
-          <Route path={PATHS.ORDERS}           element={<OrdersPage />} />
-          <Route path={PATHS.ORDER_DETAIL}     element={<OrderDetailPage />} />
-          <Route path={PATHS.ORDER_SUCCESS}    element={<OrderSuccessPage />} />
-          <Route path={PATHS.PROFILE}          element={<ProfilePage />} />
-          <Route path={PATHS.SAVED_ADDRESSES}  element={<SavedAddressesPage />} />
-        </Route>
-
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
+      {/* Public-only routes (blocked when already logged in) */}
+      <Route element={<PublicRoute />}>
+        <Route path={PATHS.LOGIN}           element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
+        <Route path={PATHS.REGISTER}        element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
+        <Route path={PATHS.FORGOT_PASSWORD} element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
+        <Route path={PATHS.RESET_PASSWORD}  element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
       </Route>
-    </Routes>
-  );
-};
+
+      {/* Open routes */}
+      <Route path={PATHS.HOME}           element={<HomePage />} />
+      <Route path={PATHS.PRODUCTS}       element={<Suspense fallback={<PageLoader />}><ProductsPage /></Suspense>} />
+      <Route path={PATHS.PRODUCT_DETAIL} element={<Suspense fallback={<PageLoader />}><ProductDetailPage /></Suspense>} />
+      <Route path={PATHS.CUSTOMER_SERVICE} element={<Suspense fallback={<PageLoader />}><CustomerServicePage /></Suspense>} />
+      <Route path={PATHS.WISHLIST}       element={<Suspense fallback={<PageLoader />}><WishlistPage /></Suspense>} />
+
+      {/* Protected routes */}
+      <Route element={<PrivateRoute />}>
+        <Route path={PATHS.CART}            element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
+        <Route path={PATHS.CHECKOUT}        element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
+        <Route path={PATHS.ORDERS}          element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
+        <Route path={PATHS.ORDER_DETAIL}    element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
+        <Route path={PATHS.ORDER_SUCCESS}   element={<Suspense fallback={<PageLoader />}><OrderSuccessPage /></Suspense>} />
+        <Route path={PATHS.PROFILE}         element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
+        <Route path={PATHS.SAVED_ADDRESSES} element={<Suspense fallback={<PageLoader />}><SavedAddressesPage /></Suspense>} />
+      </Route>
+
+      {/* 404 */}
+      <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
+    </Route>
+  </Routes>
+);
 
 export default AppRoutes;

@@ -63,11 +63,33 @@ html {
 }
 
 body {
+  /*
+   * IMPORTANT: do NOT transition background-color on body during startup.
+   * The inline script in index.html already set the correct bg before
+   * any paint. A transition here causes a visible colour sweep from the
+   * script-set colour to the CSS variable value even when they are
+   * identical — remove it to prevent that artefact.
+   *
+   * We keep the transition only after the page has mounted by relying on
+   * ThemeProvider's applyTheme() call which sets data-theme; at that
+   * point the transition is desired (for the theme toggle button).
+   */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apply background transition ONLY after React has mounted (theme toggling).
+   The .theme-ready class is added by ThemeProvider on first mount. */
+.theme-ready body {
   transition:
     background-color 300ms ease,
     color 300ms ease;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shimmer keyframe — used by PrivateRoute, PublicRoute, and PageLoader */
+@keyframes sk-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .bg-white {
@@ -172,5 +194,8 @@ select:focus {
   textarea,
   select {
     transition: none !important;
+  }
+  @keyframes sk-shimmer {
+    0%, 100% { background-position: 0 0; }
   }
 }

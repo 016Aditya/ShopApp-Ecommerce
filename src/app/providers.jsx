@@ -1,5 +1,4 @@
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/features/cart/context/CartContext";
 import ToastProvider from "@/components/common/ToastProvider";
 import ThemeProvider from "@/components/common/ThemeProvider";
@@ -8,23 +7,20 @@ import ThemeProvider from "@/components/common/ThemeProvider";
  * Providers
  *
  * ThemeProvider is placed inside BrowserRouter so it can access router
- * context if needed, but outside AuthProvider so the theme is applied
- * before any auth-gated page renders. This prevents the flash-of-wrong-
- * theme on protected routes.
+ * context if needed, but outside CartProvider so the theme is applied
+ * before any auth-gated page renders.
  *
- * ThemeProvider calls initTheme() on mount, which reads from Zustand
- * persist (localStorage key: "theme-preference") and applies the correct
- * data-theme attribute to <html> immediately.
+ * AuthProvider removed — it was a no-op wrapper ({children}) around
+ * Zustand's useAuthStore. Removing it eliminates one component wrapper
+ * from every render without changing any behaviour.
  */
 const Providers = ({ children }) => (
   <BrowserRouter>
     <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <ToastProvider />
-          {children}
-        </CartProvider>
-      </AuthProvider>
+      <CartProvider>
+        <ToastProvider />
+        {children}
+      </CartProvider>
     </ThemeProvider>
   </BrowserRouter>
 );
