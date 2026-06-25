@@ -1,36 +1,47 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getProductsByCategory } from "@/services/productService";
-import PATHS from "@/routes/paths";
-import "../styles/SimilarProducts.css";
+/**
+ * SimilarProducts.jsx — Phase 2A
+ *
+ * What changed:
+ *   Replaced the manual useState + useEffect + getProductsByCategory call
+ *   with useProductsByCategoryQuery from TanStack Query.
+ *
+ *   This means:
+ *     - If the user is on a product detail page and the category has already
+ *       been loaded (e.g. from ProductsPage browsing), SimilarProducts gets
+ *       its data from cache instantly — zero network request.
+ *     - The shared cache key ['products', 'list', 'category', category] is
+ *       exactly the same key used by ProductsPage for category filtering.
+ *
+ * What stayed the same:
+ *   All JSX, CSS, skeleton loader, card rendering, navigation, discount
+ *   badge, and the "View All" button are completely unchanged.
+ */
+import { useNavigate } from 'react-router-dom';
+import { useProductsByCategoryQuery } from '@/hooks/useQueryProducts';
+import PATHS from '@/routes/paths';
+import '../styles/SimilarProducts.css';
 
 const SimilarProducts = ({ category, currentProductId }) => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!category) return;
-    setLoading(true);
-    getProductsByCategory(category)
-      .then((data) => {
-        const filtered = data.filter((p) => p.id !== currentProductId);
-        setProducts(filtered.slice(0, 12));
-      })
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
-  }, [category, currentProductId]);
+  const { data: allInCategory = [], isLoading: loading } =
+    useProductsByCategoryQuery(category);
+
+  // Filter out the current product and cap at 12 items
+  const products = allInCategory
+    .filter((p) => p.id !== currentProductId)
+    .slice(0, 12);
 
   if (!loading && products.length === 0) return null;
 
   const formatPrice = (p) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    new Intl.NumberFormat('en-IN', {
+      style:                 'currency',
+      currency:              'INR',
       maximumFractionDigits: 0,
     }).format(p);
 
-  const discount = (original, current) =>
+  const discountPct = (original, current) =>
     original > current ? Math.round(((original - current) / original) * 100) : null;
 
   return (
@@ -53,14 +64,14 @@ const SimilarProducts = ({ category, currentProductId }) => {
               <div key={i} className="sim-card sim-card--skeleton">
                 <div className="sim-card__img skeleton" style={{ height: 160 }} />
                 <div className="sim-card__body">
-                  <div className="skeleton" style={{ height: 13, width: "85%", borderRadius: 4, marginBottom: 6 }} />
-                  <div className="skeleton" style={{ height: 13, width: "50%", borderRadius: 4, marginBottom: 6 }} />
-                  <div className="skeleton" style={{ height: 13, width: "60%", borderRadius: 4 }} />
+                  <div className="skeleton" style={{ height: 13, width: '85%', borderRadius: 4, marginBottom: 6 }} />
+                  <div className="skeleton" style={{ height: 13, width: '50%', borderRadius: 4, marginBottom: 6 }} />
+                  <div className="skeleton" style={{ height: 13, width: '60%', borderRadius: 4 }} />
                 </div>
               </div>
             ))
           : products.map((p) => {
-              const off = discount(p.originalPrice, p.price);
+              const off = discountPct(p.originalPrice, p.price);
               return (
                 <button
                   key={p.id}
@@ -73,7 +84,7 @@ const SimilarProducts = ({ category, currentProductId }) => {
                     <img
                       src={
                         p.imageUrl ||
-                        "https://via.placeholder.com/200x200?text=No+Image"
+                        'https://via.placeholder.com/200x200?text=No+Image'
                       }
                       alt={p.name}
                       className="sim-card__img"

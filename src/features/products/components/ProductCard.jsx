@@ -1,4 +1,24 @@
-import { memo } from 'react';
+/**
+ * ProductCard.jsx — Phase 2A
+ *
+ * What changed:
+ *   Added product detail prefetching on:
+ *     - Desktop: onMouseEnter (fires when the user hovers the card)
+ *     - Mobile:  IntersectionObserver (fires when the card enters the viewport)
+ *
+ *   The observer is created once per card mount and cleaned up on unmount.
+ *   It disconnects after the first intersection so it never fires twice.
+ *
+ *   Both paths call the same `prefetch(id)` callback returned by
+ *   usePrefetchProductDetail(). That function honours staleTime — if
+ *   the product detail is already in cache and still fresh, no network
+ *   request is made.
+ *
+ * What stayed the same:
+ *   All existing JSX, styles, cart logic, discount badge, rating badge,
+ *   compact/standard variants, and keyboard navigation are unchanged.
+ */
+import { memo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import PATHS, { buildPath } from '@/routes/paths';
@@ -6,12 +26,48 @@ import { useCartStore } from '@/store';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/currency';
 import RatingBadge from '@/components/common/RatingBadge';
+import { usePrefetchProductDetail } from '@/hooks/useQueryProducts';
 
 const ProductCard = memo(({ product, compact = false }) => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const navigate  = useNavigate();
+  const { user }  = useAuth();
   const [added, setAdded] = useState(false);
   const [busy, setBusy]   = useState(false);
+  const cardRef           = useRef(null);
+  const prefetch          = usePrefetchProductDetail();
+
+  // ── Mobile prefetch via IntersectionObserver ──────────────────────────────
+  // On touch devices `onMouseEnter` never fires, so we use an observer
+  // to prefetch when the card scrolls into the viewport.
+  //
+  // Strategy:
+  //   threshold: 0.5 → card must be at least 50 % visible before we prefetch.
+  //   disconnect() after first intersection → fire once, never again.
+  //   The browser/TQ staleTime guard prevents duplicate network requests.
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+
+    // Only use IntersectionObserver on touch/mobile devices.
+    // Desktop gets the faster onMouseEnter path instead.
+    const isTouchDevice = window.matchMedia('(hover: none)').matches;
+    if (!isTouchDevice) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          prefetch(product.id);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  // product.id and prefetch are both stable — prefetch is a stable callback
+  // from useQueryClient which never changes identity.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
@@ -31,16 +87,21 @@ const ProductCard = memo(({ product, compact = false }) => {
       ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
       : null;
 
+  const goToDetail = () => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
+
   /* ─── COMPACT variant ─── */
   if (compact) {
     return (
       <div
+        ref={cardRef}
         className="group flex cursor-pointer flex-col items-center rounded-sm border p-3 hover:shadow-md transition"
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
-        onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+        onClick={goToDetail}
+        // Desktop: prefetch on hover
+        onMouseEnter={() => prefetch(product.id)}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+        onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
       >
         <div
           className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
@@ -96,12 +157,15 @@ const ProductCard = memo(({ product, compact = false }) => {
   /* ─── STANDARD grid card ─── */
   return (
     <div
+      ref={cardRef}
       className="group flex cursor-pointer flex-col rounded-sm border shadow-sm transition hover:shadow-md"
       style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
-      onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+      onClick={goToDetail}
+      // Desktop: prefetch on hover
+      onMouseEnter={() => prefetch(product.id)}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+      onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
     >
       <div
         className="relative flex w-full items-center justify-center overflow-hidden"

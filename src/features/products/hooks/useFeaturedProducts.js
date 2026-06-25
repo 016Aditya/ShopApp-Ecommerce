@@ -1,40 +1,26 @@
-import { useState, useEffect } from "react";
-import { getFeaturedProducts } from "@/services/productService";
-
 /**
- * useFeaturedProducts
+ * useFeaturedProducts.js — Phase 2A
  *
- * Fetches products where featured === true from the backend.
- * The backend is the single source of truth for which products are featured.
+ * What changed:
+ *   The useState + useEffect + cancelled-flag pattern has been replaced
+ *   with a TanStack Query hook (useFeaturedProductsQuery).
+ *
+ * What stayed the same (public API contract):
+ *   Still returns { products, loading, error }.
+ *   All callers (Home.jsx, FeaturedProducts components, etc.) work without
+ *   any changes.
+ *
+ * Cache benefit:
+ *   If the user navigates Home → Products → Home, the featured products
+ *   are served from cache on the second Home visit. No extra network request.
  */
+import { useFeaturedProductsQuery } from '@/hooks/useQueryProducts';
+
 export const useFeaturedProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const featured = await getFeaturedProducts();
-        if (!cancelled) {
-          setProducts(Array.isArray(featured) ? featured : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.response?.data?.message || "Failed to load featured products");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    load();
-    return () => { cancelled = true; };
-  }, []);
-
-  return { products, loading, error };
+  const { data, isLoading, isError, error } = useFeaturedProductsQuery();
+  return {
+    products: Array.isArray(data) ? data : [],
+    loading:  isLoading,
+    error:    isError ? (error?.message ?? 'Failed to load featured products') : null,
+  };
 };
