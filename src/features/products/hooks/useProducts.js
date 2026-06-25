@@ -3,13 +3,6 @@
  *
  * Wraps TanStack Query hooks and exposes the same public API that
  * ProductsPage.jsx and ProductDetailPage.jsx have always consumed.
- *
- * Key invariant for useProduct(id):
- *   We must NEVER render product data from a previous route param.
- *   TanStack Query can return cached data for a different product ID
- *   on the very first render after a key= remount (cache hit for a
- *   previously visited / prefetched product). The explicit id-match
- *   guard below is the only airtight way to prevent that.
  */
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -62,26 +55,10 @@ export const useProducts = () => {
 
 // ── Single product detail ────────────────────────────────────────────────────────────────────
 export const useProduct = (id) => {
-  const numericId = Number(id);
-  const { data, isLoading, isPending, isError, error } = useProductDetailQuery(id);
-
-  // • TQ may return cached data from a *different* product on the first
-  //   render after a route change (e.g. a previously visited / prefetched
-  //   product that shares nothing with the current id).
-  // • We only expose data to the component once it is confirmed to belong
-  //   to the current route id.
-  // • This guard fires only in the brief window between mount and the
-  //   cache lookup settling. Once data.id === numericId, it stays that way.
-  const isCorrectData = data != null && data.id === numericId;
-
+  const { data, isLoading, isError, error } = useProductDetailQuery(id);
   return {
-    product: isCorrectData ? data : null,
-    // Show skeleton when:
-    //   1. TQ itself is loading (no cache entry for this id), OR
-    //   2. Cache returned data but it belongs to a different product.
-    loading: isLoading || !isCorrectData,
-    error:   isCorrectData && isError
-      ? (error?.message ?? 'Product not found')
-      : null,
+    product: data ?? null,
+    loading: isLoading,
+    error:   isError ? (error?.message ?? 'Product not found') : null,
   };
 };
