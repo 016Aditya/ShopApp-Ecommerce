@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PATHS from "@/routes/paths";
-import { useCartStore, useWishlistStore } from "@/store";
+import { useWishlistStore } from "@/store";
+import { useCartQuery } from "@/features/cart/hooks/useCart";
 import useAuth from "@/features/auth/hooks/useAuth";
 import ThemeToggle from "@/components/common/ThemeToggle";
 
@@ -28,9 +29,16 @@ const NAV_LINKS = [
 ];
 
 function Navbar() {
-  const cartItems     = useCartStore((s) => s.items);
+  // ── Cart count — source from TanStack Query (server state) ──────────────────
+  // cartStore no longer holds items[] (stripped to UI flags only).
+  // useCartQuery returns { data: { items, cartTotal } | undefined }.
+  // Fall back to [] so .reduce() is always called on an array, never undefined.
+  const { data: cartData } = useCartQuery();
+  const cartItems  = cartData?.items ?? [];
+  const totalItems = cartItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
+
+  // ── Wishlist count — still in Zustand (client-side persist) ──────────────
   const wishlistItems = useWishlistStore((s) => s.items);
-  const totalItems    = cartItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
   const wishlistCount = wishlistItems.length;
 
   const { user, logout } = useAuth();
@@ -46,8 +54,11 @@ function Navbar() {
   };
 
   const handleLogout = () => {
+    // authStore.logout() clears user + token from Zustand + localStorage.
+    // The Axios interceptor already cleared auth-storage on 401 if that was
+    // the trigger. Either way, cart data is invalidated automatically because
+    // useCartQuery is disabled when user is null (enabled: !!userId).
     logout();
-    useCartStore.getState().initializeCart(null);
     navigate(PATHS.LOGIN);
   };
 
@@ -64,12 +75,6 @@ function Navbar() {
                            Row 2 → Search bar (full width)
       ═══════════════════════════════════════════════════════════════════ */}
       <div style={{ backgroundColor: "var(--navbar-bg)" }}>
-        {/*
-          navbar-primary-inner:
-            desktop: flex-nowrap items-center  (unchanged)
-            mobile:  flex-wrap gap-y-2 py-2    (rows wrap naturally)
-          See mobile.css for the @media rule.
-        */}
         <div
           className="navbar-primary-inner container-app flex items-center gap-3"
           style={{ minHeight: "52px" }}
@@ -88,8 +93,7 @@ function Navbar() {
             <span className="text-[9px] text-slate-300 leading-none">.in</span>
           </Link>
 
-          {/* ── Search — desktop: flex-1 in the same row
-                         mobile:  full-width row 2 via .navbar-search CSS ── */}
+          {/* ── Search ── */}
           <form onSubmit={handleSearch} className="navbar-search flex flex-1">
             <div
               className="flex w-full overflow-hidden rounded-sm"
@@ -127,11 +131,10 @@ function Navbar() {
             </div>
           </form>
 
-          {/* ── Account — desktop: full block with dropdown
-                          mobile:  compact Hello + Account pill (no dropdown, tap → profile) ── */}
+          {/* ── Account ── */}
           {user ? (
             <>
-              {/* Desktop account block — hidden on mobile */}
+              {/* Desktop account block */}
               <div className="group relative hidden md:flex flex-shrink-0 cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
                 <span className="text-[10px] text-slate-300" style={{ lineHeight: 1.4 }}>Hello, {displayName}</span>
                 <span className="text-sm font-bold text-white" style={{ lineHeight: 1.4 }}>Account</span>
@@ -152,7 +155,7 @@ function Navbar() {
                 </div>
               </div>
 
-              {/* Mobile account pill — visible only on mobile, sits in right-side icon group */}
+              {/* Mobile account pill */}
               <Link
                 to={PATHS.PROFILE}
                 className="flex-shrink-0 flex flex-col items-end rounded border border-transparent px-1 py-0.5 hover:border-white transition md:hidden"
@@ -176,7 +179,7 @@ function Navbar() {
             </Link>
           )}
 
-          {/* ── Orders — desktop only (hidden on mobile to save space) ── */}
+          {/* ── Orders — desktop only ── */}
           <Link
             to={PATHS.ORDERS}
             className="hidden md:flex flex-shrink-0 flex-col rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -185,7 +188,7 @@ function Navbar() {
             <span className="text-sm font-bold text-white" style={{ lineHeight: 1.4 }}>&amp; Orders</span>
           </Link>
 
-          {/* ── Wishlist icon — label hidden on mobile to save width ── */}
+          {/* ── Wishlist icon ── */}
           <Link
             to={PATHS.WISHLIST}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -201,11 +204,10 @@ function Navbar() {
                 </span>
               )}
             </div>
-            {/* Label: desktop only */}
             <span className="mb-1 hidden text-sm font-bold text-white md:inline">Wishlist</span>
           </Link>
 
-          {/* ── Cart icon — label hidden on mobile ── */}
+          {/* ── Cart icon ── */}
           <Link
             to={PATHS.CART}
             className="flex-shrink-0 relative flex items-end gap-1 rounded border border-transparent px-2 py-1 hover:border-white transition"
@@ -221,7 +223,6 @@ function Navbar() {
                 </span>
               )}
             </div>
-            {/* Label: desktop only */}
             <span className="mb-1 hidden text-sm font-bold text-white md:inline">Cart</span>
           </Link>
 
@@ -229,7 +230,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* ── Category bar — swipeable on mobile, same on desktop ─────────── */}
+      {/* ── Category bar ────────────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
         <div
           className="navbar-category-bar container-app"
