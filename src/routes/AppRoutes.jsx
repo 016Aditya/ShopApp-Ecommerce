@@ -9,26 +9,20 @@ import PageWrapper from "@/components/layout/PageWrapper";
 import PageLoader from "@/components/skeleton/PageLoader";
 
 // ─── Eagerly loaded ──────────────────────────────────────────────────
-// HomePage is the most-visited page and must be in the critical bundle.
 import HomePage from "@/features/home/pages/HomePage";
 
 // ─── Lazily loaded ──────────────────────────────────────────────────
-// Everything else is split into async chunks.
-
-// Auth
 const Login          = lazy(() => import("@/features/auth/pages/Login"));
 const Register       = lazy(() => import("@/features/auth/pages/Register"));
 const OAuth2Success  = lazy(() => import("@/features/auth/pages/OAuth2Success"));
 const ForgotPassword = lazy(() => import("@/features/auth/pages/ForgotPassword"));
 const ResetPassword  = lazy(() => import("@/features/auth/pages/ResetPassword"));
 
-// Public product pages
 const ProductsPage        = lazy(() => import("@/features/products/pages/ProductsPage"));
 const ProductDetailPage   = lazy(() => import("@/features/products/pages/ProductDetailPage"));
 const CustomerServicePage = lazy(() => import("@/features/customerService/pages/CustomerServicePage"));
 const WishlistPage        = lazy(() => import("@/features/wishlist/pages/WishlistPage"));
 
-// Protected pages
 const CartPage           = lazy(() => import("@/features/cart/pages/CartPage"));
 const CheckoutPage       = lazy(() => import("@/features/orders/pages/CheckoutPage"));
 const OrdersPage         = lazy(() => import("@/features/orders/pages/OrdersPage"));
@@ -37,27 +31,19 @@ const OrderSuccessPage   = lazy(() => import("@/features/orders/pages/OrderSucce
 const ProfilePage        = lazy(() => import("@/features/profile/pages/ProfilePage"));
 const SavedAddressesPage = lazy(() => import("@/features/profile/pages/SavedAddressesPage"));
 
-// Errors
 const NotFound = lazy(() => import("@/errors/NotFound"));
 
 /**
  * ProductDetailRoute
  *
- * Thin wrapper that reads the :id param and passes it as `key` to
- * ProductDetailPage. React uses `key` as a component identity signal:
- * when the key changes, the old instance is unmounted and a fresh one
- * is mounted. This guarantees:
+ * Reads :id and passes it as the React `key` to ProductDetailPage.
+ * When the key changes React unmounts the old instance and mounts a
+ * fresh one — guaranteeing the correct TanStack Query fires for every
+ * new product ID and no stale data from a previous product is shown.
  *
- *  1. The correct TanStack Query fires immediately for the new product ID.
- *  2. No stale product data from Product A is ever shown while Product B
- *     is loading.
- *  3. All local useState (toast, addingToCart, etc.) resets cleanly.
- *  4. Browser Back/Forward shows the correct product because each history
- *     entry maps to a distinct component instance.
- *
- * The Suspense boundary stays OUTSIDE so React does not need to
- * re-download the chunk on every navigation — only the component
- * instance is replaced, not the lazy module.
+ * The Suspense boundary lives OUTSIDE so the lazy chunk is not
+ * re-downloaded on every navigation; only the component instance
+ * is replaced.
  */
 const ProductDetailRoute = () => {
   const { id } = useParams();
@@ -76,15 +62,8 @@ const AppRoutes = () => (
       }
     />
 
-    {/* All other routes share the PageWrapper (Navbar + Footer) */}
+    {/* All other routes share PageWrapper (Navbar + Footer via Outlet) */}
     <Route element={<PageWrapper />}>
-      <Route
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <Routes />
-          </Suspense>
-        }
-      />
 
       {/* Public-only routes (blocked when already logged in) */}
       <Route element={<PublicRoute />}>
