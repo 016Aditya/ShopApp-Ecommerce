@@ -1,198 +1,81 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import {
-  getCart,
-  addItemToCart,
-  updateCartItem,
-  removeItemFromCart,
-  clearCart,
-} from '@/services/cartService';
 
-// ── Cart item shape (enriched) ──────────────────────────────────────────────
-// Backend CartItem only stores: { productId, quantity, unitPrice }
-// We enrich at add-time by snapshotting the product object so the
-// cart UI can display name / image / brand / category without extra API calls.
-//
-// Stored shape:
-//   { productId, quantity, unitPrice, productName, imageUrl, brand, category }
+/**
+ * cartStore — Zustand (UI flags only, NO async API calls)
+ *
+ * Ownership boundary after refactor:
+ *   Zustand  →  ephemeral client-side UI state (drawer open/close, optimistic
+ *               item snapshots for instant feedback before the server responds)
+ *   TanStack →  ALL cart server-state: fetching, mutations, cache invalidation
+ *
+ * Why this split?
+ *   The old cartStore mixed async API calls with UI state. On a 401 response
+ *   the Axios interceptor cleared localStorage and redirected to /login, but
+ *   cartStore's own catch blocks tried to set error state on the now-unmounted
+ *   tree, triggering re-renders that fired more requests → infinite loop.
+ *
+ *   By removing all network logic from Zustand, the 401 path is now handled
+ *   exclusively by the Axios interceptor (api.js) and the useCart TanStack
+ *   Query hooks (which call authStore.logout() on 401). Zustand never touches
+ *   the network and therefore never races the interceptor.
+ */
+export const useCartStore = create((set, get) => ({
+  // ── UI flags ────────────────────────────────────────────────────────────
 
-const enrichItem = (apiItem, productSnapshot) => ({
-  productId:   apiItem.productId,
-  quantity:    apiItem.quantity,
-  unitPrice:   apiItem.unitPrice ?? productSnapshot?.unitPrice ?? productSnapshot?.price ?? 0,
-  // productSnapshot from persistence uses 'productName'; from product object uses 'name'
-  productName: productSnapshot?.name ?? productSnapshot?.productName ?? apiItem.productName ?? '',
-  imageUrl:    productSnapshot?.imageUrl   ?? apiItem.imageUrl    ?? '',
-  brand:       productSnapshot?.brand      ?? apiItem.brand       ?? '',
-  category:    productSnapshot?.category   ?? apiItem.category    ?? '',
-});
+  /** Whether the slide-out cart drawer is open. */
+  isCartOpen: false,
 
-// Merge raw API items with any previously enriched data already in the store
-const mergeItems = (apiItems = [], existingItems = []) =>
-  apiItems.map((apiItem) => {
-    const existing = existingItems.find((e) => e.productId === apiItem.productId);
-    return enrichItem(apiItem, existing);
-  });
+  openCart:  () => set({ isCartOpen: true }),
+  closeCart: () => set({ isCartOpen: false }),
+  toggleCart: () => set((s) => ({ isCartOpen: !s.isCartOpen })),
 
-export const useCartStore = create(
-  persist(
-    (set, get) => ({
-      items: [],
-      cartTotal: 0,
-      loading: false,
-      error: null,
-      userId: null,
+  // ── Optimistic snapshot ─────────────────────────────────────────────────
+  // A lightweight local copy of items written immediately when the user
+  // clicks "Add to Cart" so the UI responds instantly while the mutation
+  // is in-flight. Cleared once TanStack Query's onSettled fires.
+  //
+  // Shape: [{ productId, quantity, unitPrice, productName, imageUrl }]
+  optimisticItems: [],
 
-      // ── Initialize cart from API ──────────────────────────────────────
-      initializeCart: async (userId) => {
-        if (!userId) {
-          set({ userId: null, items: [], cartTotal: 0 });
-          return;
-        }
-
-        // Guard: skip fetch if already loaded for this user
-        const { userId: currentUserId, items, loading } = get();
-        if (currentUserId === userId && items.length > 0) return;
-        if (loading) return;
-
-        set({ userId, loading: true, error: null });
-        try {
-          const data = await getCart(userId);
-          const existing = get().items;
-          set({
-            items: mergeItems(data.items || [], existing),
-            cartTotal: data.cartTotal || 0,
-            loading: false,
-          });
-        } catch (err) {
-          set({
-            error: err.response?.data?.message || 'Failed to load cart',
-            loading: false,
-          });
-        }
-      },
-
-      // ── Add item to cart ──────────────────────────────────────────────
-      // Accepts full product object so we can snapshot display data.
-      // product: { id, name, imageUrl, brand, category, price, ... }
-      addToCart: async (product, quantity = 1) => {
-        const { userId } = get();
-        if (!userId) return;
-
-        const productId = typeof product === 'string' ? product : product.id;
-        const snapshot  = typeof product === 'string' ? null : product;
-
-        set({ loading: true, error: null });
-        try {
-          const data = await addItemToCart(userId, productId, quantity);
-          const existing = get().items;
-          const merged = mergeItems(data.items || [], [
-            ...existing,
-            // inject snapshot for the newly added item
-            { productId, ...snapshot },
-          ]);
-          set({
-            items: merged,
-            cartTotal: data.cartTotal || 0,
-            loading: false,
-          });
-        } catch (err) {
-          set({
-            error: err.response?.data?.message || 'Failed to add item',
-            loading: false,
-          });
-        }
-      },
-
-      // ── Update item quantity ──────────────────────────────────────────
-      updateQuantity: async (productId, quantity) => {
-        const { userId } = get();
-        if (!userId) return;
-        set({ loading: true, error: null });
-        try {
-          const data = await updateCartItem(userId, productId, quantity);
-          const existing = get().items;
-          set({
-            items: mergeItems(data.items || [], existing),
-            cartTotal: data.cartTotal || 0,
-            loading: false,
-          });
-        } catch (err) {
-          set({
-            error: err.response?.data?.message || 'Failed to update item',
-            loading: false,
-          });
-        }
-      },
-
-      // ── Remove item from cart ─────────────────────────────────────────
-      removeFromCart: async (productId) => {
-        const { userId } = get();
-        if (!userId) return;
-        set({ loading: true, error: null });
-        try {
-          const data = await removeItemFromCart(userId, productId);
-          const existing = get().items;
-          set({
-            items: mergeItems(data.items || [], existing),
-            cartTotal: data.cartTotal || 0,
-            loading: false,
-          });
-        } catch (err) {
-          set({
-            error: err.response?.data?.message || 'Failed to remove item',
-            loading: false,
-          });
-        }
-      },
-
-      // ── Clear entire cart ─────────────────────────────────────────────
-      clearCart: async () => {
-        const { userId } = get();
-        if (!userId) return;
-        set({ loading: true, error: null });
-        try {
-          await clearCart(userId);
-          set({ items: [], cartTotal: 0, loading: false });
-        } catch (err) {
-          set({
-            error: err.response?.data?.message || 'Failed to clear cart',
-            loading: false,
-          });
-        }
-      },
-
-      // ── Force refresh ─────────────────────────────────────────────────
-      refreshCart: async () => {
-        const { userId } = get();
-        if (!userId) return;
-        set({ loading: true, error: null });
-        try {
-          const data = await getCart(userId);
-          const existing = get().items;
-          set({
-            items: mergeItems(data.items || [], existing),
-            cartTotal: data.cartTotal || 0,
-            loading: false,
-          });
-        } catch (err) {
-          set({
-            error: err.response?.data?.message || 'Failed to refresh cart',
-            loading: false,
-          });
-        }
-      },
-
-      // ── Reset error ───────────────────────────────────────────────────
-      clearError: () => set({ error: null }),
-    }),
-    {
-      name: 'cart-store',
-      partialize: (state) => ({
-        items: state.items,       // enriched items persisted
-        cartTotal: state.cartTotal,
-        userId: state.userId,
-      }),
+  /**
+   * Add or increment an item in the optimistic snapshot.
+   * Called by useAddToCart mutation before the network request fires.
+   */
+  addOptimistic: (product, quantity = 1) => {
+    const { optimisticItems } = get();
+    const existing = optimisticItems.find((i) => i.productId === product.id);
+    if (existing) {
+      set({
+        optimisticItems: optimisticItems.map((i) =>
+          i.productId === product.id
+            ? { ...i, quantity: i.quantity + quantity }
+            : i
+        ),
+      });
+    } else {
+      set({
+        optimisticItems: [
+          ...optimisticItems,
+          {
+            productId:   product.id,
+            quantity,
+            unitPrice:   product.price ?? product.unitPrice ?? 0,
+            productName: product.name  ?? product.productName ?? '',
+            imageUrl:    product.imageUrl ?? '',
+            brand:       product.brand ?? '',
+            category:    product.category ?? '',
+          },
+        ],
+      });
     }
-  )
-);
+  },
+
+  /** Remove one item from the optimistic snapshot (e.g. on remove mutation). */
+  removeOptimistic: (productId) =>
+    set((s) => ({
+      optimisticItems: s.optimisticItems.filter((i) => i.productId !== productId),
+    })),
+
+  /** Clear the entire optimistic snapshot — call this from onSettled. */
+  clearOptimistic: () => set({ optimisticItems: [] }),
+}));

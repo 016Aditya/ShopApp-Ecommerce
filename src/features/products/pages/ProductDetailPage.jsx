@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProduct } from "../hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
-import { useCartStore } from "@/store";
+import { useAddToCart } from "@/features/cart/hooks/useCart";
 import ProductImageGallery from "../components/ProductImageGallery";
 import ProductInfo from "../components/ProductInfo";
 import PurchaseCard from "../components/PurchaseCard";
@@ -17,13 +17,16 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
 
   // Snap viewport to top on every product navigation.
-  // React Router preserves scroll position across client-side navigations.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
   const { product, loading, error } = useProduct(id);
   const { user } = useAuth();
+
+  // TanStack Query mutation — replaces useCartStore.getState().addToCart()
+  const addToCartMutation = useAddToCart();
+
   const [toast, setToast]               = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [buyingNow, setBuyingNow]       = useState(false);
@@ -37,7 +40,7 @@ const ProductDetailPage = () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
     setAddingToCart(true);
     try {
-      await useCartStore.getState().addToCart(product, 1);
+      await addToCartMutation.mutateAsync({ product, quantity: 1 });
       showToast("Added to cart! 🛒");
     } catch {
       showToast("Failed to add to cart.", "error");
@@ -50,7 +53,7 @@ const ProductDetailPage = () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
     setBuyingNow(true);
     try {
-      await useCartStore.getState().addToCart(product, 1);
+      await addToCartMutation.mutateAsync({ product, quantity: 1 });
       navigate(PATHS.CART);
     } catch {
       showToast("Failed. Please try again.", "error");
@@ -60,15 +63,7 @@ const ProductDetailPage = () => {
   };
 
   // ── ID mismatch guard ──────────────────────────────────────────────────────
-  // Last line of defence against stale cache race conditions.
-  //
-  // If TanStack Query returns a cached product whose id does not match the
-  // current URL param (possible during a concurrent-mode render interruption
-  // or a StrictMode double-invoke where the query key briefly lags the route),
-  // we refuse to render the wrong product and show the skeleton instead.
-  //
-  // product.id from the API is a number; id from useParams() is a string.
-  // String(product.id) normalises both sides for a safe comparison.
+  // Guards against stale cache race conditions during concurrent-mode renders.
   const idMismatch = product && String(product.id) !== String(id);
 
   if (loading || idMismatch) return <ProductDetailSkeleton />;
