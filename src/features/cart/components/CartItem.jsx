@@ -1,36 +1,51 @@
-import useCart from "../hooks/useCart";
+import { useUpdateCartItem, useRemoveFromCart } from "../hooks/useCart";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { formatCurrency } from "@/utils/currency";
 
+/**
+ * CartItem — uses named TanStack Query hooks directly.
+ *
+ * Using the granular hooks (instead of the useCart facade) gives each
+ * CartItem its own independent isPending state, so the +/− buttons
+ * on one row disable only that row while its mutation is in-flight,
+ * not the entire cart.
+ */
 const CartItem = ({ item }) => {
-  const { updateItem, removeItem } = useCart();
-  const addToWishlist = useWishlistStore((s) => s.addToWishlist);
+  const updateMutation = useUpdateCartItem();
+  const removeMutation = useRemoveFromCart();
+  const addToWishlist  = useWishlistStore((s) => s.addToWishlist);
 
-  // Backend CartItem shape: { productId, quantity, unitPrice }
-  // Enriched shape (from cartStore): adds productName, imageUrl, brand, category
   const {
     productId,
     productName,
     brand,
     category,
-    unitPrice,   // ← correct backend field (was wrongly mapped to 'price')
+    unitPrice,
     quantity,
-    imageUrl,    // ← correct field (was 'image')
+    imageUrl,
   } = item;
 
   const price    = unitPrice ?? 0;
   const subtotal = price * (quantity ?? 1);
 
+  const isUpdating = updateMutation.isPending;
+  const isRemoving = removeMutation.isPending;
+  const isBusy     = isUpdating || isRemoving;
+
+  const handleUpdateQty = (newQty) => {
+    if (newQty < 1 || isBusy) return;
+    updateMutation.mutate({ productId, quantity: newQty });
+  };
+
+  const handleRemove = () => {
+    if (isBusy) return;
+    removeMutation.mutate({ productId });
+  };
+
   const handleSaveForLater = () => {
-    addToWishlist({
-      productId,
-      productName,
-      imageUrl,
-      brand,
-      category,
-      unitPrice: price,
-    });
-    removeItem(productId);
+    if (isBusy) return;
+    addToWishlist({ productId, productName, imageUrl, brand, category, unitPrice: price });
+    removeMutation.mutate({ productId });
   };
 
   return (
@@ -56,7 +71,6 @@ const CartItem = ({ item }) => {
       {/* Product Details */}
       <div className="flex flex-1 flex-col justify-between">
         <div className="flex-1">
-          {/* Brand and Category */}
           <div className="flex gap-2 mb-1">
             {brand && (
               <span className="inline-block text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded">
@@ -70,12 +84,10 @@ const CartItem = ({ item }) => {
             )}
           </div>
 
-          {/* Product Name — never show raw ID */}
           <h3 className="text-base font-semibold text-gray-900 leading-tight mb-2 line-clamp-2">
             {productName || 'Loading product...'}
           </h3>
 
-          {/* Price */}
           <p className="text-lg font-bold text-gray-900 mb-3">
             {formatCurrency(price)}
             <span className="text-xs font-normal text-gray-600 ml-2">per item</span>
@@ -86,22 +98,23 @@ const CartItem = ({ item }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center border border-gray-300 rounded-lg">
             <button
-              onClick={() => updateItem(productId, Math.max(1, quantity - 1))}
-              disabled={quantity <= 1}
+              onClick={() => handleUpdateQty(quantity - 1)}
+              disabled={quantity <= 1 || isBusy}
               className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
               aria-label="Decrease quantity"
             >
-              −
+              {isUpdating ? '…' : '−'}
             </button>
             <span className="px-4 py-2 font-semibold text-gray-900 min-w-[40px] text-center">
               {quantity}
             </span>
             <button
-              onClick={() => updateItem(productId, quantity + 1)}
-              className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition"
+              onClick={() => handleUpdateQty(quantity + 1)}
+              disabled={isBusy}
+              className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
               aria-label="Increase quantity"
             >
-              +
+              {isUpdating ? '…' : '+'}
             </button>
           </div>
 
@@ -115,15 +128,17 @@ const CartItem = ({ item }) => {
         <div className="mt-3 flex gap-3">
           <button
             onClick={handleSaveForLater}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium transition"
+            disabled={isBusy}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium transition disabled:opacity-50"
           >
             Save for Later
           </button>
           <button
-            onClick={() => removeItem(productId)}
-            className="text-sm text-red-600 hover:text-red-700 font-medium transition"
+            onClick={handleRemove}
+            disabled={isBusy}
+            className="text-sm text-red-600 hover:text-red-700 font-medium transition disabled:opacity-50"
           >
-            Remove
+            {isRemoving ? 'Removing…' : 'Remove'}
           </button>
         </div>
       </div>
