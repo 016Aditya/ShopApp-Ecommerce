@@ -16,19 +16,17 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Snap to top on every product navigation.
-  // React Router preserves scroll depth across client-side navigations —
-  // without this, clicking a Similar Product card while scrolled down
-  // would open the new product already scrolled to the reviews section.
+  // Snap viewport to top on every product navigation.
+  // React Router preserves scroll position across client-side navigations.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
   const { product, loading, error } = useProduct(id);
   const { user } = useAuth();
-  const [toast, setToast] = useState(null);
+  const [toast, setToast]               = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [buyingNow, setBuyingNow] = useState(false);
+  const [buyingNow, setBuyingNow]       = useState(false);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -61,7 +59,19 @@ const ProductDetailPage = () => {
     }
   };
 
-  if (loading) return <ProductDetailSkeleton />;
+  // ── ID mismatch guard ──────────────────────────────────────────────────────
+  // Last line of defence against stale cache race conditions.
+  //
+  // If TanStack Query returns a cached product whose id does not match the
+  // current URL param (possible during a concurrent-mode render interruption
+  // or a StrictMode double-invoke where the query key briefly lags the route),
+  // we refuse to render the wrong product and show the skeleton instead.
+  //
+  // product.id from the API is a number; id from useParams() is a string.
+  // String(product.id) normalises both sides for a safe comparison.
+  const idMismatch = product && String(product.id) !== String(id);
+
+  if (loading || idMismatch) return <ProductDetailSkeleton />;
 
   if (error) {
     return (

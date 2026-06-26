@@ -1,5 +1,5 @@
 /**
- * useQueryProducts.js — Phase 2A
+ * useQueryProducts.js
  *
  * All product-related TanStack Query hooks.
  *
@@ -7,8 +7,9 @@
  *  - Never import Axios directly. Always go through productService.
  *  - Each hook exposes only what callers need.
  *  - staleTime overrides:
- *      All / Featured / Detail / Category → 5 min
- *      Search                             → 30 sec
+ *      All / Featured / Category → 5 min
+ *      Detail                    → 5 min, but refetchOnMount: 'always'
+ *      Search                    → 30 sec
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
@@ -24,7 +25,7 @@ import {
 const STALE_PRODUCTS = 5 * 60 * 1000;  // 5 min
 const STALE_SEARCH   = 30 * 1000;       // 30 sec
 
-// ── All Products ─────────────────────────────────────────────────────────────────────────────
+// ── All Products ────────────────────────────────────────────────────────────────────────────────────────
 export function useAllProductsQuery() {
   return useQuery({
     queryKey: queryKeys.products.allProducts(),
@@ -33,7 +34,7 @@ export function useAllProductsQuery() {
   });
 }
 
-// ── Featured Products ───────────────────────────────────────────────────────────────────────────
+// ── Featured Products ────────────────────────────────────────────────────────────────────────────────────
 export function useFeaturedProductsQuery() {
   return useQuery({
     queryKey: queryKeys.products.featured(),
@@ -42,32 +43,48 @@ export function useFeaturedProductsQuery() {
   });
 }
 
-// ── Product Detail ───────────────────────────────────────────────────────────────────────────
+// ── Product Detail ───────────────────────────────────────────────────────────────────────────────────
+/**
+ * useProductDetailQuery
+ *
+ * refetchOnMount: 'always'
+ *
+ * WHY THIS IS NECESSARY:
+ *
+ * ProductCard uses IntersectionObserver (mobile) and onMouseEnter (desktop)
+ * to prefetch every visible product into the TQ cache. With staleTime=5min,
+ * every product in the grid is cached and "fresh" for the entire browsing
+ * session. When ProductDetailPage mounts for a new product id, TQ finds
+ * fresh cached data and returns it immediately with isPending=false.
+ *
+ * This is correct behaviour when the cached data matches the current id.
+ * But if there is any React render timing issue (StrictMode double-invoke,
+ * Suspense boundary mid-transition, concurrent mode interruption) where
+ * the component briefly subscribes to the wrong query key, the wrong
+ * cached product is returned instantly with no loading state to mask it.
+ *
+ * refetchOnMount: 'always' ensures that on every mount, regardless of
+ * staleTime, TQ dispatches a fresh network request for the current id.
+ * The cached data is STILL returned immediately (zero latency to first
+ * render), but a background re-fetch is always in flight. If the initial
+ * render showed the wrong product due to a key race, the fresh response
+ * arrives and corrects it within one network round-trip — typically
+ * 50–300ms, imperceptible to the user.
+ *
+ * This does NOT cause a loading flash or skeleton regression. The
+ * background fetch updates the data in-place once it resolves.
+ */
 export function useProductDetailQuery(id) {
   return useQuery({
-    queryKey: queryKeys.products.detail(id),
-    queryFn:  () => getProductById(id),
-    enabled:  Boolean(id),
-    staleTime: STALE_PRODUCTS,
-    // NO placeholderData here.
-    //
-    // With placeholderData present, TanStack Query v5 sets status='success'
-    // and isLoading=false immediately on mount — even for a brand-new ID
-    // that has never been fetched. This means the component skips the
-    // skeleton and renders whatever stale data the callback returns.
-    //
-    // Without placeholderData:
-    //   - Cold product (not in cache) → isLoading=true → skeleton shown
-    //   - Prefetched product (already in cache as real data) → isLoading=false
-    //     → renders immediately with correct data — no skeleton needed
-    //
-    // Prefetching via usePrefetchProductDetail populates the cache as a
-    // real cache entry, so those products still show instantly with no
-    // loading state. placeholderData is not needed for that use case.
+    queryKey:       queryKeys.products.detail(id),
+    queryFn:        () => getProductById(id),
+    enabled:        Boolean(id),
+    staleTime:      STALE_PRODUCTS,
+    refetchOnMount: 'always',
   });
 }
 
-// ── Products by Category ─────────────────────────────────────────────────────────────────────────
+// ── Products by Category ──────────────────────────────────────────────────────────────────────────────────
 export function useProductsByCategoryQuery(category) {
   const enabled = Boolean(category) && category !== 'All';
   return useQuery({
@@ -78,7 +95,7 @@ export function useProductsByCategoryQuery(category) {
   });
 }
 
-// ── Products by Category + Subcategory ────────────────────────────────────────────────────────────
+// ── Products by Category + Subcategory ───────────────────────────────────────────────────────────────────────
 export function useProductsByCatAndSubQuery(category, subcategory) {
   const enabled = Boolean(category) && Boolean(subcategory);
   return useQuery({
@@ -89,7 +106,7 @@ export function useProductsByCatAndSubQuery(category, subcategory) {
   });
 }
 
-// ── Search ──────────────────────────────────────────────────────────────────────────────────
+// ── Search ──────────────────────────────────────────────────────────────────────────────────────────
 export function useProductSearchQuery(keyword) {
   const normalised = keyword?.trim();
   const enabled    = Boolean(normalised);
@@ -98,14 +115,11 @@ export function useProductSearchQuery(keyword) {
     queryFn:  () => searchProducts(normalised),
     enabled,
     staleTime: STALE_SEARCH,
-    // Search keeps placeholderData so the grid doesn't flash empty
-    // between keystrokes — this is intentional and safe because search
-    // results never leak into a different product's detail page.
     placeholderData: (prev) => prev,
   });
 }
 
-// ── Prefetch helper ───────────────────────────────────────────────────────────────────────────
+// ── Prefetch helper ───────────────────────────────────────────────────────────────────────────────────────
 export function usePrefetchProductDetail() {
   const qc = useQueryClient();
   return function prefetch(id) {

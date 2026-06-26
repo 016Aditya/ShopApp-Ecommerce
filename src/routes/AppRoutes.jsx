@@ -4,14 +4,10 @@ import PATHS from "./paths";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 
-// Layouts — always in the critical bundle (renders on every page)
 import PageWrapper from "@/components/layout/PageWrapper";
 import PageLoader from "@/components/skeleton/PageLoader";
-
-// ─── Eagerly loaded ──────────────────────────────────────────────────
 import HomePage from "@/features/home/pages/HomePage";
 
-// ─── Lazily loaded ──────────────────────────────────────────────────
 const Login          = lazy(() => import("@/features/auth/pages/Login"));
 const Register       = lazy(() => import("@/features/auth/pages/Register"));
 const OAuth2Success  = lazy(() => import("@/features/auth/pages/OAuth2Success"));
@@ -34,20 +30,32 @@ const SavedAddressesPage = lazy(() => import("@/features/profile/pages/SavedAddr
 const NotFound = lazy(() => import("@/errors/NotFound"));
 
 /**
- * ProductDetailRoute
+ * KeyedProductDetail
  *
- * Reads :id and passes it as the React `key` to ProductDetailPage.
- * When the key changes React unmounts the old instance and mounts a
- * fresh one — guaranteeing the correct TanStack Query fires for every
- * new product ID and no stale data from a previous product is shown.
+ * Reads :id once at this stable render level and keys the ENTIRE
+ * Suspense + ProductDetailPage subtree to the product id.
  *
- * The Suspense boundary lives OUTSIDE so the lazy chunk is not
- * re-downloaded on every navigation; only the component instance
- * is replaced.
+ * Why key on the Suspense wrapper (not on ProductDetailPage inside it):
+ *   - React Router v6 + React.StrictMode double-invokes component
+ *     functions. A wrapper component that only calls useParams() and
+ *     returns <Child key={id} /> can double-render with stale params
+ *     during a route transition, causing TanStack Query to briefly
+ *     subscribe to the wrong query key and return cached stale data.
+ *   - Keying the Suspense boundary means React tears down and rebuilds
+ *     the ENTIRE subtree — including the Suspense boundary itself —
+ *     on every id change. There is no in-between render where a child
+ *     can read a mismatched param.
+ *   - The lazy() chunk is already resolved after first load, so keying
+ *     Suspense does NOT re-download the JS bundle. It only resets the
+ *     component instance tree.
  */
-const ProductDetailRoute = () => {
+const KeyedProductDetail = () => {
   const { id } = useParams();
-  return <ProductDetailPage key={id} />;
+  return (
+    <Suspense key={id} fallback={<PageLoader />}>
+      <ProductDetailPage />
+    </Suspense>
+  );
 };
 
 const AppRoutes = () => (
@@ -65,7 +73,7 @@ const AppRoutes = () => (
     {/* All other routes share PageWrapper (Navbar + Footer via Outlet) */}
     <Route element={<PageWrapper />}>
 
-      {/* Public-only routes (blocked when already logged in) */}
+      {/* Public-only routes */}
       <Route element={<PublicRoute />}>
         <Route path={PATHS.LOGIN}           element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
         <Route path={PATHS.REGISTER}        element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
@@ -76,14 +84,7 @@ const AppRoutes = () => (
       {/* Open routes */}
       <Route path={PATHS.HOME}             element={<HomePage />} />
       <Route path={PATHS.PRODUCTS}         element={<Suspense fallback={<PageLoader />}><ProductsPage /></Suspense>} />
-      <Route
-        path={PATHS.PRODUCT_DETAIL}
-        element={
-          <Suspense fallback={<PageLoader />}>
-            <ProductDetailRoute />
-          </Suspense>
-        }
-      />
+      <Route path={PATHS.PRODUCT_DETAIL}   element={<KeyedProductDetail />} />
       <Route path={PATHS.CUSTOMER_SERVICE} element={<Suspense fallback={<PageLoader />}><CustomerServicePage /></Suspense>} />
       <Route path={PATHS.WISHLIST}         element={<Suspense fallback={<PageLoader />}><WishlistPage /></Suspense>} />
 
