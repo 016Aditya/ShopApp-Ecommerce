@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProduct } from "../hooks/useProducts";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +15,15 @@ import "../styles/ProductDetail.css";
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Snap to top on every product navigation.
+  // React Router preserves scroll depth across client-side navigations —
+  // without this, clicking a Similar Product card while scrolled down
+  // would open the new product already scrolled to the reviews section.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
   const { product, loading, error } = useProduct(id);
   const { user } = useAuth();
   const [toast, setToast] = useState(null);
