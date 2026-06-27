@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PATHS from "@/routes/paths";
-import { useWishlistStore } from "@/store";
 import { useCartQuery } from "@/features/cart/hooks/useCart";
+import { useWishlistQuery } from "@/features/wishlist/hooks/useWishlist";
 import useAuth from "@/features/auth/hooks/useAuth";
 import ThemeToggle from "@/components/common/ThemeToggle";
 
@@ -29,16 +29,17 @@ const NAV_LINKS = [
 ];
 
 function Navbar() {
-  // ── Cart count — source from TanStack Query (server state) ──────────────────
-  // cartStore no longer holds items[] (stripped to UI flags only).
-  // useCartQuery returns { data: { items, cartTotal } | undefined }.
-  // Fall back to [] so .reduce() is always called on an array, never undefined.
+  // ── Cart count — TanStack Query (server state) ────────────────────────────
+  // useCartQuery is enabled only when user is logged in (enabled: !!userId).
+  // Falls back to [] so .reduce() is always safe.
   const { data: cartData } = useCartQuery();
   const cartItems  = cartData?.items ?? [];
   const totalItems = cartItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
 
-  // ── Wishlist count — still in Zustand (client-side persist) ──────────────
-  const wishlistItems = useWishlistStore((s) => s.items);
+  // ── Wishlist count — TanStack Query (server state) ────────────────────────
+  // useWishlistQuery is also enabled only when user is logged in.
+  // Falls back to [] — safe when unauthenticated or still loading.
+  const { data: wishlistItems = [] } = useWishlistQuery();
   const wishlistCount = wishlistItems.length;
 
   const { user, logout } = useAuth();
@@ -54,10 +55,6 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    // authStore.logout() clears user + token from Zustand + localStorage.
-    // The Axios interceptor already cleared auth-storage on 401 if that was
-    // the trigger. Either way, cart data is invalidated automatically because
-    // useCartQuery is disabled when user is null (enabled: !!userId).
     logout();
     navigate(PATHS.LOGIN);
   };
@@ -80,7 +77,7 @@ function Navbar() {
           style={{ minHeight: "52px" }}
         >
 
-          {/* ── Logo — always visible, both breakpoints ── */}
+          {/* ── Logo ── */}
           <Link
             to={PATHS.HOME}
             className="navbar-logo flex-shrink-0 flex flex-col items-center rounded border border-transparent px-1 py-0.5 hover:border-white hover:opacity-90 transition"
@@ -134,7 +131,7 @@ function Navbar() {
           {/* ── Account ── */}
           {user ? (
             <>
-              {/* Desktop account block */}
+              {/* Desktop account dropdown */}
               <div className="group relative hidden md:flex flex-shrink-0 cursor-pointer flex-col rounded border border-transparent px-2 py-1 hover:border-white transition">
                 <span className="text-[10px] text-slate-300" style={{ lineHeight: 1.4 }}>Hello, {displayName}</span>
                 <span className="text-sm font-bold text-white" style={{ lineHeight: 1.4 }}>Account</span>
@@ -230,7 +227,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* ── Category bar ────────────────────────────────────────────────────────────── */}
+      {/* ── Category bar ─────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
         <div
           className="navbar-category-bar container-app"
