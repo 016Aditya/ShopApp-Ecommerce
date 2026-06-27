@@ -1,38 +1,24 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-// Wishlist item shape mirrors enriched cart item:
-// { productId, productName, imageUrl, brand, category, unitPrice }
+/**
+ * wishlistStore — Zustand (UI flags only, NO server state)
+ *
+ * Ownership boundary after TanStack migration:
+ *   Zustand  →  ephemeral client-side UI state (drawer open/close)
+ *   TanStack →  ALL wishlist server-state: fetching, mutations, cache
+ *
+ * Server state (items, add, remove) lives in:
+ *   src/features/wishlist/hooks/useWishlist.js
+ *
+ * This mirrors the same pattern as cartStore after its refactor.
+ */
+export const useWishlistStore = create((set) => ({
+  // ── UI flags ────────────────────────────────────────────────────────────
 
-export const useWishlistStore = create(
-  persist(
-    (set, get) => ({
-      items: [],
+  /** Whether the slide-out wishlist drawer is open (if you add one). */
+  isWishlistOpen: false,
 
-      // Add item — no duplicates
-      addToWishlist: (item) => {
-        const exists = get().items.some((i) => i.productId === item.productId);
-        if (exists) return;
-        set((state) => ({ items: [...state.items, item] }));
-      },
-
-      // Remove item
-      removeFromWishlist: (productId) => {
-        set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
-        }));
-      },
-
-      // Check if item is in wishlist
-      isInWishlist: (productId) => {
-        return get().items.some((i) => i.productId === productId);
-      },
-
-      // Clear all
-      clearWishlist: () => set({ items: [] }),
-    }),
-    {
-      name: 'wishlist-store',
-    }
-  )
-);
+  openWishlist:  () => set({ isWishlistOpen: true }),
+  closeWishlist: () => set({ isWishlistOpen: false }),
+  toggleWishlist: () => set((s) => ({ isWishlistOpen: !s.isWishlistOpen })),
+}));

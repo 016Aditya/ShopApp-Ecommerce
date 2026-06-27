@@ -1,38 +1,51 @@
-import { useState, useEffect }  from 'react';
-import { useNavigate }          from 'react-router-dom';
-import { useAuth }              from '@/features/auth/hooks/useAuth';
-import { useAddToCart }         from '@/features/cart/hooks/useCart';
-import { buildPath }            from '@/routes/paths';
-import PATHS                    from '@/routes/paths';
-import { formatCurrency }       from '@/utils/currency';
-import { useWishlistStore }     from '@/store/wishlistStore';
+import { useState }           from 'react';
+import { useNavigate }         from 'react-router-dom';
+import { useAuth }             from '@/features/auth/hooks/useAuth';
+import { useAddToCart }        from '@/features/cart/hooks/useCart';
+import { buildPath }           from '@/routes/paths';
+import PATHS                   from '@/routes/paths';
+import { formatCurrency }      from '@/utils/currency';
+import {
+  useWishlistQuery,
+  useRemoveFromWishlist,
+} from '@/features/wishlist/hooks/useWishlist';
 
 /**
  * WishlistPage
  *
- * Reads wishlist items from Zustand (useWishlistStore).
- * Item shape: { productId, productName, imageUrl, brand, category, unitPrice }
+ * Server state now owned by TanStack Query via useWishlistQuery.
+ * No more Zustand wishlist items — data is fetched from the backend
+ * and cached/invalidated through useWishlist hooks.
  *
- * “Add to Cart” calls the TanStack Query useAddToCart mutation —
- * useCartStore.getState().addToCart() was removed in the cart refactor.
+ * Item shape (normalized in useWishlistQuery's queryFn):
+ *   { productId, productName, imageUrl, brand, category, unitPrice }
  */
 const WishlistPage = () => {
-  const navigate           = useNavigate();
-  const { user }           = useAuth();
-  const items              = useWishlistStore((s) => s.items);
-  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
-  const addToCartMutation  = useAddToCart();
+  const navigate  = useNavigate();
+  const { user }  = useAuth();
+
+  // ── Server state (TanStack Query) ────────────────────────────────────────
+  const { data: items = [], isLoading, isError } = useWishlistQuery();
+  const removeMutation  = useRemoveFromWishlist();
+  const addToCartMutation = useAddToCart();
+
+  // ── Local UI state ───────────────────────────────────────────────────────
   const [addingId, setAddingId] = useState(null);
 
-  // Redirect guests
-  useEffect(() => {
-    if (!user) navigate(PATHS.LOGIN);
-  }, [user, navigate]);
+  // Guest guard — redirect to login
+  if (!user) {
+    navigate(PATHS.LOGIN);
+    return null;
+  }
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleRemove = (productId) => {
+    removeMutation.mutate({ productId });
+  };
 
   const handleAddToCart = async (item) => {
     setAddingId(item.productId);
     try {
-      // Reconstruct the minimal product shape useAddToCart expects
       await addToCartMutation.mutateAsync({
         product: {
           id:       item.productId,
@@ -49,13 +62,39 @@ const WishlistPage = () => {
     }
   };
 
+  // ── Loading / error states ────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <p>Loading your wishlist…</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <p style={{ color: '#dc2626' }}>Failed to load wishlist. Please try again.</p>
+        <button
+          className="btn btn-primary"
+          style={{ marginTop: '16px', background: '#2874f0', color: '#fff',
+            padding: '10px 24px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (!items.length) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
         <p style={{ fontSize: '1.2rem', marginBottom: '16px' }}>💔 Your wishlist is empty.</p>
         <button
           className="btn btn-primary"
-          style={{ background: '#2874f0', color: '#fff', padding: '10px 24px', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+          style={{ background: '#2874f0', color: '#fff', padding: '10px 24px',
+            borderRadius: '4px', border: 'none', cursor: 'pointer' }}
           onClick={() => navigate(PATHS.PRODUCTS)}
         >
           Browse Products
@@ -64,6 +103,7 @@ const WishlistPage = () => {
     );
   }
 
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '24px' }}>
@@ -88,7 +128,7 @@ const WishlistPage = () => {
               gap: '8px',
             }}
           >
-            {/* Image */}
+            {/* Product image */}
             {item.imageUrl && (
               <img
                 src={item.imageUrl}
@@ -96,10 +136,12 @@ const WishlistPage = () => {
                 style={{ width: '100%', aspectRatio: '1/1', objectFit: 'contain', cursor: 'pointer' }}
                 onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, item.productId))}
                 loading="lazy"
+                width="220"
+                height="220"
               />
             )}
 
-            {/* Name */}
+            {/* Product name */}
             <p
               style={{ fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.4, cursor: 'pointer' }}
               onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, item.productId))}
@@ -108,7 +150,9 @@ const WishlistPage = () => {
             </p>
 
             {/* Price */}
-            <p style={{ color: '#22c55e', fontWeight: 700 }}>{formatCurrency(item.unitPrice)}</p>
+            <p style={{ color: '#22c55e', fontWeight: 700 }}>
+              {formatCurrency(item.unitPrice)}
+            </p>
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
@@ -129,18 +173,20 @@ const WishlistPage = () => {
               >
                 {addingId === item.productId ? 'Adding…' : 'Add to Cart'}
               </button>
+
               <button
                 style={{
                   padding: '8px 10px',
-                  background: '#fee2e2',
+                  background: removeMutation.isPending ? '#f5f5f5' : '#fee2e2',
                   color: '#dc2626',
                   border: 'none',
                   borderRadius: '4px',
-                  cursor: 'pointer',
+                  cursor: removeMutation.isPending ? 'not-allowed' : 'pointer',
                   fontWeight: 600,
                   fontSize: '0.8rem',
                 }}
-                onClick={() => removeFromWishlist(item.productId)}
+                onClick={() => handleRemove(item.productId)}
+                disabled={removeMutation.isPending}
                 aria-label={`Remove ${item.productName} from wishlist`}
               >
                 🗑️

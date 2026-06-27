@@ -1,5 +1,5 @@
 /**
- * queryKeys.js — Phase 2A + 2B + 2C (Final)
+ * queryKeys.js — Phase 2A + 2B + 2C + 2D (Wishlist)
  *
  * Centralized query key factory for all TanStack Query keys.
  *
@@ -15,6 +15,7 @@
  *   queryKeys.reviews.byProduct('p5')          → ['reviews', 'product', 'p5']
  *   queryKeys.profile.me('u1')                 → ['profile', 'me', 'u1']
  *   queryKeys.returns.byOrder('o1')            → ['returns', 'order', 'o1']
+ *   queryKeys.wishlist.byUser('u1')            → ['wishlist', 'user', 'u1']
  */
 export const queryKeys = {
   // ── Products (Phase 2A) ──────────────────────────────────────────────────
@@ -83,5 +84,14 @@ export const queryKeys = {
 
     /** GET /api/orders/:orderId/return */
     byOrder: (orderId) => ['returns', 'order', String(orderId)],
+  },
+
+  // ── Wishlist (Phase 2D) ──────────────────────────────────────────────────
+  wishlist: {
+    /** Root key — invalidates ALL wishlist queries */
+    all: () => ['wishlist'],
+
+    /** GET /api/wishlist/user/:userId  (or /api/wishlist — depends on backend) */
+    byUser: (userId) => ['wishlist', 'user', String(userId)],
   },
 };
