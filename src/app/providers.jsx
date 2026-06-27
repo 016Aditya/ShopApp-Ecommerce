@@ -1,26 +1,24 @@
-import { BrowserRouter } from "react-router-dom";
-import { CartProvider } from "@/features/cart/context/CartContext";
-import ToastProvider from "@/components/common/ToastProvider";
-import ThemeProvider from "@/components/common/ThemeProvider";
+import { BrowserRouter } from 'react-router-dom';
+import ToastProvider from '@/components/common/ToastProvider';
+import ThemeProvider from '@/components/common/ThemeProvider';
 
 /**
  * Providers
  *
  * ThemeProvider is placed inside BrowserRouter so it can access router
- * context if needed, but outside CartProvider so the theme is applied
- * before any auth-gated page renders.
+ * context if needed.
  *
- * AuthProvider removed — it was a no-op wrapper ({children}) around
- * Zustand's useAuthStore. Removing it eliminates one component wrapper
- * from every render without changing any behaviour.
+ * Removed wrappers (no longer needed):
+ *   AuthProvider  — was a no-op shell around Zustand's useAuthStore.
+ *   CartProvider  — legacy React context deleted; cart server-state is
+ *                   owned by TanStack Query (QueryClientProvider lives
+ *                   in main.jsx, no extra wrapper required here).
  */
 const Providers = ({ children }) => (
   <BrowserRouter>
     <ThemeProvider>
-      <CartProvider>
-        <ToastProvider />
-        {children}
-      </CartProvider>
+      <ToastProvider />
+      {children}
     </ThemeProvider>
   </BrowserRouter>
 );
