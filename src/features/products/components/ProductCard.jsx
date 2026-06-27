@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import PATHS, { buildPath } from '@/routes/paths';
 import { useCartStore } from '@/store';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { formatCurrency } from '@/utils/currency';
 import RatingBadge from '@/components/common/RatingBadge';
 import { usePrefetchProductDetail } from '@/hooks/useQueryProducts';
