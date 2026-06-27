@@ -5,7 +5,7 @@ import { useCartQuery }        from '@/features/cart/hooks/useCart';
 import CheckoutItems           from '../components/CheckoutItems';
 import CheckoutAddress         from '../components/CheckoutAddress';
 import OrderSummary            from '../components/OrderSummary';
-import { placeOrder }          from '@/services/orderService';
+import { createOrder }         from '@/services/orderService';
 import PATHS                   from '@/routes/paths';
 import '../styles/Checkout.css';
 
@@ -32,7 +32,8 @@ const CheckoutPage = () => {
     setError(null);
     setPlacingOrder(true);
     try {
-      const order = await placeOrder(user.id, {
+      const order = await createOrder({
+        userId    : user.id,
         addressId : selectedAddress.id,
         items     : items.map(i => ({ productId: i.productId, quantity: i.quantity })),
         cartTotal,
