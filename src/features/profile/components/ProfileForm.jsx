@@ -1,187 +1,130 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import useProfile from "../hooks/useProfile";
+import { useState, useEffect } from 'react';
+import { useAuth }             from '@/features/auth/hooks/useAuth';
+import { updateProfile }       from '@/services/profileService';
 
-const ProfileForm = () => {
-  const { user } = useAuth();
-  const { profile, loading, error, success, updateProfile } = useProfile();
+/**
+ * ProfileForm
+ *
+ * Renders and submits the user’s editable profile fields:
+ *   name, phone, address (street / city / state / zip / country).
+ *
+ * Props
+ *   profile  — server-side profile object (may be null while loading)
+ *   user     — auth user object from useAuthStore (for fallback display)
+ *   onSuccess(msg) — callback: show toast + trigger refetch in ProfilePage
+ *   onError(msg)   — callback: show error toast in ProfilePage
+ */
+const ProfileForm = ({ profile, user, onSuccess, onError }) => {
+  const { user: authUser } = useAuth();
 
-  const [form, setForm] = useState({
-    firstName:   "",
-    lastName:    "",
-    phoneNumber: "",
-  });
+  // ── Form state ─────────────────────────────────────────────────────────────
+  const [form,    setForm]    = useState({ name: '', phone: '', street: '', city: '', state: '', zip: '', country: '' });
+  const [saving,  setSaving]  = useState(false);
+  const [touched, setTouched] = useState({});
 
+  // ── Pre-fill ──────────────────────────────────────────────────────────────────
   // Pre-fill from profile (API) first; fall back to AuthContext user
   useEffect(() => {
-    const src = profile ?? user ?? {};
     setForm({
-      firstName:   src.firstName   ?? "",
-      lastName:    src.lastName    ?? "",
-      phoneNumber: src.phoneNumber ?? "",
+      name    : profile?.name    ?? authUser?.name  ?? '',
+      phone   : profile?.phone   ?? '',
+      street  : profile?.address?.street  ?? '',
+      city    : profile?.address?.city    ?? '',
+      state   : profile?.address?.state   ?? '',
+      zip     : profile?.address?.zip     ?? '',
+      country : profile?.address?.country ?? '',
     });
-  }, [profile, user]);
+  }, [profile, authUser]);
 
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    updateProfile({
-      firstName:   form.firstName,
-      lastName:    form.lastName,
-      phoneNumber: form.phoneNumber,
-    });
+  // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
   };
 
-  // Email is always available from AuthContext (populated at login)
-  const email = user?.email ?? profile?.email ?? "";
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!authUser?.id) return;
+    setSaving(true);
+    try {
+      await updateProfile(authUser.id, {
+        name  : form.name.trim(),
+        phone : form.phone.trim(),
+        address: {
+          street  : form.street.trim(),
+          city    : form.city.trim(),
+          state   : form.state.trim(),
+          zip     : form.zip.trim(),
+          country : form.country.trim(),
+        },
+      });
+      onSuccess('Profile updated successfully!');
+    } catch (err) {
+      onError(err.response?.data?.message ?? 'Failed to update profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
+  const isDirty = Object.values(touched).some(Boolean);
+
+  // ── Field config ───────────────────────────────────────────────────────────────
+  const BASIC_FIELDS = [
+    { name: 'name',  label: 'Full Name',    type: 'text',  placeholder: 'John Doe' },
+    { name: 'phone', label: 'Phone Number', type: 'tel',   placeholder: '+91 98765 43210' },
+  ];
+  const ADDRESS_FIELDS = [
+    { name: 'street',  label: 'Street Address', type: 'text', placeholder: '123 Main Street', colSpan: true },
+    { name: 'city',    label: 'City',           type: 'text', placeholder: 'Mumbai' },
+    { name: 'state',   label: 'State',          type: 'text', placeholder: 'Maharashtra' },
+    { name: 'zip',     label: 'ZIP Code',       type: 'text', placeholder: '400001' },
+    { name: 'country', label: 'Country',        type: 'text', placeholder: 'India' },
+  ];
+
+  const renderField = ({ name, label, type, placeholder, colSpan }) => (
+    <div key={name} className={`profile-field${colSpan ? ' profile-field--full' : ''}`}>
+      <label htmlFor={name} className="profile-field__label">{label}</label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        value={form[name]}
+        placeholder={placeholder}
+        onChange={handleChange}
+        className="profile-field__input"
+      />
+    </div>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────────
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="profile-form" noValidate>
 
-      {/* First / Last row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="firstName"
-            className="text-xs font-semibold uppercase tracking-wide"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            First Name
-          </label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            className="input rounded-lg px-3 py-2.5 text-sm w-full"
-            style={{
-              border: "1px solid var(--input-border)",
-              backgroundColor: "var(--input-bg)",
-              color: "var(--text-primary)",
-            }}
-            value={form.firstName}
-            onChange={handleChange}
-            required
-            placeholder="First name"
-          />
+      {/* Basic info */}
+      <fieldset className="profile-fieldset">
+        <legend className="profile-fieldset__legend">👤 Personal Information</legend>
+        <div className="profile-grid">
+          {BASIC_FIELDS.map(renderField)}
         </div>
+      </fieldset>
 
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="lastName"
-            className="text-xs font-semibold uppercase tracking-wide"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Last Name
-          </label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            className="input rounded-lg px-3 py-2.5 text-sm w-full"
-            style={{
-              border: "1px solid var(--input-border)",
-              backgroundColor: "var(--input-bg)",
-              color: "var(--text-primary)",
-            }}
-            value={form.lastName}
-            onChange={handleChange}
-            required
-            placeholder="Last name"
-          />
+      {/* Address */}
+      <fieldset className="profile-fieldset">
+        <legend className="profile-fieldset__legend">🏠 Address</legend>
+        <div className="profile-grid">
+          {ADDRESS_FIELDS.map(renderField)}
         </div>
-      </div>
+      </fieldset>
 
-      {/* Email (read-only — always from AuthContext) */}
-      <div className="flex flex-col gap-1 mb-4">
-        <label
-          className="text-xs font-semibold uppercase tracking-wide"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          Email
-        </label>
-        <input
-          type="email"
-          className="input rounded-lg px-3 py-2.5 text-sm w-full opacity-60 cursor-not-allowed"
-          style={{
-            border: "1px solid var(--input-border)",
-            backgroundColor: "var(--bg-tertiary)",
-            color: "var(--text-secondary)",
-          }}
-          value={email}
-          disabled
-          aria-label="Email (read-only)"
-          readOnly
-        />
-        <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-          Email address cannot be changed
-        </p>
-      </div>
-
-      {/* Phone Number */}
-      <div className="flex flex-col gap-1 mb-5">
-        <label
-          htmlFor="phoneNumber"
-          className="text-xs font-semibold uppercase tracking-wide"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          Phone Number
-        </label>
-        <input
-          id="phoneNumber"
-          name="phoneNumber"
-          type="tel"
-          className="input rounded-lg px-3 py-2.5 text-sm w-full"
-          style={{
-            border: "1px solid var(--input-border)",
-            backgroundColor: "var(--input-bg)",
-            color: "var(--text-primary)",
-          }}
-          value={form.phoneNumber}
-          onChange={handleChange}
-          placeholder="e.g. 9876543210"
-          maxLength={15}
-        />
-        <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-          Used for delivery notifications and order updates
-        </p>
-      </div>
-
-      {/* Feedback */}
-      {error   && <p className="text-sm mb-3" style={{ color: "var(--error-text)" }}>{error}</p>}
-      {success && <p className="text-sm mb-3" style={{ color: "var(--success-text)" }}>Profile updated successfully!</p>}
-
-      {/* Save button */}
       <button
         type="submit"
-        disabled={loading}
-        className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
-        style={{
-          backgroundColor: "var(--button-primary)",
-          color: "var(--button-primary-text)",
-        }}
-        onMouseEnter={(e) => {
-          if (!loading) e.currentTarget.style.backgroundColor = "var(--button-primary-hover)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = loading
-            ? "var(--button-primary)"
-            : "var(--button-primary)";
-        }}
+        disabled={saving || !isDirty}
+        className="profile-btn profile-btn--primary"
       >
-        {loading ? (
-          <>
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-            Saving…
-          </>
-        ) : (
-          "Save Changes"
-        )}
+        {saving ? 'Saving…' : 'Save Changes'}
       </button>
+
     </form>
   );
 };

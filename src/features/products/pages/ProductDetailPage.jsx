@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProduct } from "../hooks/useProducts";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAddToCart } from "@/features/cart/hooks/useCart";
 import ProductImageGallery from "../components/ProductImageGallery";
 import ProductInfo from "../components/ProductInfo";
@@ -62,7 +62,7 @@ const ProductDetailPage = () => {
     }
   };
 
-  // ── ID mismatch guard ──────────────────────────────────────────────────────
+  // ── ID mismatch guard ────────────────────────────────────────────
   // Guards against stale cache race conditions during concurrent-mode renders.
   const idMismatch = product && String(product.id) !== String(id);
 
