@@ -11,14 +11,14 @@
  *   useOrders()      → { orders, loading, error, fetchOrders }
  *   useOrder(id)     → { order, loading, error }
  *   usePlaceOrder()  → { placeOrder, loading, error }
- *   useCancelOrder() → { cancelOrder, loading, error }  ← new; replaces direct service call
+ *   useCancelOrder() → { cancelOrder, loading, error }
  *
  * What changed from Phase 2A:
  *   All useState + useEffect + manual loading/error/retry replaced with
  *   TanStack Query. fetchOrders() now wraps TQ refetch — calling it manually
  *   (e.g. from a Retry button) triggers a fresh network request.
  */
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   useCancelOrderMutation,
   useOrderDetailQuery,
@@ -75,8 +75,7 @@ export const usePlaceOrder = () => {
 /**
  * useCancelOrder
  *
- * Replaces the direct `cancelOrder` service import in OrderDetailPage.
- * userId is read from AuthContext here so callers do not need to thread it.
+ * userId is read from useAuth here so callers do not need to thread it.
  * The orderId is passed by the caller as before.
  *
  * After success, invalidates:
