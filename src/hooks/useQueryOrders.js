@@ -19,7 +19,7 @@
  *   Mutations               → retry: 0 (never retry mutations automatically)
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   cancelOrder,
   createOrder,
