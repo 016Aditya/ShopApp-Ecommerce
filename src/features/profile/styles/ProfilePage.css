@@ -1,0 +1,378 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ProfilePage.css
+   Covers: ProfilePage, ProfileForm, PasswordForm
+   All colours come from theme.css variables — no hardcoded hex values.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ──────────────────────────────────────────────────────────── */
+.profile-page {
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+/* ── Header card ─────────────────────────────────────────────────────────── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-header__avatar {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  border: 2px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.profile-header__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.profile-header__name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-header__email {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+/* ── Tab navigation ──────────────────────────────────────────────────────── */
+.profile-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 1.75rem;
+}
+
+.profile-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;        /* sit on top of nav border */
+  border-radius: var(--radius-md, 8px) var(--radius-md, 8px) 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+  white-space: nowrap;
+}
+
+.profile-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.profile-tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.profile-tab--active:hover {
+  background: var(--accent-subtle);
+}
+
+.profile-tab__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── Content panel ───────────────────────────────────────────────────────── */
+.profile-content {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Fieldset ────────────────────────────────────────────────────────────── */
+.profile-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.profile-fieldset__legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* ── Field grid ──────────────────────────────────────────────────────────── */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/* Street address spans full width */
+.profile-field--full {
+  grid-column: 1 / -1;
+}
+
+.profile-field__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.profile-field__input {
+  width: 100%;
+  padding: 0.5625rem 0.75rem;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  outline: none;
+}
+
+.profile-field__input::placeholder {
+  color: var(--input-placeholder);
+}
+
+.profile-field__input:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(255, 159, 0, 0.18);
+}
+
+/* Error variant */
+.profile-field__input--error {
+  border-color: var(--error-text);
+}
+
+.profile-field__input--error:focus {
+  border-color: var(--error-text);
+  box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.18);
+}
+
+.profile-field__error {
+  font-size: 0.78rem;
+  color: var(--error-text);
+  margin: 0;
+}
+
+/* ── Password field wrapper (input + toggle button) ───────────────────── */
+.password-form .profile-fieldset {
+  margin-bottom: 0;
+}
+
+.password-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field-wrapper .profile-field__input {
+  padding-right: 2.75rem;   /* make room for the toggle button */
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-tertiary);
+  transition: color 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: var(--text-primary);
+}
+
+/* ── Primary button ──────────────────────────────────────────────────────── */
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.profile-btn--primary {
+  background: var(--button-primary);
+  color: var(--button-primary-text);
+  border-color: var(--button-primary);
+  margin-top: 1.25rem;
+}
+
+.profile-btn--primary:hover:not(:disabled) {
+  background: var(--button-primary-hover);
+  border-color: var(--button-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.profile-btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Error state (full-page) ─────────────────────────────────────────────── */
+.profile-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-lg, 12px);
+  color: var(--error-text);
+}
+
+.profile-error p {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ── Toast notification ───────────────────────────────────────────────────── */
+.profile-toast {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 0.625rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  white-space: nowrap;
+  animation: toast-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-toast--success {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+}
+
+.profile-toast--error {
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem;
+  }
+
+  .profile-header__badge {
+    margin-inline: auto;
+  }
+
+  .profile-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .profile-tabs::-webkit-scrollbar { display: none; }
+
+  .profile-grid {
+    grid-template-columns: 1fr;  /* single column on mobile */
+  }
+
+  .profile-field--full {
+    grid-column: 1;             /* no-op on 1-col grid but explicit */
+  }
+
+  .profile-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .profile-toast {
+    width: calc(100% - 2rem);
+    text-align: center;
+    white-space: normal;
+  }
+}
