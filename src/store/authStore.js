@@ -25,6 +25,11 @@ import {
  *
  * PrivateRoute guards on `user !== null`.
  * Axios interceptor guards on `token` (Zustand store → localStorage fallback).
+ *
+ * Security note — registeredUsers:
+ *   Only { email, phone } are stored. Passwords are NEVER written to localStorage.
+ *   The backend /api/users/verify-identity endpoint validates identity using
+ *   email + phoneNumber server-side; no client-side password check is needed.
  */
 export const useAuthStore = create(
   persist(
@@ -35,7 +40,10 @@ export const useAuthStore = create(
       error:     null,
       _hydrated: false,
 
-      /** Local registry for Forgot-Password email+phone verification. */
+      /**
+       * Local registry for Forgot-Password email+phone pre-fill.
+       * Stores only { email, phone } — never credentials.
+       */
       registeredUsers: [],
 
       setHydrated: () => set({ _hydrated: true }),
@@ -50,13 +58,12 @@ export const useAuthStore = create(
           /**
            * loginService returns the full backend LoginResponse:
            *   { token: string, user: UserDto.Response }
-           *
-           * We destructure them separately so the store fields are correct
-           * and the Axios interceptor always has the JWT it needs.
            */
           const { token, user } = await loginService(credentials);
 
-          // Normalise: guarantee user.id is always the string used for API calls
+          // Normalise: guarantee user.id is always the string used for API calls.
+          // Backend sends { id } from UserDto.Response, but guard against legacy
+          // sessions that might still carry { _id } from pre-JWT responses.
           const normalisedUser = {
             ...user,
             id: user.id ?? user._id,
@@ -85,14 +92,17 @@ export const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const data = await registerService(userData);
+
+          // Store only email + phone for the Forgot-Password flow pre-fill.
+          // NEVER store the password — /api/users/verify-identity handles
+          // identity verification server-side using email + phoneNumber.
           set((state) => ({
             loading: false,
             registeredUsers: [
               ...state.registeredUsers.filter((u) => u.email !== userData.email),
               {
-                email:    userData.email,
-                phone:    userData.phone ?? userData.phoneNumber ?? '',
-                password: userData.password,
+                email: userData.email,
+                phone: userData.phone ?? userData.phoneNumber ?? '',
               },
             ],
           }));
@@ -115,9 +125,12 @@ export const useAuthStore = create(
 
       updateRegisteredUser: (email, partial) =>
         set((state) => ({
-          registeredUsers: state.registeredUsers.map((u) =>
-            u.email === email ? { ...u, ...partial } : u
-          ),
+          // Filter out any stale entries with a password field (migration safety)
+          registeredUsers: state.registeredUsers.map((u) => {
+            if (u.email !== email) return u;
+            const { password: _removed, ...safe } = u; // strip password if present
+            return { ...safe, ...partial };
+          }),
         })),
 
       clearError: () => set({ error: null }),
@@ -135,6 +148,15 @@ export const useAuthStore = create(
           if (state.user && !state.user.id && state.user._id) {
             state.user = { ...state.user, id: state.user._id };
           }
+
+          // Migration: strip any password field from registeredUsers
+          // that may have been persisted by a previous version of this store.
+          if (Array.isArray(state.registeredUsers)) {
+            state.registeredUsers = state.registeredUsers.map(
+              ({ password: _removed, ...safe }) => safe
+            );
+          }
+
           // Keep localStorage auth_token in sync with the rehydrated Zustand token
           if (state.token) {
             localStorage.setItem('auth_token', state.token);
