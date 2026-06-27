@@ -1,18 +1,11 @@
 /**
- * LoginForm — production-quality UI upgrade
+ * LoginForm — production-quality UI
  *
- * Changes vs previous version:
- *   + PasswordField (show/hide eye toggle)
- *   + react-hot-toast success toast on login  ("Welcome back, {firstName}")
- *   + react-hot-toast error toast on failure
- *   + Loading label "Signing in…" on button
- *   + Registration success banner (unchanged logic)
- *   + Fully theme-variable styled — dark mode safe
- *   - Hardcoded Tailwind colour classes removed from inputs
- *
- * Business logic: UNCHANGED (useAuth hook, routes, APIs)
+ * Fix: navigate() called directly after successful login.
+ * No longer relies on PublicRoute re-render to redirect — that caused
+ * an infinite /login bounce when Zustand state settled after commit.
  */
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState }          from "react";
 import toast                 from "react-hot-toast";
 import Button                from "@/components/common/Button";
@@ -23,7 +16,11 @@ import { PATHS }             from "@/routes/paths";
 
 function LoginForm() {
   const { login, loading, error, clearError } = useAuth();
-  const location = useLocation();
+  const location  = useLocation();
+  const navigate  = useNavigate();
+
+  // If PrivateRoute redirected here, it stored the intended page in state.from
+  const from = location.state?.from?.pathname || PATHS.HOME;
 
   const regState        = location.state;
   const [showBanner, setShowBanner] = useState(() => !!(regState?.registered));
@@ -57,6 +54,8 @@ function LoginForm() {
         name ? `Welcome back, ${name}! 👋` : "Welcome back!",
         { duration: 3500 }
       );
+      // Navigate immediately — don't wait for PublicRoute to detect user
+      navigate(from, { replace: true });
     } catch (err) {
       toast.error(err?.message || "Invalid email or password", { duration: 4000 });
     }
@@ -157,7 +156,7 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* API-level error (not a toast — keeps inline pattern for field errors) */}
+        {/* API-level error */}
         {error && (
           <p
             className="rounded-xl px-3.5 py-2.5 text-sm"
