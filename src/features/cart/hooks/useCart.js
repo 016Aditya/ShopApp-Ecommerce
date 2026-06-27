@@ -10,19 +10,34 @@ import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 
 /**
- * useCart — TanStack Query hooks for all cart server-state
+ * normalizeItem
  *
- * Exports:
- *   Named hooks (granular, one operation each):
- *     useCartQuery, useAddToCart, useUpdateCartItem,
- *     useRemoveFromCart, useClearCart
+ * The backend returns cart items in two possible shapes:
  *
- *   Default export — useCart() facade:
- *     Returns the flat { items, cartTotal, loading, error,
- *                        updateItem, removeItem, emptyCart }
- *     shape that CartPage and CartItem already consume.
- *     This lets existing components work without any changes.
+ *   Shape A (server response) — nested product object:
+ *     { product: { id, name, imageUrl, brand, category, price }, quantity, unitPrice }
+ *
+ *   Shape B (optimistic / already-normalized):
+ *     { productId, productName, imageUrl, brand, category, unitPrice, quantity }
+ *
+ * CartItem, CheckoutItems, and WishlistPage all consume Shape B.
+ * This normalizer coerces Shape A → Shape B, and passes Shape B through unchanged.
  */
+const normalizeItem = (item) => {
+  // Already normalized (optimistic or previously transformed)
+  if (item.productId) return item;
+
+  const p = item.product ?? {};
+  return {
+    productId:   item.productId   ?? p.id          ?? '',
+    productName: item.productName ?? p.name        ?? p.title ?? '',
+    imageUrl:    item.imageUrl    ?? p.imageUrl    ?? p.image ?? '',
+    brand:       item.brand       ?? p.brand       ?? '',
+    category:    item.category    ?? p.category    ?? '',
+    unitPrice:   item.unitPrice   ?? p.price       ?? 0,
+    quantity:    item.quantity    ?? 1,
+  };
+};
 
 // ── Query key factory ───────────────────────────────────────────────────────
 export const cartKeys = {
@@ -36,7 +51,14 @@ export const useCartQuery = () => {
 
   return useQuery({
     queryKey: cartKeys.all(userId),
-    queryFn:  () => getCart(userId),
+    queryFn:  async () => {
+      const data = await getCart(userId);
+      // Normalize all items to flat shape on the way in
+      return {
+        ...data,
+        items: (data?.items ?? []).map(normalizeItem),
+      };
+    },
     enabled:  !!userId,
     staleTime: 1000 * 30,
     retry: (failureCount, error) => {
@@ -136,27 +158,17 @@ export const useClearCart = () => {
   });
 };
 
-// ── DEFAULT EXPORT — useCart() facade ─────────────────────────────────────────
-//
-// Provides the flat { items, cartTotal, loading, error,
-//                     updateItem, removeItem, emptyCart } shape
-// that CartPage and CartItem consume.
-//
-// updateItem(productId, quantity)  → useUpdateCartItem mutation
-// removeItem(productId)            → useRemoveFromCart mutation
-// emptyCart()                      → useClearCart mutation
-//
+// ── DEFAULT EXPORT — useCart() facade ─────────────────────────────────────────────
 const useCart = () => {
   const { data, isLoading, isError, error } = useCartQuery();
   const updateMutation = useUpdateCartItem();
   const removeMutation = useRemoveFromCart();
   const clearMutation  = useClearCart();
 
+  // Items are already normalized by useCartQuery’s queryFn
   const items     = data?.items     ?? [];
   const cartTotal = data?.cartTotal ?? 0;
 
-  // Combine loading states: true if the query is loading OR any mutation
-  // is currently in-flight (so CartPage spinner covers the whole operation)
   const loading =
     isLoading ||
     updateMutation.isPending ||
@@ -167,24 +179,12 @@ const useCart = () => {
     ? (error?.response?.data?.message ?? 'Failed to load cart')
     : null;
 
-  /**
-   * updateItem(productId, quantity)
-   * Wraps useUpdateCartItem.mutate so callers don't need to pass { productId, quantity } object.
-   */
   const updateItem = (productId, quantity) =>
     updateMutation.mutate({ productId, quantity });
 
-  /**
-   * removeItem(productId)
-   * Wraps useRemoveFromCart.mutate so callers don't need to pass { productId } object.
-   */
   const removeItem = (productId) =>
     removeMutation.mutate({ productId });
 
-  /**
-   * emptyCart()
-   * Clears the entire cart on the server and invalidates the TQ cache.
-   */
   const emptyCart = () => clearMutation.mutate();
 
   return {

@@ -1,23 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useNavigate }         from 'react-router-dom';
-import { useAuth }             from '@/features/auth/hooks/useAuth';
-import { useCartStore }        from '@/store';
-import { buildPath }           from '@/routes/paths';
-import PATHS                   from '@/routes/paths';
-import { formatCurrency }      from '@/utils/currency';
-import { useWishlistStore }    from '@/store/wishlistStore';
+import { useState, useEffect }  from 'react';
+import { useNavigate }          from 'react-router-dom';
+import { useAuth }              from '@/features/auth/hooks/useAuth';
+import { useAddToCart }         from '@/features/cart/hooks/useCart';
+import { buildPath }            from '@/routes/paths';
+import PATHS                    from '@/routes/paths';
+import { formatCurrency }       from '@/utils/currency';
+import { useWishlistStore }     from '@/store/wishlistStore';
 
 /**
  * WishlistPage
  *
  * Reads wishlist items from Zustand (useWishlistStore).
- * Renders a grid of saved products with Remove + Add-to-Cart actions.
+ * Item shape: { productId, productName, imageUrl, brand, category, unitPrice }
+ *
+ * “Add to Cart” calls the TanStack Query useAddToCart mutation —
+ * useCartStore.getState().addToCart() was removed in the cart refactor.
  */
 const WishlistPage = () => {
-  const navigate            = useNavigate();
-  const { user }            = useAuth();
-  const items               = useWishlistStore((s) => s.items);
-  const removeFromWishlist  = useWishlistStore((s) => s.removeItem);
+  const navigate           = useNavigate();
+  const { user }           = useAuth();
+  const items              = useWishlistStore((s) => s.items);
+  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
+  const addToCartMutation  = useAddToCart();
   const [addingId, setAddingId] = useState(null);
 
   // Redirect guests
@@ -25,10 +29,21 @@ const WishlistPage = () => {
     if (!user) navigate(PATHS.LOGIN);
   }, [user, navigate]);
 
-  const handleAddToCart = async (product) => {
-    setAddingId(product.id);
+  const handleAddToCart = async (item) => {
+    setAddingId(item.productId);
     try {
-      await useCartStore.getState().addToCart(product, 1);
+      // Reconstruct the minimal product shape useAddToCart expects
+      await addToCartMutation.mutateAsync({
+        product: {
+          id:       item.productId,
+          name:     item.productName,
+          imageUrl: item.imageUrl,
+          brand:    item.brand,
+          category: item.category,
+          price:    item.unitPrice,
+        },
+        quantity: 1,
+      });
     } finally {
       setAddingId(null);
     }
@@ -60,9 +75,9 @@ const WishlistPage = () => {
         gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
         gap: '16px',
       }}>
-        {items.map((product) => (
+        {items.map((item) => (
           <div
-            key={product.id}
+            key={item.productId}
             style={{
               border: '1px solid #e0e0e0',
               borderRadius: '8px',
@@ -74,12 +89,12 @@ const WishlistPage = () => {
             }}
           >
             {/* Image */}
-            {product.imageUrl && (
+            {item.imageUrl && (
               <img
-                src={product.imageUrl}
-                alt={product.name}
+                src={item.imageUrl}
+                alt={item.productName}
                 style={{ width: '100%', aspectRatio: '1/1', objectFit: 'contain', cursor: 'pointer' }}
-                onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+                onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, item.productId))}
                 loading="lazy"
               />
             )}
@@ -87,13 +102,13 @@ const WishlistPage = () => {
             {/* Name */}
             <p
               style={{ fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.4, cursor: 'pointer' }}
-              onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id))}
+              onClick={() => navigate(buildPath(PATHS.PRODUCT_DETAIL, item.productId))}
             >
-              {product.name}
+              {item.productName}
             </p>
 
             {/* Price */}
-            <p style={{ color: '#22c55e', fontWeight: 700 }}>{formatCurrency(product.price)}</p>
+            <p style={{ color: '#22c55e', fontWeight: 700 }}>{formatCurrency(item.unitPrice)}</p>
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
@@ -101,18 +116,18 @@ const WishlistPage = () => {
                 style={{
                   flex: 1,
                   padding: '8px',
-                  background: addingId === product.id ? '#ccc' : '#ff9f00',
+                  background: addingId === item.productId ? '#ccc' : '#ff9f00',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '4px',
-                  cursor: addingId === product.id ? 'not-allowed' : 'pointer',
+                  cursor: addingId === item.productId ? 'not-allowed' : 'pointer',
                   fontWeight: 600,
                   fontSize: '0.8rem',
                 }}
-                onClick={() => handleAddToCart(product)}
-                disabled={addingId === product.id}
+                onClick={() => handleAddToCart(item)}
+                disabled={addingId === item.productId}
               >
-                {addingId === product.id ? 'Adding…' : 'Add to Cart'}
+                {addingId === item.productId ? 'Adding…' : 'Add to Cart'}
               </button>
               <button
                 style={{
@@ -125,8 +140,8 @@ const WishlistPage = () => {
                   fontWeight: 600,
                   fontSize: '0.8rem',
                 }}
-                onClick={() => removeFromWishlist(product.id)}
-                aria-label={`Remove ${product.name} from wishlist`}
+                onClick={() => removeFromWishlist(item.productId)}
+                aria-label={`Remove ${item.productName} from wishlist`}
               >
                 🗑️
               </button>

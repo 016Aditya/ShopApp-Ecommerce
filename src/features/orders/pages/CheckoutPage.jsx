@@ -7,7 +7,7 @@ import CheckoutAddress         from '../components/CheckoutAddress';
 import { OrderSummary }        from '../components/OrderSummary';
 import { placeOrder }          from '@/services/orderService';
 import PATHS                   from '@/routes/paths';
-import '../styles/CheckoutPage.css';
+import '../styles/Checkout.css';
 
 const CheckoutPage = () => {
   const navigate                        = useNavigate();
@@ -34,7 +34,7 @@ const CheckoutPage = () => {
     try {
       const order = await placeOrder(user.id, {
         addressId : selectedAddress.id,
-        items     : items.map(i => ({ productId: i.product.id, quantity: i.quantity })),
+        items     : items.map(i => ({ productId: i.productId, quantity: i.quantity })),
         cartTotal,
       });
       navigate(PATHS.ORDER_SUCCESS, { state: { order } });
