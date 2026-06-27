@@ -2,48 +2,24 @@
 import { create } from 'zustand';
 
 /**
- * orderStore — Zustand global store for order state.
+ * orderStore — Zustand global store for order UI state.
  *
- * ADDED: updateOrderReturn(orderId, updatedFields)
- *   Performs an optimistic in-memory update for the matching order in the
- *   list AND selectedOrder, so the OrdersPage list reflects the return
- *   status immediately after the customer confirms — without a full refetch.
+ * Step 7 refactor: all server-state (orders[], selectedOrder, loading,
+ * error, setOrders, setSelectedOrder, setLoading, setError, clearError,
+ * updateOrderReturn) has been removed.
  *
- *   Called by OrderDetailPage after a successful PATCH /api/orders/{id}/return.
+ * TanStack Query (useQueryOrders.js / useQueryReturn.js) is now the
+ * single source of truth for all order and return server-state.
  *
- *   All existing actions (setOrders, setSelectedOrder, setLoading, setError,
- *   clearError) are untouched.
+ * This store owns ONLY ephemeral UI flags that have no network equivalent:
+ *   selectedOrderId  — which order is open in a drawer / detail panel
+ *
+ * Follows the same pattern as cartStore after its Step 4 refactor.
  */
 export const useOrderStore = create((set) => ({
-  orders:        [],
-  selectedOrder: null,
-  loading:       false,
-  error:         null,
+  // ── UI state ────────────────────────────────────────────────────────────
+  selectedOrderId: null,
 
-  setOrders:        (orders)  => set({ orders }),
-  setSelectedOrder: (order)   => set({ selectedOrder: order }),
-  setLoading:       (loading) => set({ loading }),
-  setError:         (error)   => set({ error }),
-  clearError:       ()        => set({ error: null }),
-
-  // ── NEW ──────────────────────────────────────────────────────────────────
-  // Optimistically update a single order's return fields in both the list
-  // and selectedOrder without requiring a network refetch.
-  //
-  // Usage (from OrderDetailPage):
-  //   useOrderStore.getState().updateOrderReturn(id, {
-  //     status:             "RETURN_REQUESTED",
-  //     returnRequestedAt:  isoString,
-  //     refundStatus:       "PENDING",
-  //   });
-  updateOrderReturn: (orderId, updatedFields) =>
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId ? { ...o, ...updatedFields } : o
-      ),
-      selectedOrder:
-        state.selectedOrder?.id === orderId
-          ? { ...state.selectedOrder, ...updatedFields }
-          : state.selectedOrder,
-    })),
+  setSelectedOrderId: (id) => set({ selectedOrderId: id }),
+  clearSelectedOrder: ()   => set({ selectedOrderId: null }),
 }));

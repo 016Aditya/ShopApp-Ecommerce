@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PATHS from "@/routes/paths";
 import { formatCurrency } from "@/utils/currency";
-import { useOrderStore } from "@/store/orderStore";
 import OrderItemsList from "../components/OrderItemsList";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderSummary from "../components/OrderSummary";
@@ -70,7 +69,7 @@ const OrderDetailPage = () => {
   const navigate   = useNavigate();
   const { order, loading, error } = useOrder(id);
 
-  // Phase 2C: useReturn is now TQ-backed; returnStatus comes from the cache.
+  // Phase 2C: useReturn is TQ-backed; returnStatus comes from the cache.
   // localReturnStatus is kept for instant optimistic display while the
   // mutation is in-flight, exactly as before.
   const { returnStatus, requestReturn } = useReturn(id);
@@ -127,13 +126,10 @@ const OrderDetailPage = () => {
     setLocalReturnStatus("RETURN_REQUESTED");
     setReturnModalOpen(false);
     try {
-      const updated = await requestReturn();
-      // Sync Zustand order store so other parts of the UI reflect the change
-      useOrderStore.getState().updateOrderReturn(id, {
-        status:            updated?.status            ?? "RETURN_REQUESTED",
-        returnRequestedAt: updated?.returnRequestedAt ?? new Date().toISOString(),
-        refundStatus:      updated?.refundStatus      ?? "PENDING",
-      });
+      await requestReturn();
+      // TQ cache is refreshed automatically by useInitiateReturnMutation's
+      // onSuccess invalidation (returns.byOrder + orders.detail).
+      // No Zustand write needed.
       setReturnSuccess(true);
       setTimeout(() => setReturnSuccess(false), 5000);
     } catch (err) {

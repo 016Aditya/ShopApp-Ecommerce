@@ -26,28 +26,76 @@ export const STORAGE_KEYS = {
 
 // ── Order status — must match backend Order entity enum exactly ───────────────
 export const ORDER_STATUS = {
-  PENDING:   'PENDING',
-  CONFIRMED: 'CONFIRMED',
-  SHIPPED:   'SHIPPED',
-  DELIVERED: 'DELIVERED',
-  CANCELLED: 'CANCELLED',
+  // Core lifecycle
+  PENDING:           'PENDING',
+  CONFIRMED:         'CONFIRMED',
+  PACKED:            'PACKED',
+  SHIPPED:           'SHIPPED',
+  DELIVERED:         'DELIVERED',
+  CANCELLED:         'CANCELLED',
+  // Return flow
+  RETURN_REQUESTED:  'RETURN_REQUESTED',
+  RETURN_APPROVED:   'RETURN_APPROVED',
+  PICKUP_SCHEDULED:  'PICKUP_SCHEDULED',
+  PICKED_UP:         'PICKED_UP',
+  REFUND_PROCESSED:  'REFUND_PROCESSED',
+  RETURN_SUCCESSFUL: 'RETURN_SUCCESSFUL',
+  RETURNED:          'RETURNED',
 };
 
 export const ORDER_STATUS_LABELS = {
-  [ORDER_STATUS.PENDING]:   'Pending',
-  [ORDER_STATUS.CONFIRMED]: 'Confirmed',
-  [ORDER_STATUS.SHIPPED]:   'Shipped',
-  [ORDER_STATUS.DELIVERED]: 'Delivered',
-  [ORDER_STATUS.CANCELLED]: 'Cancelled',
+  [ORDER_STATUS.PENDING]:           'Pending',
+  [ORDER_STATUS.CONFIRMED]:         'Confirmed',
+  [ORDER_STATUS.PACKED]:            'Packed',
+  [ORDER_STATUS.SHIPPED]:           'Shipped',
+  [ORDER_STATUS.DELIVERED]:         'Delivered',
+  [ORDER_STATUS.CANCELLED]:         'Cancelled',
+  [ORDER_STATUS.RETURN_REQUESTED]:  'Return Requested',
+  [ORDER_STATUS.RETURN_APPROVED]:   'Return Approved',
+  [ORDER_STATUS.PICKUP_SCHEDULED]:  'Pickup Scheduled',
+  [ORDER_STATUS.PICKED_UP]:         'Picked Up',
+  [ORDER_STATUS.REFUND_PROCESSED]:  'Refund Processed',
+  [ORDER_STATUS.RETURN_SUCCESSFUL]: 'Return Successful',
+  [ORDER_STATUS.RETURNED]:          'Returned',
 };
+
+// Statuses that indicate the order is in the return flow
+export const RETURN_STATUSES = new Set([
+  ORDER_STATUS.RETURN_REQUESTED,
+  ORDER_STATUS.RETURN_APPROVED,
+  ORDER_STATUS.PICKUP_SCHEDULED,
+  ORDER_STATUS.PICKED_UP,
+  ORDER_STATUS.REFUND_PROCESSED,
+  ORDER_STATUS.RETURN_SUCCESSFUL,
+  ORDER_STATUS.RETURNED,
+]);
+
+// Statuses from which the customer can initiate a cancellation
+export const CANCELLABLE_STATUSES = new Set([
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.CONFIRMED,
+]);
+
+// Statuses from which the customer can initiate a return
+export const RETURNABLE_STATUSES = new Set([
+  ORDER_STATUS.DELIVERED,
+]);
 
 // Tailwind badge classes per status
 export const ORDER_STATUS_COLORS = {
-  [ORDER_STATUS.PENDING]:   'bg-yellow-100 text-yellow-800',
-  [ORDER_STATUS.CONFIRMED]: 'bg-blue-100   text-blue-800',
-  [ORDER_STATUS.SHIPPED]:   'bg-purple-100 text-purple-800',
-  [ORDER_STATUS.DELIVERED]: 'bg-green-100  text-green-800',
-  [ORDER_STATUS.CANCELLED]: 'bg-red-100    text-red-800',
+  [ORDER_STATUS.PENDING]:           'bg-yellow-100 text-yellow-800',
+  [ORDER_STATUS.CONFIRMED]:         'bg-blue-100   text-blue-800',
+  [ORDER_STATUS.PACKED]:            'bg-indigo-100 text-indigo-800',
+  [ORDER_STATUS.SHIPPED]:           'bg-purple-100 text-purple-800',
+  [ORDER_STATUS.DELIVERED]:         'bg-green-100  text-green-800',
+  [ORDER_STATUS.CANCELLED]:         'bg-red-100    text-red-800',
+  [ORDER_STATUS.RETURN_REQUESTED]:  'bg-orange-100 text-orange-800',
+  [ORDER_STATUS.RETURN_APPROVED]:   'bg-orange-100 text-orange-700',
+  [ORDER_STATUS.PICKUP_SCHEDULED]:  'bg-cyan-100   text-cyan-800',
+  [ORDER_STATUS.PICKED_UP]:         'bg-cyan-100   text-cyan-700',
+  [ORDER_STATUS.REFUND_PROCESSED]:  'bg-teal-100   text-teal-800',
+  [ORDER_STATUS.RETURN_SUCCESSFUL]: 'bg-teal-100   text-teal-700',
+  [ORDER_STATUS.RETURNED]:          'bg-gray-100   text-gray-800',
 };
 
 // ── Product categories — keep in sync with backend seed data ─────────────────
