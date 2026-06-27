@@ -4,7 +4,7 @@ import { useAuth }             from '@/features/auth/hooks/useAuth';
 import { useCartQuery }        from '@/features/cart/hooks/useCart';
 import CheckoutItems           from '../components/CheckoutItems';
 import CheckoutAddress         from '../components/CheckoutAddress';
-import { OrderSummary }        from '../components/OrderSummary';
+import OrderSummary            from '../components/OrderSummary';
 import { placeOrder }          from '@/services/orderService';
 import PATHS                   from '@/routes/paths';
 import '../styles/Checkout.css';
@@ -100,8 +100,8 @@ const CheckoutPage = () => {
             items={items}
             cartTotal={cartTotal}
             onPlaceOrder={handlePlaceOrder}
-            placingOrder={placingOrder}
-            selectedAddress={selectedAddress}
+            onBackToCart={() => navigate(PATHS.CART)}
+            loading={placingOrder}
           />
         </div>
 
