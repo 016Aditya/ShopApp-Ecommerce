@@ -4,22 +4,27 @@ import "../styles/ReturnModal.css";
 /**
  * ReturnModal
  *
- * Fixes applied:
- *   1. Title now exactly matches spec: "Return this order?"
- *   2. Message now exactly matches spec (two lines per spec).
- *   3. Removed the "reason" textarea — spec does not include it.
- *   4. Added CSS import (ReturnModal.css was missing entirely).
- *   5. Buttons: "Cancel" | "Confirm Return" (spec exact).
- *   6. Overlay click closes the modal (UX standard).
+ * FIX: OrderDetailPage was passing `open={...}` but this component was
+ * reading `isOpen`. Because `isOpen` was always `undefined` (falsy),
+ * the modal returned null every single time and never rendered.
+ *
+ * Both prop names are now accepted for backwards compatibility:
+ *   open     — used by OrderDetailPage (existing call sites)
+ *   isOpen   — alias (same behaviour)
  *
  * Props:
- *   isOpen    {boolean}  — whether the modal is visible
- *   onClose   {function} — called on Cancel or overlay click
- *   onConfirm {function} — called on "Confirm Return" click
- *   isLoading {boolean}  — disables buttons and shows loading text
+ *   open / isOpen  {boolean}  — whether the modal is visible
+ *   onClose        {function} — called on Cancel or overlay click
+ *   onConfirm      {function} — called on "Confirm Return" click
+ *   loading        {boolean}  — disables buttons and shows loading text
+ *                               (OrderDetailPage passes `loading`, not `isLoading`)
  */
-const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
-  if (!isOpen) return null;
+const ReturnModal = ({ open, isOpen, onClose, onConfirm, loading = false, isLoading = false }) => {
+  // Accept either prop name so both call-site conventions work
+  const visible  = open ?? isOpen ?? false;
+  const spinning = loading || isLoading;
+
+  if (!visible) return null;
 
   return (
     <div
@@ -43,13 +48,13 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
             className="return-modal__close"
             onClick={onClose}
             aria-label="Close return modal"
-            disabled={isLoading}
+            disabled={spinning}
           >
             ✕
           </button>
         </div>
 
-        {/* ── Body ──────────────────────────────────────────────────── */}
+        {/* ── Body ────────────────────────────────────────────────────── */}
         <div className="return-modal__body">
           <p className="return-modal__message">
             Are you sure you want to return this product?
@@ -59,12 +64,12 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
           </p>
         </div>
 
-        {/* ── Footer ────────────────────────────────────────────────── */}
+        {/* ── Footer ─────────────────────────────────────────────────── */}
         <div className="return-modal__footer">
           <button
             className="return-modal__btn return-modal__btn--cancel"
             onClick={onClose}
-            disabled={isLoading}
+            disabled={spinning}
             type="button"
           >
             Cancel
@@ -72,10 +77,10 @@ const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading = false }) => {
           <button
             className="return-modal__btn return-modal__btn--confirm"
             onClick={onConfirm}
-            disabled={isLoading}
+            disabled={spinning}
             type="button"
           >
-            {isLoading ? "Processing…" : "Confirm Return"}
+            {spinning ? "Processing…" : "Confirm Return"}
           </button>
         </div>
       </div>

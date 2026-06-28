@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate }         from 'react-router-dom';
 import { useAuth }             from '@/features/auth/hooks/useAuth';
-import { useCartQuery }        from '@/features/cart/hooks/useCart';
+import { useCartQuery, useClearCart } from '@/features/cart/hooks/useCart';
+import { useQueryClient }      from '@tanstack/react-query';
+import { queryKeys }           from '@/lib/queryKeys';
 import CheckoutItems           from '../components/CheckoutItems';
 import CheckoutAddress         from '../components/CheckoutAddress';
 import OrderSummary            from '../components/OrderSummary';
 import { createOrder }         from '@/services/orderService';
+import { cartKeys }            from '@/features/cart/hooks/useCart';
 import PATHS                   from '@/routes/paths';
 import '../styles/Checkout.css';
 
@@ -13,6 +16,8 @@ const CheckoutPage = () => {
   const navigate                  = useNavigate();
   const { user }                  = useAuth();
   const { data: cart, isLoading } = useCartQuery();
+  const { mutateAsync: clearCartMutation } = useClearCart();
+  const queryClient               = useQueryClient();
 
   const items     = cart?.items     ?? [];
   const cartTotal = cart?.cartTotal ?? 0;
@@ -39,17 +44,8 @@ const CheckoutPage = () => {
     setPlacingOrder(true);
 
     try {
-      /**
-       * FIX — `userId` was referenced as a bare variable but it was never
-       * declared. The correct value lives on `user.id` (from useAuth).
-       * Using `userId` (undefined) made the backend receive userId:null
-       * so no order was created and the response was silently swallowed.
-       *
-       * Backend OrderController.createOrder() expects:
-       *   { userId: string, productIds: string[], address: { street, city, state, zipCode, country } }
-       */
       const payload = {
-        userId: user.id,                          // ← was `userId` (undefined)
+        userId: user.id,
         productIds: items.map((i) => i.productId),
         address: {
           street:  selectedAddress.line1
@@ -62,6 +58,25 @@ const CheckoutPage = () => {
       };
 
       const order = await createOrder(payload);
+
+      // FIX 1: Clear the cart on the backend and wipe the TQ cart cache
+      // so the cart badge and drawer show 0 items immediately.
+      try {
+        await clearCartMutation();
+      } catch {
+        // Cart clear failure should NOT block order success navigation.
+        // Manually wipe TQ cache so UI is still consistent.
+        queryClient.setQueryData(cartKeys.all(user.id), (old) =>
+          old ? { ...old, items: [], cartTotal: 0 } : old
+        );
+      }
+
+      // FIX 2: Invalidate the orders list cache so OrdersPage shows the
+      // new order immediately without requiring a manual refresh.
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.orders.byUser(user.id),
+      });
+
       navigate(PATHS.ORDER_SUCCESS, { state: { order } });
     } catch (err) {
       setError(err.response?.data?.message ?? 'Failed to place order. Please try again.');
