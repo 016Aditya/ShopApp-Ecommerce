@@ -468,3 +468,29 @@
   .pdp-gallery     { position: static; }
   .pdp-skeleton    { grid-template-columns: 1fr; }
 }
+
+/* ── Wishlist heart button ───────────────────────────────────── */
+.pdp-wish-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 8px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 9999px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.12s;
+}
+.pdp-wish-btn svg { width: 20px; height: 20px; color: inherit; transition: transform 0.2s; }
+.pdp-wish-btn:hover:not(:disabled) {
+  border-color: #ef4444; color: #ef4444; transform: translateY(-1px);
+}
+.pdp-wish-btn:hover:not(:disabled) svg { transform: scale(1.15); }
+.pdp-wish-btn--active {
+  border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08);
+}
+.pdp-wish-btn:disabled { opacity: 0.55; cursor: not-allowed; }
