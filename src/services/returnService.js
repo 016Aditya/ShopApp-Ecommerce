@@ -6,37 +6,33 @@ import api from "../api/api.js";
 const ORDERS_BASE = "/orders";
 
 /**
- * PATCH /api/orders/{id}/return
+ * initiateReturn
+ * POST /api/orders/{id}/return
  *
- * Root-cause fix: was using POST, backend expects PATCH.
+ * FIX: The backend OrderController uses @PostMapping("/{orderId}/return").
+ * This is the ONLY return endpoint that exists on the backend.
+ * There is NO GET /return endpoint — that was calling a non-existent route,
+ * causing a 500 on every order detail page load.
+ *
  * No request body — returnRequestedAt and refundStatus are set server-side.
- *
- * Backend validation:
- *   - Allows return only when status === DELIVERED
- *   - Returns 400 "This order cannot be returned." otherwise
+ * Backend validation: only allows return when status === DELIVERED.
+ * Returns 409 CONFLICT for non-DELIVERED orders.
  */
 export const initiateReturn = async (orderId) => {
-  const { data } = await api.patch(`${ORDERS_BASE}/${orderId}/return`);
+  const { data } = await api.post(`${ORDERS_BASE}/${orderId}/return`);
   return data;
 };
 
 /**
- * GET /api/orders/{id}/return
- * Fetch the current return status for a specific order.
+ * getReturnStatus — REMOVED
+ *
+ * The backend has NO GET /api/orders/{id}/return endpoint.
+ * Calling it caused a Spring 500 on every OrderDetailPage load.
+ *
+ * Return status is derived directly from the order's `status` field
+ * (e.g. RETURN_REQUESTED, RETURN_APPROVED, etc.) which is already
+ * included in the GET /api/orders/{id} response.
+ *
+ * useQueryReturn.js now reads order.status instead of making a
+ * separate GET /return call.
  */
-export const getReturnStatus = async (orderId) => {
-  const { data } = await api.get(`${ORDERS_BASE}/${orderId}/return`);
-  return data;
-};
-
-/**
- * PATCH /api/orders/{id}/return/status
- * Admin: update return status (RETURN_APPROVED, PICKUP_SCHEDULED, etc.)
- */
-export const updateReturnStatus = async (orderId, status) => {
-  const { data } = await api.patch(
-    `${ORDERS_BASE}/${orderId}/return/status`,
-    { status }
-  );
-  return data;
-};

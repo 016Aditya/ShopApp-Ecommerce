@@ -1,64 +1,85 @@
 /**
- * useQueryReturn.js — Phase 2C
+ * useQueryReturn.js
  *
- * Raw TanStack Query hooks for Order Returns.
- * Consumed through src/features/orders/hooks/useReturn.js.
+ * FIX: Removed useReturnStatusQuery that called GET /api/orders/:id/return.
+ * That endpoint does NOT exist in the backend (OrderController only has
+ * POST /{orderId}/return). Every page load was hitting a 500.
  *
- * Cache strategy:
- *   staleTime : 30 seconds
- *   gcTime    : 5 minutes
+ * Return status is now derived directly from the order object's `status`
+ * field — the GET /api/orders/{id} response already contains it
+ * (RETURN_REQUESTED, RETURN_APPROVED, PICKED_UP, etc.).
  *
- * Retry policy:
- *   Query    : network failures + HTTP 5xx only
- *              404 is NOT retried — it means no return has been initiated.
- *   Mutation : retry: 0
+ * useReturnStatusQuery is replaced with a lightweight helper that reads
+ * the already-cached order detail. No extra network call needed.
  */
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { getReturnStatus, initiateReturn } from "@/services/returnService";
+import { initiateReturn } from "@/services/returnService";
+import { getOrderById } from "@/services/orderService";
+import { normalizeOrder } from "@/features/orders/utils/normalizeOrder";
 
-const RETURN_STALE = 30 * 1000;       // 30 sec
-const RETURN_GC    = 5 * 60 * 1000;  // 5 min
+const RETURN_STATUSES = new Set([
+  "RETURN_REQUESTED",
+  "RETURN_APPROVED",
+  "PICKUP_SCHEDULED",
+  "PICKED_UP",
+  "REFUND_PROCESSED",
+  "RETURN_SUCCESSFUL",
+  "RETURNED",
+]);
 
-/** Returns true when the query should be retried for this error. */
-const shouldRetry = (failureCount, error) => {
-  if (failureCount >= 2) return false;
-  const status = error?.response?.status;
-  if (status === 404) return false;                       // not-initiated is valid
-  if (!status) return true;                               // network failure
-  if (status === 401 || status === 403) return false;
-  if (status >= 400 && status < 500) return false;        // other 4xx
-  return true;                                            // 5xx
+// ─────────────────────────────────────────────────────────────────────────────
+// useReturnStatusQuery
+//
+// Reads return status from the order detail cache — no extra network call.
+// If the order is not yet in the cache, fetches it via getOrderById.
+// Only enabled when the order status is in a return-related state so we
+// never fire a network request for PENDING / SHIPPED / DELIVERED orders
+// that haven't initiated a return yet.
+// ─────────────────────────────────────────────────────────────────────────────
+export const useReturnStatusQuery = (orderId) => {
+  const qc = useQueryClient();
+
+  return useQuery({
+    queryKey: queryKeys.returns.byOrder(orderId),
+    queryFn: async () => {
+      // First try the already-cached order (free — no network)
+      const cached = qc.getQueryData(queryKeys.orders.detail(orderId));
+      const orderStatus = cached?.status?.toUpperCase();
+
+      if (orderStatus && RETURN_STATUSES.has(orderStatus)) {
+        return orderStatus;
+      }
+
+      // If order isn't cached yet, fetch it (will be normalised + cached)
+      const fresh = await getOrderById(orderId);
+      const normalized = normalizeOrder(fresh);
+      qc.setQueryData(queryKeys.orders.detail(orderId), normalized);
+
+      const freshStatus = normalized?.status?.toUpperCase();
+      return RETURN_STATUSES.has(freshStatus) ? freshStatus : null;
+    },
+    // Only fire if there is evidence in the cache that a return was started.
+    // This prevents ANY network call for orders that are simply PENDING/SHIPPED.
+    enabled: (() => {
+      if (!orderId) return false;
+      const cached = qc.getQueryData(queryKeys.orders.detail(orderId));
+      if (!cached) return false; // wait until order detail is loaded first
+      const s = cached?.status?.toUpperCase();
+      return RETURN_STATUSES.has(s);
+    })(),
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: 0,
+  });
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// useReturnStatusQuery — GET /api/orders/:orderId/return
-// 404 is silenced → returns null ("return not initiated" is a valid state)
-// ─────────────────────────────────────────────────────────────────────────────
-export const useReturnStatusQuery = (orderId) =>
-  useQuery({
-    queryKey: queryKeys.returns.byOrder(orderId),
-    queryFn:  async () => {
-      try {
-        const data = await getReturnStatus(orderId);
-        return data?.status ?? null;
-      } catch (err) {
-        if (err.response?.status === 404) return null;
-        throw err;
-      }
-    },
-    enabled:  !!orderId,
-    staleTime: RETURN_STALE,
-    gcTime:    RETURN_GC,
-    refetchOnWindowFocus: false,
-    retry: shouldRetry,
-  });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useInitiateReturnMutation — PATCH /api/orders/:orderId/return
+// useInitiateReturnMutation — POST /api/orders/:orderId/return
 //
 // onSuccess → write return status to cache + invalidate order detail
-// onSettled → background sync for return status
+// onSettled → background sync via order detail (no separate /return GET)
 // ─────────────────────────────────────────────────────────────────────────────
 export const useInitiateReturnMutation = (orderId) => {
   const qc = useQueryClient();
@@ -68,13 +89,19 @@ export const useInitiateReturnMutation = (orderId) => {
     retry: 0,
 
     onSuccess: (data) => {
-      const returnStatus = data?.status ?? "RETURN_REQUESTED";
+      // The POST /return response is the updated Order document.
+      // status will be RETURN_REQUESTED.
+      const returnStatus = data?.status?.toUpperCase() ?? "RETURN_REQUESTED";
       qc.setQueryData(queryKeys.returns.byOrder(orderId), returnStatus);
-      qc.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      // Also update the order detail cache so the status badge updates immediately
+      qc.setQueryData(queryKeys.orders.detail(orderId), (old) =>
+        old ? { ...old, status: returnStatus } : old
+      );
     },
 
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.returns.byOrder(orderId) });
+      // Background refresh of order detail to get server-confirmed state
+      qc.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
     },
   });
 };
