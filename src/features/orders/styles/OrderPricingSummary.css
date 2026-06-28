@@ -1,0 +1,104 @@
+/* OrderPricingSummary.css */
+.order-pricing-summary {
+  background: var(--color-surface, #1c1b19);
+  border: 1px solid var(--color-border, #393836);
+  border-radius: var(--radius-lg, 0.75rem);
+  padding: var(--space-6, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.order-pricing-summary__title {
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: 700;
+  color: var(--color-text, #cdccca);
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.order-pricing-summary__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+}
+
+.order-pricing-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-muted, #797876);
+}
+
+.order-pricing-summary__value--free {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.order-pricing-summary__divider {
+  height: 1px;
+  background: var(--color-divider, #262523);
+  margin: var(--space-1, 0.25rem) 0;
+}
+
+.order-pricing-summary__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-base, 1rem);
+  font-weight: 700;
+  color: var(--color-text, #cdccca);
+}
+
+.order-pricing-summary__total-value {
+  color: var(--color-warning, #f97316);
+  font-size: var(--text-lg, 1.125rem);
+}
+
+.order-pricing-summary__free-note {
+  font-size: var(--text-xs, 0.75rem);
+  color: #22c55e;
+  text-align: center;
+  margin-top: var(--space-1, 0.25rem);
+}
+
+.order-pricing-summary__secure {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-faint, #5a5957);
+  text-align: center;
+  margin-top: var(--space-2, 0.5rem);
+}
+
+/* ── Order Info + Return Info sections ─────────────────────────────── */
+.order-info-section,
+.return-info-section {
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.order-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem);
+  background: var(--color-surface, #1c1b19);
+  border: 1px solid var(--color-border, #393836);
+  border-radius: var(--radius-md, 0.5rem);
+}
+
+.order-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.order-info-label {
+  color: var(--color-text-muted, #797876);
+  flex-shrink: 0;
+}
+
+.order-info-value {
+  color: var(--color-text, #cdccca);
+  text-align: right;
+  font-weight: 500;
+}
