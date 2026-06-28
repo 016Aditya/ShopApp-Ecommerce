@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate }           from 'react-router-dom';
 import { useAuth }               from '@/features/auth/hooks/useAuth';
-import { useQueryProfile }       from '@/hooks/useQueryProfile';
+import { useProfileQuery }       from '@/hooks/useQueryProfile';
 import ProfileForm               from '../components/ProfileForm';
 import PasswordForm              from '../components/PasswordForm';
 import { ProfileSkeleton }       from '@/components/skeleton';
@@ -20,12 +20,13 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
   // ── Server state via TanStack Query ─────────────────────────────────────
+  // FIX: was `useQueryProfile` (does not exist) — the correct export is `useProfileQuery`
   const {
-    profile,
-    loading: profileLoading,
-    error:   profileError,
-    refetch: refetchProfile,
-  } = useQueryProfile(user?.id);
+    data:    profile,
+    isLoading: profileLoading,
+    isError:   profileError,
+    refetch:   refetchProfile,
+  } = useProfileQuery(user?.id);
 
   // ── Toast / feedback state ─────────────────────────────────────────────
   const [toast, setToast] = useState(null);   // { msg, type: 'success'|'error' }
@@ -42,7 +43,7 @@ const ProfilePage = () => {
   }
 
   // ── Loading skeleton ───────────────────────────────────────────────────────
-if (profileLoading) return <ProfileSkeleton />;
+  if (profileLoading) return <ProfileSkeleton />;
 
   // ── Error state ─────────────────────────────────────────────────────────────
   if (profileError) {

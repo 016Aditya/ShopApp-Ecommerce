@@ -6,45 +6,43 @@ import {
   removeItemFromCart,
   clearCart,
 } from '@/services/cartService';
+import { getProductById } from '@/services/productService';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 
 /**
  * normalizeItem
  *
- * The backend returns cart items in two possible shapes:
+ * The backend CartItemResponse only returns { productId, quantity, unitPrice }.
+ * It does NOT embed a nested product object — productName, imageUrl, brand,
+ * and category must be fetched separately via the products API.
  *
- *   Shape A (server response) — nested product object:
- *     { product: { id, name, imageUrl, brand, category, price }, quantity, unitPrice }
+ * This normalizer handles two shapes:
  *
- *   Shape B (optimistic / already-normalized):
+ *   Shape A — bare backend response (no product details yet):
+ *     { productId, quantity, unitPrice }
+ *     → kept as-is; product details are enriched in useCartQuery below.
+ *
+ *   Shape B — already enriched (optimistic update or re-render):
  *     { productId, productName, imageUrl, brand, category, unitPrice, quantity }
- *
- * CartItem, CheckoutItems, and WishlistPage all consume Shape B.
- * This normalizer coerces Shape A → Shape B, and passes Shape B through unchanged.
+ *     → passed through unchanged.
  */
-const normalizeItem = (item) => {
-  // Already normalized (optimistic or previously transformed)
-  if (item.productId) return item;
-
-  const p = item.product ?? {};
-  return {
-    productId:   item.productId   ?? p.id          ?? '',
-    productName: item.productName ?? p.name        ?? p.title ?? '',
-    imageUrl:    item.imageUrl    ?? p.imageUrl    ?? p.image ?? '',
-    brand:       item.brand       ?? p.brand       ?? '',
-    category:    item.category    ?? p.category    ?? '',
-    unitPrice:   item.unitPrice   ?? p.price       ?? 0,
-    quantity:    item.quantity    ?? 1,
-  };
-};
+const normalizeItem = (item) => ({
+  productId:   item.productId   ?? '',
+  productName: item.productName ?? '',
+  imageUrl:    item.imageUrl    ?? '',
+  brand:       item.brand       ?? '',
+  category:    item.category    ?? '',
+  unitPrice:   item.unitPrice   ?? 0,
+  quantity:    item.quantity    ?? 1,
+});
 
 // ── Query key factory ───────────────────────────────────────────────────────
 export const cartKeys = {
   all: (userId) => ['cart', userId],
 };
 
-// ── Fetch cart ─────────────────────────────────────────────────────────────
+// ── Fetch cart (with product detail enrichment) ────────────────────────────
 export const useCartQuery = () => {
   const user   = useAuthStore((s) => s.user);
   const userId = user?.id;
@@ -53,10 +51,35 @@ export const useCartQuery = () => {
     queryKey: cartKeys.all(userId),
     queryFn:  async () => {
       const data = await getCart(userId);
-      // Normalize all items to flat shape on the way in
+      const rawItems = data?.items ?? [];
+
+      // The backend only returns { productId, quantity, unitPrice }.
+      // Fetch each product in parallel to get name, image, brand, category.
+      const enriched = await Promise.all(
+        rawItems.map(async (item) => {
+          // If item already has productName it was added optimistically — skip fetch
+          if (item.productName) return normalizeItem(item);
+          try {
+            const product = await getProductById(item.productId);
+            return {
+              productId:   item.productId,
+              productName: product?.name      ?? product?.title ?? '',
+              imageUrl:    product?.imageUrl  ?? product?.image ?? '',
+              brand:       product?.brand     ?? '',
+              category:    product?.category  ?? '',
+              unitPrice:   item.unitPrice     ?? product?.price ?? 0,
+              quantity:    item.quantity      ?? 1,
+            };
+          } catch {
+            // Product fetch failed — render with id as fallback name
+            return normalizeItem(item);
+          }
+        })
+      );
+
       return {
         ...data,
-        items: (data?.items ?? []).map(normalizeItem),
+        items: enriched,
       };
     },
     enabled:  !!userId,
@@ -165,7 +188,6 @@ const useCart = () => {
   const removeMutation = useRemoveFromCart();
   const clearMutation  = useClearCart();
 
-  // Items are already normalized by useCartQuery’s queryFn
   const items     = data?.items     ?? [];
   const cartTotal = data?.cartTotal ?? 0;
 

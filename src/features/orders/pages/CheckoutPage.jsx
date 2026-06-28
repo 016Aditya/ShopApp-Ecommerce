@@ -17,7 +17,15 @@ const CheckoutPage = () => {
   const items     = cart?.items     ?? [];
   const cartTotal = cart?.cartTotal ?? 0;
 
-  const [selectedAddress, setSelectedAddress] = useState(null);
+  // FIX: initialise to EMPTY_ADDRESS object (not null) so CheckoutAddress
+  // never receives `address={null}` which caused `Cannot read properties of
+  // undefined (reading 'id')` at address[key] accesses inside the component.
+  const [selectedAddress, setSelectedAddress] = useState({
+    name: '', email: '', phone: '',
+    line1: '', line2: '',
+    city: '', state: '',
+    zipCode: '', country: 'India',
+  });
   const [placingOrder,    setPlacingOrder]    = useState(false);
   const [error,           setError]           = useState(null);
 
@@ -27,14 +35,17 @@ const CheckoutPage = () => {
   }, [user, navigate]);
 
   const handlePlaceOrder = async () => {
-    if (!selectedAddress) { setError('Please select a delivery address.'); return; }
-    if (!items.length)    { setError('Your cart is empty.');               return; }
+    // Validate that a real address has been entered/selected
+    const hasAddress = selectedAddress?.line1?.trim() && selectedAddress?.city?.trim();
+    if (!hasAddress)  { setError('Please enter a delivery address.'); return; }
+    if (!items.length){ setError('Your cart is empty.');               return; }
     setError(null);
     setPlacingOrder(true);
     try {
       const order = await createOrder({
         userId    : user.id,
-        addressId : selectedAddress.id,
+        // addressId is optional — only send when a saved address id exists
+        ...(selectedAddress.id ? { addressId: selectedAddress.id } : {}),
         items     : items.map(i => ({ productId: i.productId, quantity: i.quantity })),
         cartTotal,
       });
@@ -82,10 +93,11 @@ const CheckoutPage = () => {
         <div className="checkout-layout__main">
           <section className="checkout-section">
             <h2 className="checkout-section__title">📬 Delivery Address</h2>
+            {/* FIX: pass `address` + `onChange` props that CheckoutAddress
+                expects — NOT `onSelect`/`selectedId` which it doesn't accept */}
             <CheckoutAddress
-              userId={user?.id}
-              onSelect={setSelectedAddress}
-              selectedId={selectedAddress?.id}
+              address={selectedAddress}
+              onChange={setSelectedAddress}
             />
           </section>
 
