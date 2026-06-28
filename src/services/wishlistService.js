@@ -3,24 +3,18 @@ import api from '@/api/api';
 /**
  * wishlistService — pure async functions, no React, no hooks.
  *
- * All functions call the Spring Boot backend wishlist endpoints.
- * Adjust URL paths below to match your @RequestMapping in the backend.
+ * Backend controller routes (WishlistController.java):
+ *   GET    /api/wishlist/user/{userId}                    → get wishlist
+ *   POST   /api/wishlist/user/{userId}/add/{productId}    → add product
+ *   DELETE /api/wishlist/user/{userId}/remove/{productId} → remove product
+ *   DELETE /api/wishlist/user/{userId}/clear              → clear wishlist
  *
- * Assumed backend routes (update if your controller uses different paths):
- *   GET    /api/wishlist/user/:userId   → returns wishlist items array
- *   POST   /api/wishlist/user/:userId/add?productId=:productId
- *   DELETE /api/wishlist/user/:userId/remove?productId=:productId
- *
- * If your backend uses a single /api/wishlist route (token-identified),
- * remove the userId path param and update the URLs accordingly.
+ * FIX: previous service used query params (?productId=...) for add/remove.
+ * The backend uses PATH VARIABLES (/add/{productId}, /remove/{productId}).
+ * This caused Spring to return 500 because no route matched the query-param
+ * variant — the endpoint simply didn't exist at that URL.
  */
 
-/**
- * getWishlist
- * Fetch the wishlist for a user.
- * @param {string} userId
- * @returns {Promise<Array>} raw item array from backend
- */
 export const getWishlist = async (userId) => {
   const { data } = await api.get(`/wishlist/user/${userId}`);
   return data;
@@ -28,29 +22,26 @@ export const getWishlist = async (userId) => {
 
 /**
  * addToWishlist
- * Add a product to the user's wishlist.
- * @param {string} userId
- * @param {string} productId
+ * POST /api/wishlist/user/{userId}/add/{productId}
  */
 export const addToWishlist = async (userId, productId) => {
-  const { data } = await api.post(
-    `/wishlist/user/${userId}/add`,
-    null,
-    { params: { productId } }
-  );
+  const { data } = await api.post(`/wishlist/user/${userId}/add/${productId}`);
   return data;
 };
 
 /**
  * removeFromWishlist
- * Remove a product from the user's wishlist.
- * @param {string} userId
- * @param {string} productId
+ * DELETE /api/wishlist/user/{userId}/remove/{productId}
  */
 export const removeFromWishlist = async (userId, productId) => {
-  const { data } = await api.delete(
-    `/wishlist/user/${userId}/remove`,
-    { params: { productId } }
-  );
+  const { data } = await api.delete(`/wishlist/user/${userId}/remove/${productId}`);
   return data;
+};
+
+/**
+ * clearWishlist
+ * DELETE /api/wishlist/user/{userId}/clear
+ */
+export const clearWishlist = async (userId) => {
+  await api.delete(`/wishlist/user/${userId}/clear`);
 };

@@ -40,28 +40,20 @@ const CheckoutPage = () => {
 
     try {
       /**
-       * FIX — payload shape mismatch.
+       * FIX — `userId` was referenced as a bare variable but it was never
+       * declared. The correct value lives on `user.id` (from useAuth).
+       * Using `userId` (undefined) made the backend receive userId:null
+       * so no order was created and the response was silently swallowed.
        *
-       * Backend OrderDto.Request expects:
-       *   { userId, productIds: ["id1", "id2", ...], address: { ... } }
-       *
-       * Previous code sent:
-       *   { userId, items: [{ productId, quantity }], cartTotal }
-       *
-       * The backend iterated `productIds` which was null → NPE:
-       *   "Cannot invoke List.iterator() because productIds is null"
-       *
-       * Fixed: extract productId from each cart item into a flat string
-       * array and map it to the `productIds` key the backend requires.
-       * Quantity defaults to 1 per the current OrderService implementation.
-       * The `address` object is sent inline (street fields) rather than
-       * an addressId so the backend can build the Address snapshot.
+       * Backend OrderController.createOrder() expects:
+       *   { userId: string, productIds: string[], address: { street, city, state, zipCode, country } }
        */
       const payload = {
-        userId,
+        userId: user.id,                          // ← was `userId` (undefined)
         productIds: items.map((i) => i.productId),
         address: {
-          street:  selectedAddress.line1 + (selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''),
+          street:  selectedAddress.line1
+                   + (selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''),
           city:    selectedAddress.city,
           state:   selectedAddress.state,
           zipCode: selectedAddress.zipCode,
