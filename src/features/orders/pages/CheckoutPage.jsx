@@ -10,45 +10,66 @@ import PATHS                   from '@/routes/paths';
 import '../styles/Checkout.css';
 
 const CheckoutPage = () => {
-  const navigate                        = useNavigate();
-  const { user }                        = useAuth();
-  const { data: cart, isLoading }       = useCartQuery();
+  const navigate                  = useNavigate();
+  const { user }                  = useAuth();
+  const { data: cart, isLoading } = useCartQuery();
 
   const items     = cart?.items     ?? [];
   const cartTotal = cart?.cartTotal ?? 0;
 
-  // FIX: initialise to EMPTY_ADDRESS object (not null) so CheckoutAddress
-  // never receives `address={null}` which caused `Cannot read properties of
-  // undefined (reading 'id')` at address[key] accesses inside the component.
   const [selectedAddress, setSelectedAddress] = useState({
     name: '', email: '', phone: '',
     line1: '', line2: '',
     city: '', state: '',
     zipCode: '', country: 'India',
   });
-  const [placingOrder,    setPlacingOrder]    = useState(false);
-  const [error,           setError]           = useState(null);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [error,        setError]        = useState(null);
 
-  // Redirect guests immediately
   useEffect(() => {
     if (!user) navigate(PATHS.LOGIN);
   }, [user, navigate]);
 
   const handlePlaceOrder = async () => {
-    // Validate that a real address has been entered/selected
     const hasAddress = selectedAddress?.line1?.trim() && selectedAddress?.city?.trim();
-    if (!hasAddress)  { setError('Please enter a delivery address.'); return; }
-    if (!items.length){ setError('Your cart is empty.');               return; }
+    if (!hasAddress)   { setError('Please enter a delivery address.'); return; }
+    if (!items.length) { setError('Your cart is empty.');               return; }
+
     setError(null);
     setPlacingOrder(true);
+
     try {
-      const order = await createOrder({
-        userId    : user.id,
-        // addressId is optional — only send when a saved address id exists
-        ...(selectedAddress.id ? { addressId: selectedAddress.id } : {}),
-        items     : items.map(i => ({ productId: i.productId, quantity: i.quantity })),
-        cartTotal,
-      });
+      /**
+       * FIX — payload shape mismatch.
+       *
+       * Backend OrderDto.Request expects:
+       *   { userId, productIds: ["id1", "id2", ...], address: { ... } }
+       *
+       * Previous code sent:
+       *   { userId, items: [{ productId, quantity }], cartTotal }
+       *
+       * The backend iterated `productIds` which was null → NPE:
+       *   "Cannot invoke List.iterator() because productIds is null"
+       *
+       * Fixed: extract productId from each cart item into a flat string
+       * array and map it to the `productIds` key the backend requires.
+       * Quantity defaults to 1 per the current OrderService implementation.
+       * The `address` object is sent inline (street fields) rather than
+       * an addressId so the backend can build the Address snapshot.
+       */
+      const payload = {
+        userId,
+        productIds: items.map((i) => i.productId),
+        address: {
+          street:  selectedAddress.line1 + (selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''),
+          city:    selectedAddress.city,
+          state:   selectedAddress.state,
+          zipCode: selectedAddress.zipCode,
+          country: selectedAddress.country || 'India',
+        },
+      };
+
+      const order = await createOrder(payload);
       navigate(PATHS.ORDER_SUCCESS, { state: { order } });
     } catch (err) {
       setError(err.response?.data?.message ?? 'Failed to place order. Please try again.');
@@ -93,8 +114,6 @@ const CheckoutPage = () => {
         <div className="checkout-layout__main">
           <section className="checkout-section">
             <h2 className="checkout-section__title">📬 Delivery Address</h2>
-            {/* FIX: pass `address` + `onChange` props that CheckoutAddress
-                expects — NOT `onSelect`/`selectedId` which it doesn't accept */}
             <CheckoutAddress
               address={selectedAddress}
               onChange={setSelectedAddress}

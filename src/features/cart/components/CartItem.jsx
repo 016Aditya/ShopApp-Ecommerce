@@ -1,19 +1,31 @@
 import { useUpdateCartItem, useRemoveFromCart } from "../hooks/useCart";
-import { useWishlistStore } from "@/store/wishlistStore";
-import { formatCurrency } from "@/utils/currency";
+import { useWishlistStore }                     from "@/store/wishlistStore";
+import { useAddToWishlist }                     from "@/features/wishlist/hooks/useWishlist";
+import { formatCurrency }                       from "@/utils/currency";
 
 /**
- * CartItem — uses named TanStack Query hooks directly.
+ * CartItem — uses granular TanStack Query hooks.
  *
- * Using the granular hooks (instead of the useCart facade) gives each
- * CartItem its own independent isPending state, so the +/− buttons
- * on one row disable only that row while its mutation is in-flight,
- * not the entire cart.
+ * Each CartItem has its own independent isPending state so the +/−
+ * buttons on one row disable only that row while its mutation is
+ * in-flight, not the entire cart.
+ *
+ * FIX: wishlistStore no longer exposes addToWishlist after the
+ * TanStack migration (it only holds UI flags now). The actual
+ * "add to wishlist" mutation lives in:
+ *   src/features/wishlist/hooks/useWishlist.js → useAddToWishlist()
+ * Import that hook instead of trying to read a non-existent
+ * function from the Zustand store.
  */
 const CartItem = ({ item }) => {
   const updateMutation = useUpdateCartItem();
   const removeMutation = useRemoveFromCart();
-  const addToWishlist  = useWishlistStore((s) => s.addToWishlist);
+
+  // Wishlist UI flag (open/close drawer) — still from Zustand
+  const openWishlist = useWishlistStore((s) => s.openWishlist);
+
+  // Wishlist server mutation — from TanStack hook (NOT from Zustand store)
+  const addToWishlistMutation = useAddToWishlist();
 
   const {
     productId,
@@ -30,7 +42,8 @@ const CartItem = ({ item }) => {
 
   const isUpdating = updateMutation.isPending;
   const isRemoving = removeMutation.isPending;
-  const isBusy     = isUpdating || isRemoving;
+  const isSaving   = addToWishlistMutation.isPending;
+  const isBusy     = isUpdating || isRemoving || isSaving;
 
   const handleUpdateQty = (newQty) => {
     if (newQty < 1 || isBusy) return;
@@ -44,8 +57,16 @@ const CartItem = ({ item }) => {
 
   const handleSaveForLater = () => {
     if (isBusy) return;
-    addToWishlist({ productId, productName, imageUrl, brand, category, unitPrice: price });
-    removeMutation.mutate({ productId });
+    // Add to wishlist via TanStack mutation, then remove from cart
+    addToWishlistMutation.mutate(
+      { productId },
+      {
+        onSuccess: () => {
+          removeMutation.mutate({ productId });
+          openWishlist();   // slide open the wishlist drawer (optional UX)
+        },
+      }
+    );
   };
 
   return (
@@ -62,7 +83,9 @@ const CartItem = ({ item }) => {
             />
           ) : (
             <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828
+                0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           )}
         </div>
@@ -131,7 +154,7 @@ const CartItem = ({ item }) => {
             disabled={isBusy}
             className="text-sm text-blue-600 hover:text-blue-700 font-medium transition disabled:opacity-50"
           >
-            Save for Later
+            {isSaving ? 'Saving…' : 'Save for Later'}
           </button>
           <button
             onClick={handleRemove}
