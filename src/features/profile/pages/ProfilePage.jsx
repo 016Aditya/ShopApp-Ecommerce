@@ -56,7 +56,7 @@ const NAV_CARDS = [
     id: 'settings',
     label: 'Account Settings',
     sub: 'Update profile & password',
-    path: null,   // scrolls to the tabs section below
+    path: null,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
         <circle cx="12" cy="12" r="3"/>
@@ -66,11 +66,17 @@ const NAV_CARDS = [
   },
 ];
 
-// Helper: format join date from ISO string → "June 2026"
+/**
+ * formatMemberSince
+ * Accepts an ISO string (Instant from backend) or anything new Date() can parse.
+ * Returns "June 2026" style string, or null if the value is absent / unparseable.
+ */
 const formatMemberSince = (dateStr) => {
   if (!dateStr) return null;
   try {
-    return new Date(dateStr).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   } catch {
     return null;
   }
@@ -83,7 +89,7 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
   const {
-    data:    profile,
+    data:      profile,
     isLoading: profileLoading,
     isError:   profileError,
     refetch:   refetchProfile,
@@ -110,19 +116,32 @@ const ProfilePage = () => {
     );
   }
 
-  const initials = user.name
-    ? user.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : '?';
+  // ── Derive display values from UserDto.Response field names ─────────────────
+  // Backend returns: { id, firstName, lastName, email, phoneNumber, role, createdAt }
+  // authStore stores this object verbatim as `user`.
 
+  const firstName   = user.firstName  ?? profile?.firstName  ?? '';
+  const lastName    = user.lastName   ?? profile?.lastName   ?? '';
+  const fullName    = [firstName, lastName].filter(Boolean).join(' ') || 'User';
+
+  // Initials: first letter of firstName + first letter of lastName
+  const initials = [
+    firstName?.[0]?.toUpperCase(),
+    lastName?.[0]?.toUpperCase(),
+  ].filter(Boolean).join('') || '?';
+
+  // phoneNumber is the field name in UserDto.Response
+  const phone = user.phoneNumber ?? profile?.phoneNumber ?? null;
+
+  // createdAt is an Instant ISO string from the backend
   const memberSince = formatMemberSince(user.createdAt ?? profile?.createdAt);
-  const phone       = user.phone ?? profile?.phone ?? null;
-  const isAdmin     = user.role === 'ADMIN';
+
+  const isAdmin = user.role === 'ADMIN';
 
   const handleNavCard = (card) => {
     if (card.path) {
       navigate(card.path);
     } else {
-      // "Account Settings" card — scroll smoothly to the tabs section
       document.getElementById('account-settings-section')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
@@ -130,21 +149,25 @@ const ProfilePage = () => {
   return (
     <div className="profile-page">
 
-      {/* ═══════════════════════════════════════════════════════════
-          MY ACCOUNT — top section (matches the reference image)
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════
+          MY ACCOUNT — top section
+      ════════════════════════════════════════════════════════ */}
       <h1 className="ma-page-title">My Account</h1>
 
-      {/* Avatar card */}
+      {/* ── Avatar / user card ── */}
       <div className="ma-user-card">
         <div className="ma-avatar">{initials}</div>
+
         <div className="ma-user-info">
+          {/* Name row: full name + role badge */}
           <div className="ma-name-row">
-            <span className="ma-name">{user.name}</span>
+            <span className="ma-name">{fullName}</span>
             <span className={`ma-role-badge${isAdmin ? ' ma-role-badge--admin' : ''}`}>
               {isAdmin ? 'ADMIN' : 'USER'}
             </span>
           </div>
+
+          {/* Meta row: email | phone | member since */}
           <div className="ma-meta-row">
             {user.email && (
               <span className="ma-meta-item">
@@ -156,6 +179,7 @@ const ProfilePage = () => {
                 <span className="ma-meta-value">{user.email}</span>
               </span>
             )}
+
             {phone && (
               <span className="ma-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -165,6 +189,7 @@ const ProfilePage = () => {
                 <span className="ma-meta-value">{phone}</span>
               </span>
             )}
+
             {memberSince && (
               <span className="ma-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -179,7 +204,7 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* 4-column quick-nav grid */}
+      {/* ── 4-column quick-nav grid ── */}
       <div className="ma-nav-grid">
         {NAV_CARDS.map((card) => (
           <button
@@ -195,13 +220,12 @@ const ProfilePage = () => {
         ))}
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════
-          ACCOUNT SETTINGS — existing tabs section (unchanged)
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════
+          ACCOUNT SETTINGS — existing tabs (unchanged)
+      ════════════════════════════════════════════════════════ */}
       <div id="account-settings-section">
         <h2 className="ma-section-title">Account Settings</h2>
 
-        {/* Tabs */}
         <nav className="profile-tabs" role="tablist" aria-label="Profile sections">
           {TABS.map(tab => (
             <button
@@ -217,7 +241,6 @@ const ProfilePage = () => {
           ))}
         </nav>
 
-        {/* Tab panels */}
         <div className="profile-content" role="tabpanel">
           {activeTab === 'profile' && (
             <ProfileForm
