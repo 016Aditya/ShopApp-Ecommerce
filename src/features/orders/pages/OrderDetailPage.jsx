@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import PATHS from "@/routes/paths";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import PATHS, { buildPath } from "@/routes/paths";
 import { formatCurrency } from "@/utils/currency";
 import OrderItemsList       from "../components/OrderItemsList";
 import OrderStatusBadge     from "../components/OrderStatusBadge";
@@ -57,6 +57,60 @@ const SectionCard = ({ icon, iconBg, title, children, className = "" }) => (
     <div className="odp-card__body">{children}</div>
   </div>
 );
+
+/**
+ * ProductPreviewCard
+ * Clickable card showing the first ordered item's image, name and price.
+ * Clicking anywhere on the card navigates to the product detail page.
+ */
+const ProductPreviewCard = ({ items, placeholder }) => {
+  const firstItem = items?.[0];
+  if (!firstItem) return null;
+
+  const productPath = firstItem.productId
+    ? buildPath(PATHS.PRODUCT_DETAIL, firstItem.productId)
+    : null;
+
+  const extraCount = (items?.length ?? 0) - 1;
+
+  const inner = (
+    <>
+      <img
+        className="odp-preview-card__img"
+        src={firstItem.imageUrl || placeholder}
+        alt={firstItem.name || "Product image"}
+        width={64}
+        height={64}
+        loading="lazy"
+        onError={(e) => { e.currentTarget.src = placeholder; }}
+      />
+      <div className="odp-preview-card__info">
+        <span className="odp-preview-card__name">
+          {firstItem.name || "Product"}
+          {extraCount > 0 && (
+            <span className="odp-preview-card__extra"> +{extraCount} more</span>
+          )}
+        </span>
+        <span className="odp-preview-card__price">
+          {formatCurrency(firstItem.price ?? firstItem.unitPrice ?? 0)}
+        </span>
+      </div>
+      {productPath && (
+        <span className="odp-preview-card__arrow" aria-hidden="true">›</span>
+      )}
+    </>
+  );
+
+  if (productPath) {
+    return (
+      <Link to={productPath} className="odp-preview-card" aria-label={`View product: ${firstItem.name}`}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return <div className="odp-preview-card odp-preview-card--no-link">{inner}</div>;
+};
 
 const OrderDetailPage = () => {
   const { id }   = useParams();
@@ -172,6 +226,9 @@ const OrderDetailPage = () => {
           )}
         </div>
       </div>
+
+      {/* ── Product Preview Card ── */}
+      <ProductPreviewCard items={order.items} placeholder={ORDER_IMAGE_PLACEHOLDER} />
 
       {/* ── Timeline ── */}
       <div className="order-detail__timeline">
