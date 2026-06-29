@@ -44,22 +44,32 @@ const CheckoutPage = () => {
     setPlacingOrder(true);
 
     try {
-      const payload = {
-        userId: user.id,
-        productIds: items.map((i) => i.productId),
-        address: {
-          street:  selectedAddress.line1
-                   + (selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''),
-          city:    selectedAddress.city,
-          state:   selectedAddress.state,
-          zipCode: selectedAddress.zipCode,
-          country: selectedAddress.country || 'India',
-        },
+      const shippingAddress = {
+        street:  selectedAddress.line1
+                 + (selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''),
+        city:    selectedAddress.city,
+        state:   selectedAddress.state,
+        zipCode: selectedAddress.zipCode,
+        country: selectedAddress.country || 'India',
       };
 
-      const order = await createOrder(payload);
+      // FIX BUG 2: Create ONE separate order per distinct cart item
+      //   Samsung + iPhone in cart  →  2 orders (not 1)
+      // FIX BUG 1: Send actual cart quantity per product
+      //   3x Jeans in cart  →  1 order with qty=3 (not "1 item")
+      const orderPromises = items.map((item) =>
+        createOrder({
+          userId:     user.id,
+          productIds: [item.productId],
+          productQuantities: { [item.productId]: item.quantity },
+          address: shippingAddress,
+        })
+      );
 
-      // FIX 1: Clear the cart on the backend and wipe the TQ cart cache
+      const orders = await Promise.all(orderPromises);
+      const lastOrder = orders[orders.length - 1];
+
+      // Clear the cart on the backend and wipe TQ cart cache
       // so the cart badge and drawer show 0 items immediately.
       try {
         await clearCartMutation();
@@ -71,13 +81,13 @@ const CheckoutPage = () => {
         );
       }
 
-      // FIX 2: Invalidate the orders list cache so OrdersPage shows the
-      // new order immediately without requiring a manual refresh.
+      // Invalidate the orders list cache so OrdersPage shows all new
+      // orders immediately without requiring a manual refresh.
       queryClient.invalidateQueries({
         queryKey: queryKeys.orders.byUser(user.id),
       });
 
-      navigate(PATHS.ORDER_SUCCESS, { state: { order } });
+      navigate(PATHS.ORDER_SUCCESS, { state: { order: lastOrder } });
     } catch (err) {
       setError(err.response?.data?.message ?? 'Failed to place order. Please try again.');
     } finally {
