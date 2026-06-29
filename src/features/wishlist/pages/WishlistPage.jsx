@@ -9,7 +9,7 @@ import {
   useWishlistQuery,
   useRemoveFromWishlist,
 } from '@/features/wishlist/hooks/useWishlist';
-import './styles/Wishlist.css';
+import '../styles/Wishlist.css';
 
 const WishlistPage = () => {
   const navigate = useNavigate();
