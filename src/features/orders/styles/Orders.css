@@ -66,10 +66,6 @@
 }
 
 /* ── Status badge ───────────────────────────────────────────── */
-/*
-  v3 spec: rgba(245,158,11,.12) bg, rgba(245,158,11,.25) border,
-  #f59e0b text, 8px 14px padding, 999px radius, 0.82rem, 600
-*/
 .order-status-badge {
   display: inline-flex;
   align-items: center;
@@ -103,12 +99,6 @@
   }
 }
 
-/*
-  Section label — "Delivery Completed | Return Process"
-  Sits 12-18px above the timeline progress bar.
-  Centered, dimmed, purely decorative context.
-  Only rendered when isReturnFlow is true.
-*/
 .order-timeline__section-label {
   text-align: center;
   font-size: 0.85rem;
@@ -117,7 +107,6 @@
   opacity: 0.65;
   letter-spacing: 0.3px;
   margin-bottom: 18px;
-  /* 12px min so it never collapses on tight viewports */
   padding-top: 12px;
 }
 
@@ -130,11 +119,6 @@
   gap: 0;
   background: transparent;
 }
-/*
-  --gap14: tighter spacing between all nodes;
-  align-items: center keeps every dot, connector, and label on the same
-  vertical midpoint — no node appears lower than another.
-*/
 .order-timeline--gap14 {
   gap: 14px;
   align-items: center;
@@ -261,7 +245,7 @@
 .order-detail__return-info-label { font-weight: 600; color: var(--text-primary); }
 .order-detail__return-info-value { color: #d97706; font-weight: 500; }
 
-/* ── Return metadata line ("Requested on 22 Jun 2026") ────────*/
+/* ── Return metadata line ─────────────────────────────────────*/
 .order-detail__return-meta {
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -288,7 +272,12 @@
   border-radius: 8px; padding: 16px; margin-bottom: 12px;
   transition: background 300ms ease, border-color 300ms ease;
 }
-.order-detail__section-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+.order-detail__section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
 
 /* Product-preview card */
 .order-detail__product-preview {
@@ -358,7 +347,18 @@
 .order-items-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .order-items-list__row  { display: flex; align-items: center; gap: 12px; }
 .order-items-list__img  { width: 72px; height: 72px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border-color); flex-shrink: 0; }
-.order-items-list__img--polished { width: 64px; height: 64px; border-radius: 12px; }
+
+/*
+  Product image inside "Products Ordered" on the Order Detail page.
+  Size: 65.6px = 64px * 1.025  (2.5% increase from base 64px)
+  All other properties unchanged.
+*/
+.order-items-list__img--polished {
+  width: 65.6px;
+  height: 65.6px;
+  border-radius: 12px;
+}
+
 .order-items-list__meta { flex: 1; }
 .order-items-list__name { font-size: 0.875rem; font-weight: 500; color: var(--text-primary); }
 .order-items-list__name--bold { font-weight: 600; }
@@ -440,12 +440,7 @@
 .order-success__btn--shop   { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); }
 .order-success__btn--shop:hover { background: var(--bg-tertiary); }
 
-/* ── Auth success banner (shown on Login after registration) ──
-   Spec: rgba(34,197,94,.12) bg, rgba(34,197,94,.3) border,
-         #22c55e text, border-radius 12px, padding 14px 16px,
-         margin-bottom 20px.
-   Includes a dismiss × button top-right.
-*/
+/* ── Auth success banner ──────────────────────────────────────*/
 .auth-success-banner {
   position: relative;
   display: flex;
@@ -491,3 +486,12 @@
   transition: opacity 150ms;
 }
 .auth-success-banner__dismiss:hover { opacity: 1; }
+
+/* ── Order info grid ──────────────────────────────────────────*/
+.order-info-grid { display: flex; flex-direction: column; gap: 8px; }
+.order-info-row  { display: flex; justify-content: space-between; align-items: center; }
+.order-info-label { font-size: 0.85rem; color: var(--text-secondary); }
+.order-info-value { font-size: 0.875rem; font-weight: 500; color: var(--text-primary); }
+
+/* ── Order actions row ────────────────────────────────────────*/
+.order-detail__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
