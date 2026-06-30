@@ -1,130 +1,217 @@
 import { useState, useEffect } from 'react';
-import { useAuth }             from '@/features/auth/hooks/useAuth';
-import { updateProfile }       from '@/services/profileService';
+import { userService }        from '@/services/userService';
+import { useAuth }            from '@/features/auth/hooks/useAuth';
+import { useQueryClient }     from '@tanstack/react-query';
+import { QUERY_KEYS }         from '@/lib/queryKeys';
 
-/**
- * ProfileForm
- *
- * Renders and submits the user’s editable profile fields:
- *   name, phone, address (street / city / state / zip / country).
- *
- * Props
- *   profile  — server-side profile object (may be null while loading)
- *   user     — auth user object from useAuthStore (for fallback display)
- *   onSuccess(msg) — callback: show toast + trigger refetch in ProfilePage
- *   onError(msg)   — callback: show error toast in ProfilePage
- */
+// ── helpers ──────────────────────────────────────────────────────────────────
+const empty = (v) => !v || String(v).trim() === '';
+
+const buildInitial = (profile, user) => ({
+  firstName:    profile?.firstName    ?? user?.firstName    ?? '',
+  lastName:     profile?.lastName     ?? user?.lastName     ?? '',
+  phoneNumber:  profile?.phoneNumber  ?? user?.phoneNumber  ?? '',
+  // address sub-fields — pre-filled from profile.address when available
+  addrFullName: profile?.address?.fullName      ?? '',
+  addrPhone:    profile?.address?.phoneNumber   ?? '',
+  addrLine1:    profile?.address?.addressLine1  ?? '',
+  addrLine2:    profile?.address?.addressLine2  ?? '',
+  city:         profile?.address?.city          ?? '',
+  state:        profile?.address?.state         ?? '',
+  zipCode:      profile?.address?.zipCode       ?? '',
+  country:      profile?.address?.country       ?? 'India',
+});
+
+// ── ProfileForm ───────────────────────────────────────────────────────────────
 const ProfileForm = ({ profile, user, onSuccess, onError }) => {
-  const { user: authUser } = useAuth();
+  const { updateUser }   = useAuth();
+  const queryClient      = useQueryClient();
+  const [fields, setFields]   = useState(() => buildInitial(profile, user));
+  const [loading, setLoading] = useState(false);
 
-  // ── Form state ─────────────────────────────────────────────────────────────
-  const [form,    setForm]    = useState({ name: '', phone: '', street: '', city: '', state: '', zip: '', country: '' });
-  const [saving,  setSaving]  = useState(false);
-  const [touched, setTouched] = useState({});
-
-  // ── Pre-fill ──────────────────────────────────────────────────────────────────
-  // Pre-fill from profile (API) first; fall back to AuthContext user
+  // Re-seed when profile data arrives (first query load)
   useEffect(() => {
-    setForm({
-      name    : profile?.name    ?? authUser?.name  ?? '',
-      phone   : profile?.phone   ?? '',
-      street  : profile?.address?.street  ?? '',
-      city    : profile?.address?.city    ?? '',
-      state   : profile?.address?.state   ?? '',
-      zip     : profile?.address?.zip     ?? '',
-      country : profile?.address?.country ?? '',
-    });
-  }, [profile, authUser]);
+    setFields(buildInitial(profile, user));
+  }, [profile, user]);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    setTouched(prev => ({ ...prev, [name]: true }));
-  };
+  const set = (key) => (e) => setFields((prev) => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!authUser?.id) return;
-    setSaving(true);
+
+    if (empty(fields.firstName)) { onError('First name is required.'); return; }
+    if (empty(fields.lastName))  { onError('Last name is required.');  return; }
+
+    setLoading(true);
     try {
-      await updateProfile(authUser.id, {
-        name  : form.name.trim(),
-        phone : form.phone.trim(),
-        address: {
-          street  : form.street.trim(),
-          city    : form.city.trim(),
-          state   : form.state.trim(),
-          zip     : form.zip.trim(),
-          country : form.country.trim(),
-        },
-      });
-      onSuccess('Profile updated successfully!');
+      // Build the request body that matches UserDto.UpdateProfileRequest
+      const payload = {
+        firstName:   fields.firstName.trim(),
+        lastName:    fields.lastName.trim(),
+        phoneNumber: fields.phoneNumber.trim() || undefined,
+        // Only include the address block when at least one field is filled
+        ...(!empty(fields.addrLine1) && {
+          address: {
+            fullName:     fields.addrFullName.trim() || undefined,
+            phoneNumber:  fields.addrPhone.trim()    || undefined,
+            addressLine1: fields.addrLine1.trim(),
+            addressLine2: fields.addrLine2.trim()    || undefined,
+            city:         fields.city.trim()         || undefined,
+            state:        fields.state.trim()        || undefined,
+            zipCode:      fields.zipCode.trim()      || undefined,
+            country:      fields.country.trim()      || undefined,
+          },
+        }),
+      };
+
+      const updatedUser = await userService.updateProfile(user.id, payload);
+
+      // Sync Zustand auth store so the Navbar name updates immediately
+      updateUser?.(updatedUser);
+
+      // Invalidate the profile TanStack query so ProfilePage re-fetches
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.profile(user.id) });
+
+      onSuccess('Profile updated successfully.');
     } catch (err) {
-      onError(err.response?.data?.message ?? 'Failed to update profile.');
+      onError(err?.message ?? 'Failed to update profile.');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const isDirty = Object.values(touched).some(Boolean);
-
-  // ── Field config ───────────────────────────────────────────────────────────────
-  const BASIC_FIELDS = [
-    { name: 'name',  label: 'Full Name',    type: 'text',  placeholder: 'John Doe' },
-    { name: 'phone', label: 'Phone Number', type: 'tel',   placeholder: '+91 98765 43210' },
-  ];
-  const ADDRESS_FIELDS = [
-    { name: 'street',  label: 'Street Address', type: 'text', placeholder: '123 Main Street', colSpan: true },
-    { name: 'city',    label: 'City',           type: 'text', placeholder: 'Mumbai' },
-    { name: 'state',   label: 'State',          type: 'text', placeholder: 'Maharashtra' },
-    { name: 'zip',     label: 'ZIP Code',       type: 'text', placeholder: '400001' },
-    { name: 'country', label: 'Country',        type: 'text', placeholder: 'India' },
-  ];
-
-  const renderField = ({ name, label, type, placeholder, colSpan }) => (
-    <div key={name} className={`profile-field${colSpan ? ' profile-field--full' : ''}`}>
-      <label htmlFor={name} className="profile-field__label">{label}</label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        value={form[name]}
-        placeholder={placeholder}
-        onChange={handleChange}
-        className="profile-field__input"
-      />
-    </div>
-  );
-
-  // ── Render ─────────────────────────────────────────────────────────────────────
   return (
-    <form onSubmit={handleSubmit} className="profile-form" noValidate>
+    <form className="profile-form" onSubmit={handleSubmit} noValidate>
 
-      {/* Basic info */}
-      <fieldset className="profile-fieldset">
-        <legend className="profile-fieldset__legend">👤 Personal Information</legend>
-        <div className="profile-grid">
-          {BASIC_FIELDS.map(renderField)}
+      {/* ── Personal info ── */}
+      <fieldset className="pf-fieldset">
+        <legend className="pf-legend">Personal Information</legend>
+
+        <div className="pf-row pf-row--2col">
+          <div className="pf-group">
+            <label htmlFor="pf-firstName" className="pf-label">First Name *</label>
+            <input
+              id="pf-firstName"
+              className="pf-input"
+              type="text"
+              value={fields.firstName}
+              onChange={set('firstName')}
+              placeholder="Aditya"
+              required
+            />
+          </div>
+
+          <div className="pf-group">
+            <label htmlFor="pf-lastName" className="pf-label">Last Name *</label>
+            <input
+              id="pf-lastName"
+              className="pf-input"
+              type="text"
+              value={fields.lastName}
+              onChange={set('lastName')}
+              placeholder="Kumar"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="pf-group">
+          <label htmlFor="pf-phoneNumber" className="pf-label">Mobile Number</label>
+          <input
+            id="pf-phoneNumber"
+            className="pf-input"
+            type="tel"
+            value={fields.phoneNumber}
+            onChange={set('phoneNumber')}
+            placeholder="9876543210"
+            maxLength={10}
+          />
         </div>
       </fieldset>
 
-      {/* Address */}
-      <fieldset className="profile-fieldset">
-        <legend className="profile-fieldset__legend">🏠 Address</legend>
-        <div className="profile-grid">
-          {ADDRESS_FIELDS.map(renderField)}
+      {/* ── Delivery address ── */}
+      <fieldset className="pf-fieldset">
+        <legend className="pf-legend">Default Delivery Address</legend>
+
+        <div className="pf-row pf-row--2col">
+          <div className="pf-group">
+            <label htmlFor="pf-addrFullName" className="pf-label">Full Name</label>
+            <input
+              id="pf-addrFullName"
+              className="pf-input"
+              type="text"
+              value={fields.addrFullName}
+              onChange={set('addrFullName')}
+              placeholder="Aditya Kumar"
+            />
+          </div>
+
+          <div className="pf-group">
+            <label htmlFor="pf-addrPhone" className="pf-label">Phone</label>
+            <input
+              id="pf-addrPhone"
+              className="pf-input"
+              type="tel"
+              value={fields.addrPhone}
+              onChange={set('addrPhone')}
+              placeholder="9876543210"
+              maxLength={10}
+            />
+          </div>
+        </div>
+
+        <div className="pf-group">
+          <label htmlFor="pf-addrLine1" className="pf-label">Address Line 1</label>
+          <input
+            id="pf-addrLine1"
+            className="pf-input"
+            type="text"
+            value={fields.addrLine1}
+            onChange={set('addrLine1')}
+            placeholder="House / Flat no., Street, Area"
+          />
+        </div>
+
+        <div className="pf-group">
+          <label htmlFor="pf-addrLine2" className="pf-label">Address Line 2 <span className="pf-optional">(optional)</span></label>
+          <input
+            id="pf-addrLine2"
+            className="pf-input"
+            type="text"
+            value={fields.addrLine2}
+            onChange={set('addrLine2')}
+            placeholder="Landmark, Near..."
+          />
+        </div>
+
+        <div className="pf-row pf-row--3col">
+          <div className="pf-group">
+            <label htmlFor="pf-city" className="pf-label">City</label>
+            <input id="pf-city" className="pf-input" type="text" value={fields.city} onChange={set('city')} placeholder="Kolkata" />
+          </div>
+          <div className="pf-group">
+            <label htmlFor="pf-state" className="pf-label">State</label>
+            <input id="pf-state" className="pf-input" type="text" value={fields.state} onChange={set('state')} placeholder="West Bengal" />
+          </div>
+          <div className="pf-group">
+            <label htmlFor="pf-zipCode" className="pf-label">PIN Code</label>
+            <input id="pf-zipCode" className="pf-input" type="text" value={fields.zipCode} onChange={set('zipCode')} placeholder="700001" maxLength={6} />
+          </div>
+        </div>
+
+        <div className="pf-group">
+          <label htmlFor="pf-country" className="pf-label">Country</label>
+          <input id="pf-country" className="pf-input" type="text" value={fields.country} onChange={set('country')} placeholder="India" />
         </div>
       </fieldset>
 
       <button
         type="submit"
-        disabled={saving || !isDirty}
         className="profile-btn profile-btn--primary"
+        disabled={loading}
       >
-        {saving ? 'Saving…' : 'Save Changes'}
+        {loading ? 'Saving…' : 'Save Changes'}
       </button>
-
     </form>
   );
 };
