@@ -61,7 +61,7 @@ const SectionCard = ({ icon, iconBg, title, children, className = "" }) => (
 /**
  * ProductPreviewCard
  * Clickable card showing the first ordered item's image, name and price.
- * Clicking anywhere on the card navigates to the product detail page.
+ * Reads normalizeOrder fields: item.productName, item.imageUrl, item.unitPrice
  */
 const ProductPreviewCard = ({ items, placeholder }) => {
   const firstItem = items?.[0];
@@ -73,12 +73,17 @@ const ProductPreviewCard = ({ items, placeholder }) => {
 
   const extraCount = (items?.length ?? 0) - 1;
 
+  // normalizeOrder stores: productName, imageUrl, unitPrice
+  const displayName  = firstItem.productName || firstItem.name || "Product";
+  const displayPrice = firstItem.unitPrice ?? firstItem.price ?? 0;
+  const displayImage = firstItem.imageUrl || placeholder;
+
   const inner = (
     <>
       <img
         className="odp-preview-card__img"
-        src={firstItem.imageUrl || placeholder}
-        alt={firstItem.name || "Product image"}
+        src={displayImage}
+        alt={displayName}
         width={64}
         height={64}
         loading="lazy"
@@ -86,13 +91,13 @@ const ProductPreviewCard = ({ items, placeholder }) => {
       />
       <div className="odp-preview-card__info">
         <span className="odp-preview-card__name">
-          {firstItem.name || "Product"}
+          {displayName}
           {extraCount > 0 && (
             <span className="odp-preview-card__extra"> +{extraCount} more</span>
           )}
         </span>
         <span className="odp-preview-card__price">
-          {formatCurrency(firstItem.price ?? firstItem.unitPrice ?? 0)}
+          {formatCurrency(displayPrice)}
         </span>
       </div>
       {productPath && (
@@ -103,7 +108,7 @@ const ProductPreviewCard = ({ items, placeholder }) => {
 
   if (productPath) {
     return (
-      <Link to={productPath} className="odp-preview-card" aria-label={`View product: ${firstItem.name}`}>
+      <Link to={productPath} className="odp-preview-card" aria-label={`View product: ${displayName}`}>
         {inner}
       </Link>
     );
