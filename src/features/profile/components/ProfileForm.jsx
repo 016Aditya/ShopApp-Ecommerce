@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { userService }        from '@/services/userService';
 import { useAuth }            from '@/features/auth/hooks/useAuth';
 import { useQueryClient }     from '@tanstack/react-query';
-import { QUERY_KEYS }         from '@/lib/queryKeys';
+import { queryKeys }          from '@/lib/queryKeys';   // ✅ correct named export
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const empty = (v) => !v || String(v).trim() === '';
@@ -70,7 +70,8 @@ const ProfileForm = ({ profile, user, onSuccess, onError }) => {
       updateUser?.(updatedUser);
 
       // Invalidate the profile TanStack query so ProfilePage re-fetches
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.profile(user.id) });
+      // ✅ queryKeys.profile.me(id) — correct factory shape
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.me(user.id) });
 
       onSuccess('Profile updated successfully.');
     } catch (err) {
