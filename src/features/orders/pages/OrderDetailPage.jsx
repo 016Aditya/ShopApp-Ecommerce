@@ -60,8 +60,8 @@ const SectionCard = ({ icon, iconBg, title, children, className = "" }) => (
 
 /**
  * ProductPreviewCard
- * Clickable card showing the first ordered item's image, name and price.
- * Reads normalizeOrder fields: item.productName, item.imageUrl, item.unitPrice
+ * Inline layout: [img]  Product Name — ₹Price   [›]
+ * Matches the screenshot: name and price on the same line separated by " — "
  */
 const ProductPreviewCard = ({ items, placeholder }) => {
   const firstItem = items?.[0];
@@ -73,7 +73,6 @@ const ProductPreviewCard = ({ items, placeholder }) => {
 
   const extraCount = (items?.length ?? 0) - 1;
 
-  // normalizeOrder stores: productName, imageUrl, unitPrice
   const displayName  = firstItem.productName || firstItem.name || "Product";
   const displayPrice = firstItem.unitPrice ?? firstItem.price ?? 0;
   const displayImage = firstItem.imageUrl || placeholder;
@@ -84,22 +83,19 @@ const ProductPreviewCard = ({ items, placeholder }) => {
         className="odp-preview-card__img"
         src={displayImage}
         alt={displayName}
-        width={64}
-        height={64}
+        width={72}
+        height={72}
         loading="lazy"
         onError={(e) => { e.currentTarget.src = placeholder; }}
       />
-      <div className="odp-preview-card__info">
-        <span className="odp-preview-card__name">
-          {displayName}
-          {extraCount > 0 && (
-            <span className="odp-preview-card__extra"> +{extraCount} more</span>
-          )}
-        </span>
-        <span className="odp-preview-card__price">
-          {formatCurrency(displayPrice)}
-        </span>
-      </div>
+      <span className="odp-preview-card__inline">
+        <span className="odp-preview-card__name">{displayName}</span>
+        {extraCount > 0 && (
+          <span className="odp-preview-card__extra"> +{extraCount} more</span>
+        )}
+        <span className="odp-preview-card__sep"> — </span>
+        <span className="odp-preview-card__price">{formatCurrency(displayPrice)}</span>
+      </span>
       {productPath && (
         <span className="odp-preview-card__arrow" aria-hidden="true">›</span>
       )}
@@ -160,7 +156,6 @@ const OrderDetailPage = () => {
     } finally { setReturnLoading(false); }
   };
 
-  // ── Loading / Error / Empty ───────────────────────────────────────────
   if (loading) return (
     <div className="orders-page">
       <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)}>← Back to Orders</button>
@@ -184,7 +179,6 @@ const OrderDetailPage = () => {
     </div>
   );
 
-  // ── Derived state ─────────────────────────────────────────────────────
   const currentStatus = cancelled ? "CANCELLED" : order.status;
   const upperStatus   = currentStatus?.toUpperCase() ?? "PENDING";
 
@@ -213,12 +207,10 @@ const OrderDetailPage = () => {
   return (
     <div className="orders-page order-detail-page">
 
-      {/* ── Back ── */}
       <button className="orders-back" onClick={() => navigate(PATHS.ORDERS)} aria-label="Back to Orders">
         ← Back to Orders
       </button>
 
-      {/* ── Header ── */}
       <div className="order-detail__header">
         <div>
           <h1 className="order-detail__title">Order #{shortId}</h1>
@@ -240,25 +232,19 @@ const OrderDetailPage = () => {
         <OrderTimeline status={localReturnStatus || currentStatus} isReturnFlow={isReturnFlow} />
       </div>
 
-      {/* ── Main grid ── */}
       <div className="odp-grid">
-
-        {/* ════ LEFT COLUMN ════ */}
         <div className="odp-left">
 
-          {/* Shipping Address */}
           <SectionCard icon="📍" iconBg="rgba(59,130,246,0.15)" title="Shipping Address">
             <ShippingInfo address={order.address} />
           </SectionCard>
 
-          {/* Products Ordered */}
           <SectionCard icon="🛍️" iconBg="rgba(168,85,247,0.15)" title="Products Ordered">
             <div className="odp-items-wrapper">
               <OrderItemsList items={order.items} />
             </div>
           </SectionCard>
 
-          {/* Order Information */}
           <SectionCard icon="ℹ️" iconBg="rgba(59,130,246,0.15)" title="Order Information">
             <div className="odp-info-cols">
               <div className="odp-info-col">
@@ -282,7 +268,6 @@ const OrderDetailPage = () => {
             </div>
           </SectionCard>
 
-          {/* Return Information — only when return is active */}
           {isReturnFlow && (
             <SectionCard icon="↩" iconBg="rgba(245,158,11,0.15)" title="Return Information">
               <div className="order-info-grid">
@@ -318,12 +303,10 @@ const OrderDetailPage = () => {
             </SectionCard>
           )}
 
-          {/* Errors / success */}
           {cancelError  && <p className="error-text" style={{ marginTop: 8 }}>{cancelError}</p>}
           {returnError  && <p className="error-text" style={{ marginTop: 8 }}>{returnError}</p>}
           {returnSuccess && <p className="success-text" style={{ marginTop: 8 }}>Return request submitted successfully.</p>}
 
-          {/* Action buttons card */}
           {(showCancel || showReturn) && (
             <div className="odp-card odp-actions-card">
               <div className="odp-actions-row">
@@ -342,7 +325,6 @@ const OrderDetailPage = () => {
           )}
         </div>
 
-        {/* ════ RIGHT COLUMN ════ */}
         <div className="odp-right">
           <div className="odp-pricing-panel">
             <div className="odp-pricing-panel__header">
@@ -352,10 +334,8 @@ const OrderDetailPage = () => {
             <OrderPricingSummary order={order} />
           </div>
         </div>
-
       </div>
 
-      {/* Return Modal */}
       <ReturnModal
         open={returnModalOpen}
         onClose={() => setReturnModalOpen(false)}
