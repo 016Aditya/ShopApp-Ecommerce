@@ -1,0 +1,164 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   WishlistHeart.css
+   Premium minimalist wishlist toggle — Apple-inspired, zero-container design.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Button (touch target wrapper — invisible, 44×44 min) ─────────────────── */
+.wh-btn {
+  /* Position inside the image container */
+  position: absolute;
+  top:   8px;
+  right: 8px;
+  z-index: 20;
+
+  /* 44×44 tap target as per WCAG; centred content */
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:  44px;
+  min-height: 44px;
+
+  /* No visual container */
+  background:  transparent;
+  border:      none;
+  padding:     0;
+  margin:      0;
+  cursor:      pointer;
+  outline:     none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wh-btn:focus-visible .wh-heart {
+  outline: 2px solid #FF4D6D;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Heart SVG ────────────────────────────────────────────────────────────── */
+.wh-heart {
+  width:  22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+
+  /* Default: solid light grey, subtle */
+  fill:    #BFC5CF;
+  opacity: 0.88;
+
+  transition:
+    fill       200ms ease-out,
+    opacity    200ms ease-out,
+    transform  200ms ease-out,
+    filter     200ms ease-out;
+
+  will-change: transform, fill, filter;
+}
+
+/* Hover — desktop only */
+@media (hover: hover) {
+  .wh-btn:hover .wh-heart {
+    fill:      #E5E7EB;
+    opacity:   1;
+    transform: scale(1.08);
+  }
+}
+
+/* Added state */
+.wh-heart--added {
+  fill:    #FF4D6D;
+  opacity: 1;
+  filter:  drop-shadow(0 0 8px rgba(255, 77, 109, 0.35));
+}
+
+/* Hover on added — slightly deeper red */
+@media (hover: hover) {
+  .wh-btn:hover .wh-heart--added {
+    fill:      #E63757;
+    transform: scale(1.08);
+    filter:    drop-shadow(0 0 10px rgba(255, 77, 109, 0.45));
+  }
+}
+
+/* Pop keyframe */
+@keyframes wh-pop {
+  0%   { transform: scale(1);    }
+  45%  { transform: scale(1.26); }
+  70%  { transform: scale(0.94); }
+  100% { transform: scale(1);    }
+}
+
+.wh-heart--pop {
+  animation: wh-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Burst rays ────────────────────────────────────────────────────────────── */
+.wh-burst {
+  position: absolute;
+  top:  50%;
+  left: 50%;
+  width:  0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.wh-ray {
+  position: absolute;
+  width:  2px;
+  height: 7px;
+  border-radius: 1px;
+  background: #FF4D6D;
+  top:  0;
+  left: 0;
+  transform-origin: 1px 14px;
+  transform:
+    rotate(calc(var(--i) * 45deg))
+    translateY(-14px);
+  animation: wh-ray-out 420ms ease-out forwards;
+}
+
+@keyframes wh-ray-out {
+  0% {
+    opacity: 0.9;
+    transform:
+      rotate(calc(var(--i) * 45deg))
+      translateY(-10px)
+      scaleY(1);
+  }
+  60% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform:
+      rotate(calc(var(--i) * 45deg))
+      translateY(-20px)
+      scaleY(0.4);
+  }
+}
+
+/* ── Responsive sizing ─────────────────────────────────────────────────────── */
+
+/* Tablet (≤ 768px) */
+@media (max-width: 768px) {
+  .wh-btn {
+    top:   6px;
+    right: 6px;
+  }
+  .wh-heart {
+    width:  19px;
+    height: 19px;
+  }
+}
+
+/* Mobile (≤ 480px) */
+@media (max-width: 480px) {
+  .wh-btn {
+    top:   5px;
+    right: 5px;
+  }
+  .wh-heart {
+    width:  18px;
+    height: 18px;
+  }
+}

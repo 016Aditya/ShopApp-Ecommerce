@@ -1,32 +1,27 @@
 /**
- * ProductCard.jsx — Phase 2A
+ * ProductCard.jsx
  *
- * What changed:
- *   Added product detail prefetching on:
- *     - Desktop: onMouseEnter (fires when the user hovers the card)
- *     - Mobile:  IntersectionObserver (fires when the card enters the viewport)
+ * Changes in this update:
+ *   - Injected <WishlistHeart> into the image container of both
+ *     COMPACT and STANDARD card variants.
+ *   - WishlistHeart sits at top-right inside the image area.
+ *   - The discount badge (top-right) is repositioned to top-left
+ *     so it never overlaps the heart icon.
+ *   - ProductDetailPage is NOT affected — WishlistHeart is only
+ *     rendered from ProductCard.
  *
- *   The observer is created once per card mount and cleaned up on unmount.
- *   It disconnects after the first intersection so it never fires twice.
- *
- *   Both paths call the same `prefetch(id)` callback returned by
- *   usePrefetchProductDetail(). That function honours staleTime — if
- *   the product detail is already in cache and still fresh, no network
- *   request is made.
- *
- * What stayed the same:
- *   All existing JSX, styles, cart logic, discount badge, rating badge,
- *   compact/standard variants, and keyboard navigation are unchanged.
+ * All existing logic (prefetch, add-to-cart, discount, rating,
+ * IntersectionObserver, keyboard nav) is unchanged.
  */
-import { memo, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { useNavigate }   from 'react-router-dom';
 import PATHS, { buildPath } from '@/routes/paths';
-import { useCartStore } from '@/store';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useCartStore }  from '@/store';
+import { useAuth }       from '@/features/auth/hooks/useAuth';
 import { formatCurrency } from '@/utils/currency';
-import RatingBadge from '@/components/common/RatingBadge';
+import RatingBadge       from '@/components/common/RatingBadge';
 import { usePrefetchProductDetail } from '@/hooks/useQueryProducts';
+import WishlistHeart     from '@/components/WishlistHeart';
 
 const ProductCard = memo(({ product, compact = false }) => {
   const navigate  = useNavigate();
@@ -37,19 +32,9 @@ const ProductCard = memo(({ product, compact = false }) => {
   const prefetch          = usePrefetchProductDetail();
 
   // ── Mobile prefetch via IntersectionObserver ──────────────────────────────
-  // On touch devices `onMouseEnter` never fires, so we use an observer
-  // to prefetch when the card scrolls into the viewport.
-  //
-  // Strategy:
-  //   threshold: 0.5 → card must be at least 50 % visible before we prefetch.
-  //   disconnect() after first intersection → fire once, never again.
-  //   The browser/TQ staleTime guard prevents duplicate network requests.
   useEffect(() => {
     const el = cardRef.current;
     if (!el || !('IntersectionObserver' in window)) return;
-
-    // Only use IntersectionObserver on touch/mobile devices.
-    // Desktop gets the faster onMouseEnter path instead.
     const isTouchDevice = window.matchMedia('(hover: none)').matches;
     if (!isTouchDevice) return;
 
@@ -64,8 +49,6 @@ const ProductCard = memo(({ product, compact = false }) => {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  // product.id and prefetch are both stable — prefetch is a stable callback
-  // from useQueryClient which never changes identity.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
@@ -97,12 +80,12 @@ const ProductCard = memo(({ product, compact = false }) => {
         className="group flex cursor-pointer flex-col items-center rounded-sm border p-3 hover:shadow-md transition"
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
         onClick={goToDetail}
-        // Desktop: prefetch on hover
         onMouseEnter={() => prefetch(product.id)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
       >
+        {/* Image container — position:relative for heart + badge */}
         <div
           className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
           style={{
@@ -112,11 +95,16 @@ const ProductCard = memo(({ product, compact = false }) => {
             borderRadius: '8px',
           }}
         >
+          {/* Discount badge — moved to top-LEFT to avoid heart overlap */}
           {discount ? (
-            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+            <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
               {discount}% OFF
             </div>
           ) : null}
+
+          {/* ── Wishlist heart ── */}
+          <WishlistHeart productId={product.id} productName={product.name} />
+
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
@@ -161,12 +149,12 @@ const ProductCard = memo(({ product, compact = false }) => {
       className="group flex cursor-pointer flex-col rounded-sm border shadow-sm transition hover:shadow-md"
       style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
       onClick={goToDetail}
-      // Desktop: prefetch on hover
       onMouseEnter={() => prefetch(product.id)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
     >
+      {/* Image container — position:relative for heart + badge */}
       <div
         className="relative flex w-full items-center justify-center overflow-hidden"
         style={{
@@ -178,11 +166,16 @@ const ProductCard = memo(({ product, compact = false }) => {
           background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
         }}
       >
+        {/* Discount badge — top-LEFT to avoid heart overlap */}
         {discount ? (
-          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
             {discount}% OFF
           </div>
         ) : null}
+
+        {/* ── Wishlist heart ── */}
+        <WishlistHeart productId={product.id} productName={product.name} />
+
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
