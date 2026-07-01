@@ -14,6 +14,7 @@ import PurchaseCard from "../components/PurchaseCard";
 import ReviewList from "@/features/reviews/components/ReviewList";
 import SimilarProducts from "../components/SimilarProducts";
 import { ProductDetailSkeleton } from "@/components/skeleton";
+import CartToast from "@/components/CartToast";
 import PATHS from "@/routes/paths";
 import "../styles/ProductDetail.css";
 
@@ -21,20 +22,16 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Snap viewport to top on every product navigation.
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
+  useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
   const { product, loading, error } = useProduct(id);
   const { user } = useAuth();
 
-  // TanStack Query mutation — replaces useCartStore.getState().addToCart()
   const addToCartMutation = useAddToCart();
 
-  // ── Wishlist ────────────────────────────────────────────────
+  // ── Wishlist ───────────────────────────────────────────────
   const { data: wishlistItems = [] } = useWishlistQuery();
-  const addToWishlistMutation    = useAddToWishlist();
+  const addToWishlistMutation      = useAddToWishlist();
   const removeFromWishlistMutation = useRemoveFromWishlist();
 
   const isWishlisted = wishlistItems.some(
@@ -56,13 +53,20 @@ const ProductDetailPage = () => {
     }
   };
 
-  const [toast, setToast]               = useState(null);
+  // ── Cart toast (replaces old inline toast state) ────────────────────
+  const [showToast, setShowToast]       = useState(false);
+  const [errorToast, setErrorToast]     = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [buyingNow, setBuyingNow]       = useState(false);
 
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const triggerSuccessToast = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
+  };
+
+  const triggerErrorToast = () => {
+    setErrorToast(true);
+    setTimeout(() => setErrorToast(false), 2500);
   };
 
   const handleAddToCart = async () => {
@@ -70,9 +74,9 @@ const ProductDetailPage = () => {
     setAddingToCart(true);
     try {
       await addToCartMutation.mutateAsync({ product, quantity: 1 });
-      showToast("Added to cart! \uD83D\uDED2");
+      triggerSuccessToast();
     } catch {
-      showToast("Failed to add to cart.", "error");
+      triggerErrorToast();
     } finally {
       setAddingToCart(false);
     }
@@ -85,16 +89,13 @@ const ProductDetailPage = () => {
       await addToCartMutation.mutateAsync({ product, quantity: 1 });
       navigate(PATHS.CART);
     } catch {
-      showToast("Failed. Please try again.", "error");
+      triggerErrorToast();
     } finally {
       setBuyingNow(false);
     }
   };
 
-  // ── ID mismatch guard ────────────────────────────────────────────
-  // Guards against stale cache race conditions during concurrent-mode renders.
   const idMismatch = product && String(product.id) !== String(id);
-
   if (loading || idMismatch) return <ProductDetailSkeleton />;
 
   if (error) {
@@ -127,7 +128,6 @@ const ProductDetailPage = () => {
         <span className="pdp-breadcrumb__current">{product.name}</span>
       </nav>
 
-      {/* Wishlist heart button — above the gallery grid */}
       <button
         className={`pdp-wish-btn${isWishlisted ? ' pdp-wish-btn--active' : ''}`}
         onClick={handleWishlistToggle}
@@ -160,19 +160,20 @@ const ProductDetailPage = () => {
       </div>
 
       {product.category && (
-        <SimilarProducts
-          category={product.category}
-          currentProductId={product.id}
-        />
+        <SimilarProducts category={product.category} currentProductId={product.id} />
       )}
 
       <div className="pdp-reviews">
         <ReviewList productId={id} currentUser={user ?? null} />
       </div>
 
-      {toast && (
-        <div className={`pdp-toast pdp-toast--${toast.type}`} role="alert">
-          {toast.type === "success" ? "✓" : "✗"} {toast.msg}
+      {/* Shared floating green toast — success */}
+      <CartToast visible={showToast} />
+
+      {/* Error toast — reuses pdp-toast CSS directly */}
+      {errorToast && (
+        <div className="pdp-toast pdp-toast--error" role="alert">
+          ✗ Failed to add to cart. Please try again.
         </div>
       )}
     </div>

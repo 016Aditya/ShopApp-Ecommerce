@@ -1,0 +1,39 @@
+/* ============================================================
+   CartToast.css
+   Floating green pill — shown after Add to Cart success.
+   Reused by ProductCard and ProductDetailPage.
+   ============================================================ */
+
+.cart-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 28px;
+  border-radius: 9999px;
+  background: #16a34a;          /* green-600 */
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  z-index: 99999;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;         /* never blocks clicks */
+  animation: cart-toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cart-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-toast { animation: none; }
+}
