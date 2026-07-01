@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore }  from '@/store/authStore';
-import { queryKeys }     from '@/lib/queryKeys';
+import { useAuthStore }   from '@/store/authStore';
+import { queryKeys }      from '@/lib/queryKeys';
+import { useToastStore }  from '@/store/toastStore';
 import {
   getWishlist,
   addToWishlist,
@@ -36,25 +37,34 @@ export const useWishlistQuery = () => {
 };
 
 export const useAddToWishlist = () => {
-  const queryClient = useQueryClient();
-  const user        = useAuthStore((s) => s.user);
-  const userId      = user?.id;
+  const queryClient       = useQueryClient();
+  const user              = useAuthStore((s) => s.user);
+  const userId            = user?.id;
+  // ⭐ Single shared trigger — fires from here so EVERY component
+  //    that calls useAddToWishlist automatically gets the toast.
+  const showWishlistToast = useToastStore((s) => s.showWishlistToast);
 
   return useMutation({
     mutationFn: ({ productId }) => addToWishlist(userId, productId),
-    onSuccess:  () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.byUser(userId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.byUser(userId) });
+      showWishlistToast('add');
+    },
   });
 };
 
 export const useRemoveFromWishlist = () => {
-  const queryClient = useQueryClient();
-  const user        = useAuthStore((s) => s.user);
-  const userId      = user?.id;
+  const queryClient       = useQueryClient();
+  const user              = useAuthStore((s) => s.user);
+  const userId            = user?.id;
+  // ⭐ Same pattern — remove fires a different message from the same store.
+  const showWishlistToast = useToastStore((s) => s.showWishlistToast);
 
   return useMutation({
     mutationFn: ({ productId }) => removeFromWishlist(userId, productId),
-    onSuccess:  () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.byUser(userId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.byUser(userId) });
+      showWishlistToast('remove');
+    },
   });
 };

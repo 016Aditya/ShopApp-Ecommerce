@@ -1,41 +1,60 @@
 /**
- * toastStore.js — Global cart toast state (Zustand)
+ * toastStore.js — Global toast state (Zustand)
  *
- * Owned by the cart domain but lives in store/ because it is consumed
- * by both useCart (the mutation hook) and CartToastPortal (the renderer).
+ * Manages two independent toast channels:
+ *   cart     — green "✓ Added to Cart!"  (showCartToast)
+ *   wishlist — pink  "❤️ Added to Wishlist!" / "💔 Removed from Wishlist!"
+ *              (showWishlistToast(type))  type: 'add' | 'remove'
  *
- * API:
- *   showCartToast()  — called from useAddToCart onSuccess
- *   hideCartToast()  — called from CartToastPortal after animation
+ * Each channel is independent: both can be visible simultaneously
+ * (e.g. add to cart AND wishlist in rapid succession).
  *
- * Debounce: if showCartToast() is called while the toast is already
- * visible, it resets the auto-hide timer rather than stacking toasts.
+ * Debounce: calling show* while already visible resets the hide timer
+ * instead of stacking multiple toasts.
  */
 import { create } from 'zustand';
 
+const AUTO_HIDE_MS = 2260; // 2 s visible + 260 ms exit-animation buffer
+
 export const useToastStore = create((set, get) => ({
-  visible: false,
-  _hideTimer: null,
+  // ── Cart toast ──────────────────────────────────────────────────────
+  cartVisible: false,
+  _cartTimer: null,
 
   showCartToast: () => {
-    // Clear any running hide timer (debounce rapid clicks)
-    const existing = get()._hideTimer;
+    const existing = get()._cartTimer;
     if (existing) clearTimeout(existing);
-
-    // Show immediately
-    set({ visible: true, _hideTimer: null });
-
-    // Auto-hide after 2 s visible + 260 ms exit animation buffer
-    const timer = setTimeout(() => {
-      set({ visible: false, _hideTimer: null });
-    }, 2260);
-
-    set({ _hideTimer: timer });
+    set({ cartVisible: true, _cartTimer: null });
+    const timer = setTimeout(() => set({ cartVisible: false, _cartTimer: null }), AUTO_HIDE_MS);
+    set({ _cartTimer: timer });
   },
 
   hideCartToast: () => {
-    const existing = get()._hideTimer;
+    const existing = get()._cartTimer;
     if (existing) clearTimeout(existing);
-    set({ visible: false, _hideTimer: null });
+    set({ cartVisible: false, _cartTimer: null });
+  },
+
+  // ── Wishlist toast ──────────────────────────────────────────────────
+  // type: 'add' | 'remove'
+  wishlistVisible: false,
+  wishlistType: 'add',
+  _wishlistTimer: null,
+
+  showWishlistToast: (type = 'add') => {
+    const existing = get()._wishlistTimer;
+    if (existing) clearTimeout(existing);
+    set({ wishlistVisible: true, wishlistType: type, _wishlistTimer: null });
+    const timer = setTimeout(
+      () => set({ wishlistVisible: false, _wishlistTimer: null }),
+      AUTO_HIDE_MS
+    );
+    set({ _wishlistTimer: timer });
+  },
+
+  hideWishlistToast: () => {
+    const existing = get()._wishlistTimer;
+    if (existing) clearTimeout(existing);
+    set({ wishlistVisible: false, _wishlistTimer: null });
   },
 }));
