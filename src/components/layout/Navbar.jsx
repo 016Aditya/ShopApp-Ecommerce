@@ -457,7 +457,7 @@ function Navbar() {
 
       {/* ══════════════ DESKTOP CATEGORY BAR (hidden on mobile) ══════════════ */}
       <div className="hidden md:block" style={{ backgroundColor: "color-mix(in srgb, var(--navbar-bg) 93%, white 7%)" }}>
->>>>>>> 9ce0fd12fec218c1e70088228030901ea49b1b9c
+>>>>>>> 9ce0fd12fec218c1e7008822803090ea49b1b9c
         <div
           className="container-app"
           style={{ display:"flex", alignItems:"center", overflowX:"auto", whiteSpace:"nowrap", scrollbarWidth:"none", msOverflowStyle:"none", gap:0, minHeight:"40px" }}
