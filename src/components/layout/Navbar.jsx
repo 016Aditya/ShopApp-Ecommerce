@@ -66,13 +66,13 @@ function Navbar() {
       <div style={{ backgroundColor: "var(--navbar-bg)", minHeight: "68px" }}>
         <div
           style={{
-            maxWidth:    "1280px",
+            maxWidth:    "1282px",
             margin:      "0 auto",
-            padding:     "0 20px",
+            padding:     "0 19px",
             height:      "68px",
             display:     "flex",
             alignItems:  "center",
-            gap:         "12px",
+            gap:         "11px",
           }}
         >
 
@@ -84,14 +84,14 @@ function Navbar() {
               ...navItemBase,
               flexDirection: "column",
               alignItems:    "flex-start",
-              padding:   "4px 8px 4px 13px",
+              padding:   "4px 7px 4px 13px",
               minWidth:  "150px",
               flexShrink: 0,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
           >
-            <span style={{ fontSize: "22px", fontWeight: 800, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.4px" }}>
+            <span style={{ fontSize: "22.5px", fontWeight: 800, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.4px" }}>
               shop<span style={{ color: "var(--accent, #ff9f00)" }}>App</span>
             </span>
             <span style={{ fontSize: "10px", color: "#94a3b8", lineHeight: 1, marginTop: "2px", fontStyle: "italic" }}>
@@ -173,7 +173,7 @@ function Navbar() {
                     ...navItemBase,
                     flexDirection: "column",
                     alignItems:    "flex-start",
-                    padding:       "4px 10.5px",
+                    padding:       "4px 11px",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
@@ -352,7 +352,7 @@ function Navbar() {
               gap:            "6px",
               border:         "1px solid transparent",
               padding:        "8px 12px",
-              fontSize:       "13px",
+              fontSize:       "14px",
               fontWeight:     700,
               color:          "#fff",
               textDecoration: "none",
@@ -373,7 +373,7 @@ function Navbar() {
               <div key={link.label} className="group" style={{ position:"relative", flexShrink:0 }}>
                 <Link
                   to={link.path}
-                  style={{ display:"flex", alignItems:"center", gap:"4px", border:"1px solid transparent", padding:"8px 12px", fontSize:"15px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
+                  style={{ display:"flex", alignItems:"center", gap:"4px", border:"1px solid transparent", padding:"8px 12px", fontSize:"14.5px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
                   onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
                   onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}
                 >
@@ -401,7 +401,7 @@ function Navbar() {
               <Link
                 key={link.label}
                 to={link.path}
-                style={{ display:"flex", flexShrink:0, border:"1px solid transparent", padding:"8px 12px", fontSize:"15px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
+                style={{ display:"flex", flexShrink:0, border:"1px solid transparent", padding:"8px 12px", fontSize:"14.5px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
                 onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
                 onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}
               >
