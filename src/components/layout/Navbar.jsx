@@ -28,29 +28,28 @@ const NAV_LINKS = [
   { label: "Customer Service", path: PATHS.CUSTOMER_SERVICE, dropdown: null },
 ];
 
-// ── Shared nav-item hover wrapper style ─────────────────────────────────────
-// Replicates the Flipkart hover: thin white border box that appears on hover.
+// ── Shared nav-item hover wrapper ────────────────────────────────────────────
 const navItemBase = {
-  display:       "flex",
-  flexShrink:    0,
-  alignItems:    "center",
-  borderRadius:  "2px",
-  padding:       "4px 8px",
-  cursor:        "pointer",
-  border:        "1px solid transparent",
-  transition:    "border-color 0.15s ease",
+  display:        "flex",
+  flexShrink:     0,
+  alignItems:     "center",
+  borderRadius:   "2px",
+  padding:        "4px 8px",
+  cursor:         "pointer",
+  border:         "1px solid transparent",
+  transition:     "border-color 0.15s ease",
   textDecoration: "none",
 };
 
 function Navbar() {
-  const { data: cartData }          = useCartQuery();
-  const cartItems                   = cartData?.items ?? [];
-  const totalItems                  = cartItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
-  const { data: wishlistItems = [] } = useWishlistQuery();
-  const wishlistCount               = wishlistItems.length;
-  const { user, logout }            = useAuth();
-  const navigate                    = useNavigate();
-  const [query, setQuery]           = useState("");
+  const { data: cartData }           = useCartQuery();
+  const cartItems                    = cartData?.items ?? [];
+  const totalItems                   = cartItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0);
+  const { data: wishlistItems = [] }  = useWishlistQuery();
+  const wishlistCount                = wishlistItems.length;
+  const { user, logout }             = useAuth();
+  const navigate                     = useNavigate();
+  const [query, setQuery]            = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
   const handleSearch = (e) => {
@@ -64,54 +63,70 @@ function Navbar() {
     <header className="sticky top-0 z-50 shadow-md" style={{ colorScheme: "dark" }}>
 
       {/* ══════════════ PRIMARY BAR ══════════════ */}
-      <div style={{ backgroundColor: "var(--navbar-bg)", minHeight: "64px" }}>
+      {/*
+        Height:   68px (up from 64px) — comfortable vertical rhythm
+        Padding:  0 20px (up from 16px) — balanced side breathing room
+        Logo:     minWidth 160px, padding-left 13px for spacious left margin
+        Search:   flex:1 + marginRight:-10px reclaims ~10px from right side
+        Gap:      12px between logo/search, 6px between right items
+      */}
+      <div style={{ backgroundColor: "var(--navbar-bg)", minHeight: "68px" }}>
         <div
           style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "0 16px",
-            height: "64px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
+            maxWidth:    "1280px",
+            margin:      "0 auto",
+            padding:     "0 20px",
+            height:      "68px",
+            display:     "flex",
+            alignItems:  "center",
+            gap:         "12px",
           }}
         >
 
-          {/* ── Logo ─────────────────────────────────────────────────────── */}
+          {/* ── Logo — 160px wide, 7px extra left padding ── */}
           <Link
             to={PATHS.HOME}
             aria-label="ShopApp Home"
             style={{
               ...navItemBase,
               flexDirection: "column",
-              alignItems: "flex-start",
-              padding: "4px 6px",
+              alignItems:    "flex-start",
+              // padding: top right bottom left
+              // left: 6px base + 7px extra = 13px total
+              padding:   "4px 8px 4px 13px",
+              minWidth:  "160px",
               flexShrink: 0,
-              minWidth: "80px",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = "#fff"}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
           >
-            <span style={{ fontSize: "18px", fontWeight: 800, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.3px" }}>
+            {/* Font bumped to 22px to fill the wider logo zone */}
+            <span style={{ fontSize: "22px", fontWeight: 800, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.4px" }}>
               shop<span style={{ color: "var(--accent, #ff9f00)" }}>App</span>
             </span>
-            <span style={{ fontSize: "9px", color: "#94a3b8", lineHeight: 1, marginTop: "1px", fontStyle: "italic" }}>
+            <span style={{ fontSize: "10px", color: "#94a3b8", lineHeight: 1, marginTop: "2px", fontStyle: "italic" }}>
               .in
             </span>
           </Link>
 
-          {/* ── Search ───────────────────────────────────────────────────── */}
+          {/* ── Search — wider by ~10px via negative right margin ── */}
+          {/*
+            The right-side items use flexShrink:0, so extending the search form
+            via a small negative marginRight is the cleanest way to grab the
+            extra space without touching item widths.
+          */}
           <form
             onSubmit={handleSearch}
-            style={{ flex: 1, display: "flex", minWidth: 0 }}
+            style={{ flex: 1, display: "flex", minWidth: 0, marginRight: "-10px" }}
           >
             <div
               style={{
-                display: "flex",
-                width: "100%",
+                display:    "flex",
+                width:      "100%",
                 borderRadius: "2px",
-                overflow: "hidden",
-                boxShadow: searchFocused ? "0 0 0 3px rgba(255,159,0,0.30)" : "none",
+                overflow:   "hidden",
+                // Subtle orange glow on focus only
+                boxShadow:  searchFocused ? "0 0 0 3px rgba(255,159,0,0.28)" : "none",
                 transition: "box-shadow 0.2s ease",
               }}
             >
@@ -123,32 +138,34 @@ function Navbar() {
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
                 style={{
-                  flex: 1,
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  outline: "none",
-                  border: "none",
+                  flex:            1,
+                  // padding reduced from 10px → 8px top/bottom = ~4px total height reduction
+                  padding:         "8px 16px",
+                  fontSize:        "14px",
+                  outline:         "none",
+                  border:          "none",
                   backgroundColor: "#fff",
-                  color: "#0f1111",
-                  minWidth: 0,
+                  color:           "#0f1111",
+                  minWidth:        0,
                 }}
               />
               <button
                 type="submit"
                 aria-label="Search"
                 style={{
-                  width: "52px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width:           "52px",
+                  display:         "flex",
+                  alignItems:      "center",
+                  justifyContent:  "center",
                   backgroundColor: "var(--accent, #ff9f00)",
-                  border: "none",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  transition: "opacity 0.15s",
+                  border:          "none",
+                  cursor:          "pointer",
+                  flexShrink:      0,
+                  transition:      "opacity 0.15s",
+                  // height is NOT set — it auto-matches the input height
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = "0.88"}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                   stroke="#0f1111" strokeWidth="2.5"
@@ -160,56 +177,48 @@ function Navbar() {
             </div>
           </form>
 
-          {/* ── Right-side nav items — hidden on mobile, shown md+ ─────── */}
-          <div className="hidden md:flex" style={{ alignItems: "center", gap: "4px", flexShrink: 0 }}>
+          {/* ── Right nav — desktop only, gap 6px ── */}
+          <div className="hidden md:flex" style={{ alignItems: "center", gap: "6px", flexShrink: 0 }}>
 
             {/* Account */}
             {user ? (
-              <div
-                className="group"
-                style={{ position: "relative" }}
-              >
+              <div className="group" style={{ position: "relative" }}>
                 <div
                   style={{
                     ...navItemBase,
                     flexDirection: "column",
-                    alignItems: "flex-start",
-                    padding: "4px 8px",
+                    alignItems:    "flex-start",
+                    padding:       "4px 10px",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = "#fff"}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
                 >
-                  <span style={{ fontSize: "11px", color: "#cbd5e1", lineHeight: 1.4 }}>
-                    Hello, {displayName}
-                  </span>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>
-                    Account
-                  </span>
+                  <span style={{ fontSize: "11px", color: "#cbd5e1", lineHeight: 1.4 }}>Hello, {displayName}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>Account</span>
                 </div>
-                {/* Dropdown */}
                 <div
                   className="group-hover:block hidden"
                   style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    minWidth: "180px",
+                    position:        "absolute",
+                    top:             "100%",
+                    right:           0,
+                    minWidth:        "180px",
                     backgroundColor: "var(--modal-bg, #fff)",
-                    border: "1px solid var(--border-color, #ddd)",
-                    borderRadius: "4px",
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
-                    zIndex: 9999,
+                    border:          "1px solid var(--border-color, #ddd)",
+                    borderRadius:    "4px",
+                    boxShadow:       "0 4px 16px rgba(0,0,0,0.18)",
+                    zIndex:          9999,
                   }}
                 >
-                  <Link to={PATHS.PROFILE}  style={{ display: "block", padding: "10px 16px", fontSize: "13px", color: "var(--text-primary)", textDecoration: "none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>Profile</Link>
-                  <Link to={PATHS.ORDERS}   style={{ display: "block", padding: "10px 16px", fontSize: "13px", color: "var(--text-primary)", textDecoration: "none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>My Orders</Link>
-                  <Link to={PATHS.WISHLIST} style={{ display: "block", padding: "10px 16px", fontSize: "13px", color: "var(--text-primary)", textDecoration: "none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>
+                  <Link to={PATHS.PROFILE}  style={{ display:"block", padding:"10px 16px", fontSize:"13px", color:"var(--text-primary)", textDecoration:"none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>Profile</Link>
+                  <Link to={PATHS.ORDERS}   style={{ display:"block", padding:"10px 16px", fontSize:"13px", color:"var(--text-primary)", textDecoration:"none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>My Orders</Link>
+                  <Link to={PATHS.WISHLIST} style={{ display:"block", padding:"10px 16px", fontSize:"13px", color:"var(--text-primary)", textDecoration:"none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>
                     Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
                   </Link>
-                  <hr style={{ borderColor: "var(--border-color, #eee)", margin: 0 }} />
+                  <hr style={{ borderColor: "var(--border-color,#eee)", margin: 0 }} />
                   <button
                     onClick={handleLogout}
-                    style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 16px", fontSize: "13px", color: "var(--text-primary)", background: "none", border: "none", cursor: "pointer" }}
+                    style={{ display:"block", width:"100%", textAlign:"left", padding:"10px 16px", fontSize:"13px", color:"var(--text-primary)", background:"none", border:"none", cursor:"pointer" }}
                     onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"}
                     onMouseLeave={(e)=>e.currentTarget.style.background=""}
                   >Sign Out</button>
@@ -218,119 +227,91 @@ function Navbar() {
             ) : (
               <Link
                 to={PATHS.LOGIN}
-                style={{
-                  ...navItemBase,
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  padding: "4px 8px",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = "#fff"}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+                style={{ ...navItemBase, flexDirection:"column", alignItems:"flex-start", padding:"4px 10px" }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
               >
-                <span style={{ fontSize: "11px", color: "#cbd5e1", lineHeight: 1.4 }}>Hello, sign in</span>
-                <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>Account &amp; Lists</span>
+                <span style={{ fontSize:"11px", color:"#cbd5e1", lineHeight:1.4 }}>Hello, sign in</span>
+                <span style={{ fontSize:"14px", fontWeight:700, color:"#fff", lineHeight:1.4 }}>Account &amp; Lists</span>
               </Link>
             )}
 
             {/* Returns & Orders */}
             <Link
               to={PATHS.ORDERS}
-              style={{
-                ...navItemBase,
-                flexDirection: "column",
-                alignItems: "flex-start",
-                padding: "4px 8px",
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "#fff"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+              style={{ ...navItemBase, flexDirection:"column", alignItems:"flex-start", padding:"4px 10px" }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
             >
-              <span style={{ fontSize: "11px", color: "#cbd5e1", lineHeight: 1.4 }}>Returns</span>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>&amp; Orders</span>
+              <span style={{ fontSize:"11px", color:"#cbd5e1", lineHeight:1.4 }}>Returns</span>
+              <span style={{ fontSize:"14px", fontWeight:700, color:"#fff", lineHeight:1.4 }}>&amp; Orders</span>
             </Link>
 
             {/* Wishlist */}
             <Link
               to={PATHS.WISHLIST}
               aria-label="Wishlist"
-              style={{ ...navItemBase, gap: "6px", padding: "4px 8px" }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "#fff"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+              style={{ ...navItemBase, gap:"6px", padding:"4px 10px" }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
             >
-              <div style={{ position: "relative", display: "flex" }}>
+              <div style={{ position:"relative", display:"flex" }}>
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                  stroke="#fff" strokeWidth="1.8"
-                  strokeLinecap="round" strokeLinejoin="round">
+                  stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
                 {wishlistCount > 0 && (
-                  <span style={{
-                    position: "absolute", top: "-5px", left: "14px",
-                    minWidth: "18px", height: "18px",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    borderRadius: "9999px", fontSize: "10px", fontWeight: 800,
-                    backgroundColor: "var(--accent, #ff9f00)", color: "#0f1111",
-                    padding: "0 3px",
-                  }}>
+                  <span style={{ position:"absolute", top:"-5px", left:"14px", minWidth:"18px", height:"18px", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:"9999px", fontSize:"10px", fontWeight:800, backgroundColor:"var(--accent,#ff9f00)", color:"#0f1111", padding:"0 3px" }}>
                     {wishlistCount > 99 ? "99+" : wishlistCount}
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "2px" }}>Wishlist</span>
+              <span style={{ fontSize:"14px", fontWeight:700, color:"#fff", marginBottom:"2px" }}>Wishlist</span>
             </Link>
 
             {/* Cart */}
             <Link
               to={PATHS.CART}
               aria-label="Cart"
-              style={{ ...navItemBase, gap: "6px", padding: "4px 8px" }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "#fff"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+              style={{ ...navItemBase, gap:"6px", padding:"4px 10px" }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
             >
-              <div style={{ position: "relative", display: "flex" }}>
+              <div style={{ position:"relative", display:"flex" }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                  stroke="#fff" strokeWidth="1.8"
-                  strokeLinecap="round" strokeLinejoin="round">
+                  stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
                 </svg>
                 {totalItems > 0 && (
-                  <span style={{
-                    position: "absolute", top: "-5px", left: "14px",
-                    minWidth: "18px", height: "18px",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    borderRadius: "9999px", fontSize: "10px", fontWeight: 800,
-                    backgroundColor: "var(--accent, #ff9f00)", color: "#0f1111",
-                    padding: "0 3px",
-                  }}>
+                  <span style={{ position:"absolute", top:"-5px", left:"14px", minWidth:"18px", height:"18px", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:"9999px", fontSize:"10px", fontWeight:800, backgroundColor:"var(--accent,#ff9f00)", color:"#0f1111", padding:"0 3px" }}>
                     {totalItems > 99 ? "99+" : totalItems}
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "2px" }}>Cart</span>
+              <span style={{ fontSize:"14px", fontWeight:700, color:"#fff", marginBottom:"2px" }}>Cart</span>
             </Link>
 
-            {/* Theme toggle */}
+            {/* Theme toggle — unchanged */}
             <ThemeToggle />
           </div>
 
-          {/* ── Mobile: compact icons only ───────────────────────────────── */}
-          <div className="flex md:hidden" style={{ alignItems: "center", gap: "4px", flexShrink: 0 }}>
-            {/* Account pill */}
+          {/* ── Mobile: compact icons only ── */}
+          <div className="flex md:hidden" style={{ alignItems:"center", gap:"4px", flexShrink:0 }}>
             {user ? (
-              <Link to={PATHS.PROFILE} style={{ ...navItemBase, flexDirection: "column", alignItems: "flex-end" }}
+              <Link to={PATHS.PROFILE} style={{ ...navItemBase, flexDirection:"column", alignItems:"flex-end" }}
                 onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
                 onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}>
-                <span style={{ fontSize: "9px", color: "#cbd5e1", lineHeight: 1.4 }}>Hello, {displayName}</span>
-                <span style={{ fontSize: "12px", fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>Account</span>
+                <span style={{ fontSize:"9px", color:"#cbd5e1", lineHeight:1.4 }}>Hello, {displayName}</span>
+                <span style={{ fontSize:"12px", fontWeight:700, color:"#fff", lineHeight:1.4 }}>Account</span>
               </Link>
             ) : (
               <Link to={PATHS.LOGIN} style={{ ...navItemBase }}
                 onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
                 onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}>
-                <span style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>Sign In</span>
+                <span style={{ fontSize:"13px", fontWeight:700, color:"#fff" }}>Sign In</span>
               </Link>
             )}
-            {/* Wishlist icon */}
-            <Link to={PATHS.WISHLIST} aria-label="Wishlist" style={{ ...navItemBase, position: "relative" }}
+            <Link to={PATHS.WISHLIST} aria-label="Wishlist" style={{ ...navItemBase, position:"relative" }}
               onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
               onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -342,8 +323,7 @@ function Navbar() {
                 </span>
               )}
             </Link>
-            {/* Cart icon */}
-            <Link to={PATHS.CART} aria-label="Cart" style={{ ...navItemBase, position: "relative" }}
+            <Link to={PATHS.CART} aria-label="Cart" style={{ ...navItemBase, position:"relative" }}
               onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
               onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -362,33 +342,21 @@ function Navbar() {
       </div>
 
       {/* ══════════════ CATEGORY BAR ══════════════ */}
+      {/* 'All' menu item removed per refinement spec */}
       <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
         <div
           className="container-app"
           style={{
-            display: "flex",
-            alignItems: "center",
-            overflowX: "auto",
-            whiteSpace: "nowrap",
-            scrollbarWidth: "none",
+            display:         "flex",
+            alignItems:      "center",
+            overflowX:       "auto",
+            whiteSpace:      "nowrap",
+            scrollbarWidth:  "none",
             msOverflowStyle: "none",
-            gap: 0,
-            minHeight: "40px",
+            gap:             0,
+            minHeight:       "40px",
           }}
         >
-          <Link
-            to={PATHS.PRODUCTS}
-            className="navbar-cat-item"
-            style={{ display:"flex", flexShrink:0, alignItems:"center", gap:"6px", border:"1px solid transparent", padding:"8px 12px", fontSize:"13px", fontWeight:700, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
-            onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
-            onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}
-          >
-            <svg width="15" height="15" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M3 5h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm0 4h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm0 4h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2z" clipRule="evenodd" />
-            </svg>
-            All
-          </Link>
-
           {NAV_LINKS.map((link) =>
             link.dropdown ? (
               <div key={link.label} className="group" style={{ position:"relative", flexShrink:0 }}>
