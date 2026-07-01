@@ -9,6 +9,7 @@ import {
 import { getProductById } from '@/services/productService';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
+import { useToastStore } from '@/store/toastStore';
 
 /**
  * normalizeItem
@@ -16,16 +17,6 @@ import { useCartStore } from '@/store/cartStore';
  * The backend CartItemResponse only returns { productId, quantity, unitPrice }.
  * It does NOT embed a nested product object — productName, imageUrl, brand,
  * and category must be fetched separately via the products API.
- *
- * This normalizer handles two shapes:
- *
- *   Shape A — bare backend response (no product details yet):
- *     { productId, quantity, unitPrice }
- *     → kept as-is; product details are enriched in useCartQuery below.
- *
- *   Shape B — already enriched (optimistic update or re-render):
- *     { productId, productName, imageUrl, brand, category, unitPrice, quantity }
- *     → passed through unchanged.
  */
 const normalizeItem = (item) => ({
   productId:   item.productId   ?? '',
@@ -37,12 +28,12 @@ const normalizeItem = (item) => ({
   quantity:    item.quantity    ?? 1,
 });
 
-// ── Query key factory ───────────────────────────────────────────────────────
+// ── Query key factory ─────────────────────────────────────────────────
 export const cartKeys = {
   all: (userId) => ['cart', userId],
 };
 
-// ── Fetch cart (with product detail enrichment) ────────────────────────────
+// ── Fetch cart (with product detail enrichment) ──────────────────────────
 export const useCartQuery = () => {
   const user   = useAuthStore((s) => s.user);
   const userId = user?.id;
@@ -53,11 +44,8 @@ export const useCartQuery = () => {
       const data = await getCart(userId);
       const rawItems = data?.items ?? [];
 
-      // The backend only returns { productId, quantity, unitPrice }.
-      // Fetch each product in parallel to get name, image, brand, category.
       const enriched = await Promise.all(
         rawItems.map(async (item) => {
-          // If item already has productName it was added optimistically — skip fetch
           if (item.productName) return normalizeItem(item);
           try {
             const product = await getProductById(item.productId);
@@ -71,16 +59,12 @@ export const useCartQuery = () => {
               quantity:    item.quantity      ?? 1,
             };
           } catch {
-            // Product fetch failed — render with id as fallback name
             return normalizeItem(item);
           }
         })
       );
 
-      return {
-        ...data,
-        items: enriched,
-      };
+      return { ...data, items: enriched };
     },
     enabled:  !!userId,
     staleTime: 1000 * 30,
@@ -91,13 +75,16 @@ export const useCartQuery = () => {
   });
 };
 
-// ── Add item ─────────────────────────────────────────────────────────────
+// ── Add item ───────────────────────────────────────────────────────────────
 export const useAddToCart = () => {
   const queryClient     = useQueryClient();
   const user            = useAuthStore((s) => s.user);
   const logout          = useAuthStore((s) => s.logout);
   const addOptimistic   = useCartStore((s) => s.addOptimistic);
   const clearOptimistic = useCartStore((s) => s.clearOptimistic);
+  // ⭐ Single global toast trigger — fires from here so EVERY add-to-cart
+  //    location gets the toast without any per-component wiring.
+  const showCartToast   = useToastStore((s) => s.showCartToast);
   const userId = user?.id;
 
   return useMutation({
@@ -110,6 +97,8 @@ export const useAddToCart = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.all(userId) });
+      // Show global portal toast — works from any component, any page
+      showCartToast();
     },
     onError: (error) => {
       if (error?.response?.status === 401) logout();
@@ -120,7 +109,7 @@ export const useAddToCart = () => {
   });
 };
 
-// ── Update item quantity ──────────────────────────────────────────────────
+// ── Update item quantity ──────────────────────────────────────────────
 export const useUpdateCartItem = () => {
   const queryClient = useQueryClient();
   const user        = useAuthStore((s) => s.user);
@@ -139,7 +128,7 @@ export const useUpdateCartItem = () => {
   });
 };
 
-// ── Remove item ────────────────────────────────────────────────────────────
+// ── Remove item ──────────────────────────────────────────────────────────────
 export const useRemoveFromCart = () => {
   const queryClient      = useQueryClient();
   const user             = useAuthStore((s) => s.user);
@@ -161,7 +150,7 @@ export const useRemoveFromCart = () => {
   });
 };
 
-// ── Clear cart ────────────────────────────────────────────────────────────
+// ── Clear cart ──────────────────────────────────────────────────────────────
 export const useClearCart = () => {
   const queryClient     = useQueryClient();
   const user            = useAuthStore((s) => s.user);
@@ -209,15 +198,7 @@ const useCart = () => {
 
   const emptyCart = () => clearMutation.mutate();
 
-  return {
-    items,
-    cartTotal,
-    loading,
-    error: errorMsg,
-    updateItem,
-    removeItem,
-    emptyCart,
-  };
+  return { items, cartTotal, loading, error: errorMsg, updateItem, removeItem, emptyCart };
 };
 
 export default useCart;

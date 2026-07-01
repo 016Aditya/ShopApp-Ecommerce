@@ -1,15 +1,14 @@
 /**
  * CartToast.jsx — Premium animated Add-to-Cart notification
  *
- * Features:
- *  - Animate-in: fade + translateY(20px→0) + scale(0.95→1) over 250ms
- *  - Visible: holds for ~2 s (controlled by parent setTimeout)
- *  - Animate-out: fade + translateY(0→-12px) + scale(1→0.97) over 250ms
- *    Achieved by adding `.cart-toast--out` class 250ms before unmount,
- *    then parent sets visible=false.
- *  - "View Cart →" link navigates to cart
- *  - Mobile safe-area aware
- *  - pointer-events: none on pill except the View Cart button
+ * Rendered exclusively through CartToastPortal (which portals it to
+ * document.body). Never render this component directly inside a page
+ * or feature component — use toastStore.showCartToast() instead.
+ *
+ * Animation states:
+ *   visible=true  → show=true, animOut=false  → cart-toast-in keyframe
+ *   visible=false → animOut=true              → cart-toast-out keyframe (260ms)
+ *                 → show=false               → null (DOM removed)
  */
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,18 +17,16 @@ import './CartToast.css';
 
 const CartToast = ({ visible }) => {
   const navigate = useNavigate();
-  // animOut drives the exit CSS class; we keep the DOM node alive 250ms
-  // after visible flips to false so the animation can play.
   const [show, setShow]       = useState(false);
   const [animOut, setAnimOut] = useState(false);
   const timerRef              = useRef(null);
 
   useEffect(() => {
     if (visible) {
+      clearTimeout(timerRef.current);
       setAnimOut(false);
       setShow(true);
     } else if (show) {
-      // Start exit animation, then unmount after 250ms
       setAnimOut(true);
       timerRef.current = setTimeout(() => {
         setShow(false);
@@ -37,7 +34,8 @@ const CartToast = ({ visible }) => {
       }, 260);
     }
     return () => clearTimeout(timerRef.current);
-  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   if (!show) return null;
 
@@ -49,7 +47,8 @@ const CartToast = ({ visible }) => {
     >
       <span className="cart-toast__icon" aria-hidden="true">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          stroke="currentColor" strokeWidth="3"
+          strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       </span>
