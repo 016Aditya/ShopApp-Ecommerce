@@ -28,13 +28,14 @@ const NAV_LINKS = [
   { label: "Customer Service", path: PATHS.CUSTOMER_SERVICE, dropdown: null },
 ];
 
-// ── 5 primary mobile categories (visible in grid) ────────────────────────────
+// ── Mobile "Shop By" categories ──────────────────────────────────────────────
+// Each item: icon (SVG element) + label (string, use \n for line-break)
 const MOBILE_PRIMARY = [
   {
     label: "Deals",
     path: PATHS.PRODUCTS,
     icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
         <line x1="7" y1="7" x2="7.01" y2="7"/>
       </svg>
@@ -44,7 +45,7 @@ const MOBILE_PRIMARY = [
     label: "Mobiles",
     path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`,
     icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
         <line x1="12" y1="18" x2="12.01" y2="18"/>
       </svg>
@@ -54,7 +55,7 @@ const MOBILE_PRIMARY = [
     label: "Fashion",
     path: `${PATHS.PRODUCTS}?category=Clothing`,
     icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
       </svg>
     ),
@@ -63,7 +64,7 @@ const MOBILE_PRIMARY = [
     label: "Electronics",
     path: `${PATHS.PRODUCTS}?category=Electronics`,
     icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
         <line x1="8" y1="21" x2="16" y2="21"/>
         <line x1="12" y1="17" x2="12" y2="21"/>
@@ -74,7 +75,7 @@ const MOBILE_PRIMARY = [
     label: "Home &\nKitchen",
     path: `${PATHS.PRODUCTS}?category=Home`,
     icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
@@ -355,29 +356,34 @@ function Navbar() {
           </form>
         </div>
 
-        {/* ══ Row 3: Shop By — Premium 6-column CSS Grid ══ */}
+        {/* ══ Row 3: Shop By — horizontal row, icon + label side by side ══ */}
         <div style={{
           backgroundColor: "color-mix(in srgb, var(--navbar-bg) 92%, white 8%)",
-          padding: "16px 18px 20px",
+          padding: "14px 10px 16px",
           borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
-          {/* Heading */}
+          {/* "Shop By" heading */}
           <p style={{
-            fontSize: "12px",
-            fontWeight: 600,
-            color: "#B8C0CC",
-            letterSpacing: "0.3px",
-            marginBottom: "16px",
+            fontSize: "13px",
+            fontWeight: 400,
+            color: "#9ca3af",
+            letterSpacing: "0px",
+            marginBottom: "14px",
             lineHeight: 1,
+            paddingLeft: "6px",
           }}>Shop By</p>
 
-          {/* 6-column equal grid */}
+          {/* Single flex row — 6 items, evenly distributed */}
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
-            gap: "0",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            width: "100%",
           }}>
-            {/* Primary 5 cats */}
+
+            {/* ── 5 primary category items ── */}
             {MOBILE_PRIMARY.map((cat) => (
               <Link
                 key={cat.label}
@@ -387,26 +393,38 @@ function Navbar() {
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "flex-start",
-                  gap: "8px",
+                  gap: "6px",
                   textDecoration: "none",
-                  padding: "4px 2px",
+                  flex: "1 1 0",
+                  minWidth: 0,
                   WebkitTapHighlightColor: "transparent",
                 }}
               >
-                <span style={{ color: "#e2e8f0", display: "flex", flexShrink: 0 }}>{cat.icon}</span>
+                {/* Icon */}
                 <span style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
+                  color: "#e2e8f0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  {cat.icon}
+                </span>
+                {/* Label */}
+                <span style={{
+                  fontSize: "12px",
+                  fontWeight: 400,
                   color: "#d1d5db",
                   textAlign: "center",
-                  lineHeight: 1.3,
+                  lineHeight: 1.35,
                   whiteSpace: cat.label.includes("\n") ? "pre-line" : "nowrap",
-                  wordBreak: "break-word",
-                }}>{cat.label}</span>
+                }}>
+                  {cat.label}
+                </span>
               </Link>
             ))}
 
-            {/* More button — 6th column → opens right drawer */}
+            {/* ── More button — 6th item ── */}
             <button
               onClick={openDrawer}
               aria-label="More categories"
@@ -415,23 +433,47 @@ function Navbar() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "flex-start",
-                gap: "8px",
+                gap: "6px",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                padding: "4px 2px",
+                flex: "1 1 0",
+                minWidth: 0,
+                padding: 0,
                 WebkitTapHighlightColor: "transparent",
               }}
             >
-              <span style={{ color: "#e2e8f0", display: "flex" }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="5"  cy="12" r="2.2"/>
-                  <circle cx="12" cy="12" r="2.2"/>
-                  <circle cx="19" cy="12" r="2.2"/>
+              {/* 3×3 dot grid icon — matches reference */}
+              <span style={{
+                color: "#e2e8f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "26px",
+                height: "26px",
+                flexShrink: 0,
+              }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="5"  cy="5"  r="2"/>
+                  <circle cx="12" cy="5"  r="2"/>
+                  <circle cx="19" cy="5"  r="2"/>
+                  <circle cx="5"  cy="12" r="2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <circle cx="19" cy="12" r="2"/>
+                  <circle cx="5"  cy="19" r="2"/>
+                  <circle cx="12" cy="19" r="2"/>
+                  <circle cx="19" cy="19" r="2"/>
                 </svg>
               </span>
-              <span style={{ fontSize: "11px", fontWeight: 500, color: "#d1d5db", whiteSpace: "nowrap" }}>More</span>
+              <span style={{
+                fontSize: "12px",
+                fontWeight: 400,
+                color: "#d1d5db",
+                whiteSpace: "nowrap",
+                lineHeight: 1.35,
+              }}>More</span>
             </button>
+
           </div>
         </div>
       </div>
