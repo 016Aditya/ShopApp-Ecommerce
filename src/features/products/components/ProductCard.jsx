@@ -1,23 +1,22 @@
 /**
  * ProductCard.jsx
  *
- * Changes in this update:
- *   - Injected <WishlistHeart> into the image container of both
- *     COMPACT and STANDARD card variants.
- *   - WishlistHeart sits at top-right inside the image area.
- *   - The discount badge (top-right) is repositioned to top-left
- *     so it never overlaps the heart icon.
- *   - ProductDetailPage is NOT affected — WishlistHeart is only
- *     rendered from ProductCard.
+ * Fix: handleAddToCart was calling useCartStore.getState().addToCart()
+ *      which does NOT exist on cartStore (cartStore only has addOptimistic,
+ *      openCart, etc.).  The real mutation is useAddToCart() from useCart.js.
  *
- * All existing logic (prefetch, add-to-cart, discount, rating,
- * IntersectionObserver, keyboard nav) is unchanged.
+ * Changes:
+ *   - Import useAddToCart from features/cart/hooks/useCart
+ *   - Call addToCartMutation.mutate({ product, quantity: 1 }) instead
+ *   - setAdded(true) in onSuccess callback so ✓ tick is reliable
+ *   - Button shows green "✓ Added to Cart" for 2.5 s after success
+ *   - All existing logic (prefetch, wishlist heart, discount badge, etc.) unchanged
  */
 import { memo, useEffect, useRef, useState } from 'react';
 import { useNavigate }   from 'react-router-dom';
 import PATHS, { buildPath } from '@/routes/paths';
-import { useCartStore }  from '@/store';
 import { useAuth }       from '@/features/auth/hooks/useAuth';
+import { useAddToCart }  from '@/features/cart/hooks/useCart';
 import { formatCurrency } from '@/utils/currency';
 import RatingBadge       from '@/components/common/RatingBadge';
 import { usePrefetchProductDetail } from '@/hooks/useQueryProducts';
@@ -27,9 +26,11 @@ const ProductCard = memo(({ product, compact = false }) => {
   const navigate  = useNavigate();
   const { user }  = useAuth();
   const [added, setAdded] = useState(false);
-  const [busy, setBusy]   = useState(false);
   const cardRef           = useRef(null);
   const prefetch          = usePrefetchProductDetail();
+
+  const addToCartMutation = useAddToCart();
+  const busy = addToCartMutation.isPending;
 
   // ── Mobile prefetch via IntersectionObserver ──────────────────────────────
   useEffect(() => {
@@ -52,17 +53,20 @@ const ProductCard = memo(({ product, compact = false }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
-  const handleAddToCart = async (e) => {
+  const handleAddToCart = (e) => {
     e.stopPropagation();
     if (!user) { navigate(PATHS.LOGIN); return; }
-    setBusy(true);
-    try {
-      await useCartStore.getState().addToCart(product, 1);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-    } finally {
-      setBusy(false);
-    }
+    if (busy || added || product.inStock === false) return;
+
+    addToCartMutation.mutate(
+      { product, quantity: 1 },
+      {
+        onSuccess: () => {
+          setAdded(true);
+          setTimeout(() => setAdded(false), 2500);
+        },
+      }
+    );
   };
 
   const discount =
@@ -71,6 +75,22 @@ const ProductCard = memo(({ product, compact = false }) => {
       : null;
 
   const goToDetail = () => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
+
+  // ── Button label & colour helper ─────────────────────────────────────────
+  const btnLabel = () => {
+    if (product.inStock === false) return 'OUT OF STOCK';
+    if (added) return '✓ Added to Cart';
+    if (busy)  return 'Adding...';
+    return 'ADD TO CART';
+  };
+
+  const btnClass = () => {
+    const base = 'w-full rounded-sm py-2 text-sm font-bold transition active:scale-95 ';
+    if (product.inStock === false) return base + 'bg-gray-400 cursor-not-allowed text-white';
+    if (added) return base + 'bg-green-600 text-white cursor-default';
+    if (busy)  return base + 'bg-[#ff9f00]/70 cursor-not-allowed text-white';
+    return base + 'bg-[#ff9f00] hover:bg-[#e08e00] text-white';
+  };
 
   /* ─── COMPACT variant ─── */
   if (compact) {
@@ -85,7 +105,7 @@ const ProductCard = memo(({ product, compact = false }) => {
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
       >
-        {/* Image container — position:relative for heart + badge */}
+        {/* Image container */}
         <div
           className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
           style={{
@@ -95,14 +115,12 @@ const ProductCard = memo(({ product, compact = false }) => {
             borderRadius: '8px',
           }}
         >
-          {/* Discount badge — moved to top-LEFT to avoid heart overlap */}
           {discount ? (
             <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
               {discount}% OFF
             </div>
           ) : null}
 
-          {/* ── Wishlist heart ── */}
           <WishlistHeart productId={product.id} productName={product.name} />
 
           {product.imageUrl ? (
@@ -138,6 +156,17 @@ const ProductCard = memo(({ product, compact = false }) => {
         <p className="mt-1 font-bold" style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
           {formatCurrency(product.price)}
         </p>
+
+        {/* Add to Cart on compact card */}
+        <button
+          className={btnClass()}
+          style={{ marginTop: '8px' }}
+          onClick={handleAddToCart}
+          disabled={busy || product.inStock === false}
+          aria-label={`Add ${product.name} to cart`}
+        >
+          {btnLabel()}
+        </button>
       </div>
     );
   }
@@ -154,7 +183,7 @@ const ProductCard = memo(({ product, compact = false }) => {
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
     >
-      {/* Image container — position:relative for heart + badge */}
+      {/* Image container */}
       <div
         className="relative flex w-full items-center justify-center overflow-hidden"
         style={{
@@ -166,14 +195,12 @@ const ProductCard = memo(({ product, compact = false }) => {
           background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
         }}
       >
-        {/* Discount badge — top-LEFT to avoid heart overlap */}
         {discount ? (
           <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
             {discount}% OFF
           </div>
         ) : null}
 
-        {/* ── Wishlist heart ── */}
         <WishlistHeart productId={product.id} productName={product.name} />
 
         {product.imageUrl ? (
@@ -248,17 +275,12 @@ const ProductCard = memo(({ product, compact = false }) => {
       {/* Add to Cart */}
       <div className="px-3 pb-3">
         <button
-          className={`w-full rounded-sm py-2 text-sm font-bold text-white transition active:scale-95 ${
-            added ? 'bg-green-600'
-            : busy ? 'bg-[#ff9f00]/70 cursor-not-allowed'
-            : product.inStock === false ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-[#ff9f00] hover:bg-[#e08e00]'
-          }`}
+          className={btnClass()}
           onClick={handleAddToCart}
           disabled={busy || product.inStock === false}
           aria-label={`Add ${product.name} to cart`}
         >
-          {added ? '✓ Added!' : busy ? 'Adding...' : product.inStock === false ? 'OUT OF STOCK' : 'ADD TO CART'}
+          {btnLabel()}
         </button>
       </div>
     </div>
