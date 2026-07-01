@@ -82,39 +82,19 @@ const MOBILE_PRIMARY = [
   },
 ];
 
-// ── All categories shown in the "More" bottom sheet ───────────────────────────
+// ── Categories shown in the "More" right-side drawer ─────────────────────────
 const MORE_CATS = [
-  { label: "All Products",     path: PATHS.PRODUCTS,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> },
-  { label: "Today's Deals",    path: PATHS.PRODUCTS,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-  { label: "Books",            path: `${PATHS.PRODUCTS}?category=Books`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
-  { label: "Sports",           path: `${PATHS.PRODUCTS}?category=Sports`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93 19.07 19.07"/></svg> },
-  { label: "New Releases",     path: PATHS.PRODUCTS,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
-  { label: "Customer Service", path: PATHS.CUSTOMER_SERVICE,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> },
-  { label: "Grocery",          path: `${PATHS.PRODUCTS}?category=Grocery`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> },
-  { label: "Beauty",           path: `${PATHS.PRODUCTS}?category=Beauty`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-  { label: "Appliances",       path: `${PATHS.PRODUCTS}?category=Appliances`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> },
-  { label: "Furniture",        path: `${PATHS.PRODUCTS}?category=Furniture`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0z"/><path d="M4 18v2M20 18v2M12 4v9"/></svg> },
-  { label: "Gaming",           path: `${PATHS.PRODUCTS}?category=Gaming`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="13" r="1" fill="currentColor"/><circle cx="17" cy="11" r="1" fill="currentColor"/><path d="M17.92 10A10 10 0 0 0 12 8c-5.5 0-10 4-10 9s2 5 4 5 2.5-2 6-2 4.5 2 6 2 4-1 4-5a10 10 0 0 0-.08-1"/></svg> },
-  { label: "Automotive",       path: `${PATHS.PRODUCTS}?category=Automotive`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg> },
-  { label: "Health",           path: `${PATHS.PRODUCTS}?category=Health`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
-  { label: "Accessories",      path: `${PATHS.PRODUCTS}?category=Accessories`,
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> },
+  { label: "Today's Deal",   path: PATHS.PRODUCTS },
+  { label: "Electronics",    path: `${PATHS.PRODUCTS}?category=Electronics` },
+  { label: "Camera",         path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Camera` },
+  { label: "Fashion",        path: `${PATHS.PRODUCTS}?category=Clothing` },
+  { label: "Kitchen",        path: `${PATHS.PRODUCTS}?category=Home` },
+  { label: "Books and Sports", path: `${PATHS.PRODUCTS}?category=Books` },
+  { label: "Furniture",      path: `${PATHS.PRODUCTS}?category=Furniture` },
+  { label: "Decor",          path: `${PATHS.PRODUCTS}?category=Decor` },
 ];
 
-// ── Shared nav-item hover wrapper ────────────────────────────────────────────
+// ── Shared nav-item hover wrapper ─────────────────────────────────────────────
 const navItemBase = {
   display:        "flex",
   flexShrink:     0,
@@ -137,21 +117,22 @@ function Navbar() {
   const navigate                     = useNavigate();
   const [query, setQuery]            = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
+  const [drawerOpen, setDrawerOpen]   = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
-  // Animate bottom sheet in/out
+  // Animate right drawer in/out
   useEffect(() => {
-    if (bottomSheetOpen) {
-      requestAnimationFrame(() => setSheetVisible(true));
+    if (drawerOpen) {
+      requestAnimationFrame(() => setDrawerVisible(true));
     } else {
-      setSheetVisible(false);
+      setDrawerVisible(false);
     }
-  }, [bottomSheetOpen]);
+  }, [drawerOpen]);
 
-  const closeBottomSheet = () => {
-    setSheetVisible(false);
-    setTimeout(() => setBottomSheetOpen(false), 280);
+  const openDrawer  = () => setDrawerOpen(true);
+  const closeDrawer = () => {
+    setDrawerVisible(false);
+    setTimeout(() => setDrawerOpen(false), 260);
   };
 
   const handleSearch = (e) => {
@@ -425,9 +406,9 @@ function Navbar() {
               </Link>
             ))}
 
-            {/* More button — 6th column */}
+            {/* More button — 6th column → opens right drawer */}
             <button
-              onClick={() => setBottomSheetOpen(true)}
+              onClick={openDrawer}
               aria-label="More categories"
               style={{
                 display: "flex",
@@ -503,48 +484,57 @@ function Navbar() {
         </>
       )}
 
-      {/* ══════════════ MORE — BOTTOM SHEET ══════════════ */}
-      {bottomSheetOpen && (
+      {/* ══════════════ MORE — RIGHT-SIDE DRAWER ══════════════ */}
+      {drawerOpen && (
         <>
           {/* Backdrop */}
           <div
-            onClick={closeBottomSheet}
+            onClick={closeDrawer}
             style={{
               position: "fixed",
               inset: 0,
-              backgroundColor: "rgba(0,0,0,0.6)",
+              backgroundColor: "rgba(0,0,0,0.5)",
               zIndex: 1000,
-              transition: "opacity 250ms ease",
-              opacity: sheetVisible ? 1 : 0,
+              opacity: drawerVisible ? 1 : 0,
+              transition: "opacity 240ms ease",
             }}
           />
-          {/* Sheet */}
+
+          {/* Drawer panel — slides in from right */}
           <div
             style={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundColor: "var(--modal-bg, #1e1e1e)",
-              borderRadius: "22px 22px 0 0",
-              zIndex: 1001,
-              maxHeight: "80dvh",
-              overflowY: "auto",
-              transform: sheetVisible ? "translateY(0)" : "translateY(100%)",
-              transition: "transform 260ms cubic-bezier(0.32,0.72,0,1)",
-              paddingBottom: "env(safe-area-inset-bottom, 16px)",
+              position:        "fixed",
+              top:             0,
+              right:           0,
+              width:           "72vw",
+              maxWidth:        "280px",
+              height:          "100dvh",
+              backgroundColor: "var(--modal-bg, #1c1c1c)",
+              zIndex:          1001,
+              display:         "flex",
+              flexDirection:   "column",
+              boxShadow:       "-4px 0 24px rgba(0,0,0,0.4)",
+              transform:       drawerVisible ? "translateX(0)" : "translateX(100%)",
+              transition:      "transform 260ms cubic-bezier(0.32,0.72,0,1)",
             }}
           >
-            {/* Handle */}
-            <div style={{ display:"flex", justifyContent:"center", padding:"12px 0 4px" }}>
-              <div style={{ width:"40px", height:"4px", borderRadius:"9999px", backgroundColor:"rgba(255,255,255,0.18)" }} />
-            </div>
-
-            {/* Header */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 20px 16px" }}>
-              <span style={{ fontSize:"16px", fontWeight:700, color:"#fff" }}>All Categories</span>
-              <button onClick={closeBottomSheet} aria-label="Close"
-                style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", display:"flex", padding:"4px" }}>
+            {/* Drawer header */}
+            <div style={{
+              display:         "flex",
+              alignItems:      "center",
+              justifyContent:  "space-between",
+              padding:         "18px 20px 14px",
+              borderBottom:    "1px solid var(--border-color, rgba(255,255,255,0.08))",
+              flexShrink:      0,
+            }}>
+              <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary, #e2e8f0)" }}>
+                All Categories
+              </span>
+              <button
+                onClick={closeDrawer}
+                aria-label="Close categories"
+                style={{ background:"none", border:"none", cursor:"pointer", color:"var(--text-muted, #94a3b8)", display:"flex", padding:"2px" }}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
@@ -552,43 +542,34 @@ function Navbar() {
               </button>
             </div>
 
-            {/* Categories grid inside sheet — 4 columns */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "4px",
-              padding: "0 12px 24px",
-            }}>
-              {MORE_CATS.map((cat) => (
+            {/* Vertical category list */}
+            <nav style={{ flex: 1, overflowY: "auto" }}>
+              {MORE_CATS.map((cat, idx) => (
                 <Link
                   key={cat.label}
                   to={cat.path}
-                  onClick={closeBottomSheet}
+                  onClick={closeDrawer}
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "14px 8px",
-                    textDecoration: "none",
-                    borderRadius: "12px",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    transition: "background 0.15s",
+                    display:         "block",
+                    padding:         "15px 20px",
+                    fontSize:        "14px",
+                    fontWeight:      400,
+                    color:           "var(--text-primary, #e2e8f0)",
+                    textDecoration:  "none",
+                    borderBottom:    idx < MORE_CATS.length - 1
+                      ? "1px solid var(--border-color, rgba(255,255,255,0.07))"
+                      : "none",
+                    transition:      "background 0.14s",
                   }}
-                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = "rgba(255,159,0,0.12)"}
-                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)"}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--hover-bg, rgba(255,255,255,0.06))"}
+                  onMouseLeave={(e)  => e.currentTarget.style.backgroundColor = ""}
+                  onTouchStart={(e)  => e.currentTarget.style.backgroundColor = "var(--hover-bg, rgba(255,255,255,0.06))"}
+                  onTouchEnd={(e)    => e.currentTarget.style.backgroundColor = ""}
                 >
-                  <span style={{ color: "#e2e8f0" }}>{cat.icon}</span>
-                  <span style={{
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    color: "#cbd5e1",
-                    textAlign: "center",
-                    lineHeight: 1.3,
-                  }}>{cat.label}</span>
+                  {cat.label}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
         </>
       )}
