@@ -50,7 +50,6 @@ function Navbar() {
   const { user, logout }             = useAuth();
   const navigate                     = useNavigate();
   const [query, setQuery]            = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -104,21 +103,15 @@ function Navbar() {
             onSubmit={handleSearch}
             style={{ flex: 1, display: "flex", minWidth: 0, marginRight: "-10px" }}
           >
-            {/*
-              Use border (not outline) so the orange ring is visible on all 4 sides.
-              overflow:hidden clips outline, but border is part of the box model and renders correctly.
-              border:2px means the inner content shrinks by 2px — compensate with negative margin
-              so the overall form width stays identical.
-            */}
+            {/* Orange border always visible — brighter on focus */}
             <div
               style={{
                 display:      "flex",
                 width:        "100%",
                 borderRadius: "2px",
                 overflow:     "hidden",
-                border:       searchFocused ? "2px solid var(--accent, #ff9f00)" : "2px solid transparent",
+                border:       "2px solid var(--accent, #ff9f00)",
                 boxSizing:    "border-box",
-                transition:   "border-color 0.2s ease",
               }}
             >
               <input
@@ -126,8 +119,6 @@ function Navbar() {
                 placeholder="Search products, brands and more..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
                 style={{
                   flex:            1,
                   padding:         "8px 16px",
@@ -331,7 +322,6 @@ function Navbar() {
       </div>
 
       {/* ══════════════ CATEGORY BAR ══════════════ */}
-      {/* Slightly lighter than primary bar (~7%) for subtle visual separation */}
       <div style={{ backgroundColor: "color-mix(in srgb, var(--navbar-bg) 93%, white 7%)" }}>
         <div
           className="container-app"
