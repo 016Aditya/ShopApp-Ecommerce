@@ -63,13 +63,6 @@ function Navbar() {
     <header className="sticky top-0 z-50 shadow-md" style={{ colorScheme: "dark" }}>
 
       {/* ══════════════ PRIMARY BAR ══════════════ */}
-      {/*
-        Height:   68px (up from 64px) — comfortable vertical rhythm
-        Padding:  0 20px (up from 16px) — balanced side breathing room
-        Logo:     minWidth 160px, padding-left 13px for spacious left margin
-        Search:   flex:1 + marginRight:-10px reclaims ~10px from right side
-        Gap:      12px between logo/search, 6px between right items
-      */}
       <div style={{ backgroundColor: "var(--navbar-bg)", minHeight: "68px" }}>
         <div
           style={{
@@ -83,7 +76,7 @@ function Navbar() {
           }}
         >
 
-          {/* ── Logo — 160px wide, 7px extra left padding ── */}
+          {/* ── Logo ── */}
           <Link
             to={PATHS.HOME}
             aria-label="ShopApp Home"
@@ -91,8 +84,6 @@ function Navbar() {
               ...navItemBase,
               flexDirection: "column",
               alignItems:    "flex-start",
-              // padding: top right bottom left
-              // left: 6px base + 7px extra = 13px total
               padding:   "4px 8px 4px 13px",
               minWidth:  "150px",
               flexShrink: 0,
@@ -100,7 +91,6 @@ function Navbar() {
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
           >
-            {/* Font bumped to 22px to fill the wider logo zone */}
             <span style={{ fontSize: "22px", fontWeight: 800, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.4px" }}>
               shop<span style={{ color: "var(--accent, #ff9f00)" }}>App</span>
             </span>
@@ -109,25 +99,22 @@ function Navbar() {
             </span>
           </Link>
 
-          {/* ── Search — wider by ~10px via negative right margin ── */}
-          {/*
-            The right-side items use flexShrink:0, so extending the search form
-            via a small negative marginRight is the cleanest way to grab the
-            extra space without touching item widths.
-          */}
+          {/* ── Search ── */}
           <form
             onSubmit={handleSearch}
             style={{ flex: 1, display: "flex", minWidth: 0, marginRight: "-10px" }}
           >
             <div
               style={{
-                display:    "flex",
-                width:      "100%",
+                display:      "flex",
+                width:        "100%",
                 borderRadius: "2px",
-                overflow:   "hidden",
-                // Subtle orange glow on focus only
-                boxShadow:  searchFocused ? "0 0 0 3px rgba(255,159,0,0.28)" : "none",
-                transition: "box-shadow 0.2s ease",
+                overflow:     "hidden",
+                // Single clean orange outline on focus — no double border, no shadow ring
+                outline:      searchFocused ? "2px solid var(--accent, #ff9f00)" : "2px solid transparent",
+                outlineOffset: "0px",
+                boxShadow:    "none",
+                transition:   "outline-color 0.2s ease",
               }}
             >
               <input
@@ -139,7 +126,6 @@ function Navbar() {
                 onBlur={() => setSearchFocused(false)}
                 style={{
                   flex:            1,
-                  // padding reduced from 10px → 8px top/bottom = ~4px total height reduction
                   padding:         "8px 16px",
                   fontSize:        "14px",
                   outline:         "none",
@@ -162,7 +148,6 @@ function Navbar() {
                   cursor:          "pointer",
                   flexShrink:      0,
                   transition:      "opacity 0.15s",
-                  // height is NOT set — it auto-matches the input height
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
@@ -177,7 +162,7 @@ function Navbar() {
             </div>
           </form>
 
-          {/* ── Right nav — desktop only, gap 6px ── */}
+          {/* ── Right nav — desktop only ── */}
           <div className="hidden md:flex" style={{ alignItems: "center", gap: "5.5px", flexShrink: 0 }}>
 
             {/* Account */}
@@ -291,7 +276,7 @@ function Navbar() {
               <span style={{ fontSize:"14px", fontWeight:700, color:"#fff", marginBottom:"2px" }}>Cart</span>
             </Link>
 
-            {/* Theme toggle — unchanged */}
+            {/* Theme toggle */}
             <ThemeToggle />
           </div>
 
@@ -342,8 +327,8 @@ function Navbar() {
       </div>
 
       {/* ══════════════ CATEGORY BAR ══════════════ */}
-      {/* 'All' menu item removed per refinement spec */}
-      <div style={{ backgroundColor: "var(--navbar-secondary-bg)" }}>
+      {/* Slightly lighter than primary bar (~7%) for subtle visual separation */}
+      <div style={{ backgroundColor: "color-mix(in srgb, var(--navbar-bg) 93%, white 7%)" }}>
         <div
           className="container-app"
           style={{
@@ -357,6 +342,32 @@ function Navbar() {
             minHeight:       "40px",
           }}
         >
+          {/* ── ☰ All — restored ── */}
+          <Link
+            to={PATHS.PRODUCTS}
+            style={{
+              display:        "flex",
+              flexShrink:     0,
+              alignItems:     "center",
+              gap:            "6px",
+              border:         "1px solid transparent",
+              padding:        "8px 12px",
+              fontSize:       "13px",
+              fontWeight:     700,
+              color:          "#fff",
+              textDecoration: "none",
+              transition:     "border-color 0.15s",
+              borderRadius:   "2px",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
+          >
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 5h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm0 4h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm0 4h14a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2z" clipRule="evenodd" />
+            </svg>
+            All
+          </Link>
+
           {NAV_LINKS.map((link) =>
             link.dropdown ? (
               <div key={link.label} className="group" style={{ position:"relative", flexShrink:0 }}>
