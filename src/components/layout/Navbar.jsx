@@ -322,7 +322,7 @@ function Navbar() {
       </div>
 
       {/* ══════════════ CATEGORY BAR ══════════════ */}
-      <div style={{ backgroundColor: "color-mix(in srgb, var(--navbar-bg) 93%, white 7%)" }}>
+      <div style={{ backgroundColor: "color-mix(in srgb, var(--navbar-bg) 93%, white 6%)" }}>
         <div
           className="container-app"
           style={{
