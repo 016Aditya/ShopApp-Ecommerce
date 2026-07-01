@@ -1,25 +1,26 @@
 /**
  * ProductCard.jsx
  *
- * Fix: Removed role="button" + onClick from the outer wrapper <div>.
- * The entire card was a single giant button, which caused the card's
- * goToDetail onClick to fire when the user clicked "ADD TO CART" —
- * navigating away before onSuccess could trigger the toast.
- *
- * Solution: only the inner .card-clickable section (image + info) is
- * navigable. The Add to Cart button sits outside that area and has no
- * parent click handler to bubble into.
+ * Premium Add-to-Cart UX:
+ *  - Button turns green ("✓ Added to Cart") immediately on success AND
+ *    whenever the product already exists in the cart (persistent across
+ *    navigation and page refresh — derived from live useCartQuery data).
+ *  - Smooth 250ms color + text transition; no layout shift.
+ *  - Animated floating CartToast fires on each successful add.
+ *  - Outer wrapper div has NO onClick/role=button — only the inner
+ *    .card-clickable section (image + info) is navigable, so the
+ *    Add to Cart button never bubbles into goToDetail.
  */
 import { memo, useEffect, useRef, useState } from 'react';
-import { useNavigate }   from 'react-router-dom';
+import { useNavigate }     from 'react-router-dom';
 import PATHS, { buildPath } from '@/routes/paths';
-import { useAuth }       from '@/features/auth/hooks/useAuth';
-import { useAddToCart }  from '@/features/cart/hooks/useCart';
-import { formatCurrency } from '@/utils/currency';
-import RatingBadge       from '@/components/common/RatingBadge';
+import { useAuth }         from '@/features/auth/hooks/useAuth';
+import { useAddToCart, useCartQuery } from '@/features/cart/hooks/useCart';
+import { formatCurrency }  from '@/utils/currency';
+import RatingBadge         from '@/components/common/RatingBadge';
 import { usePrefetchProductDetail } from '@/hooks/useQueryProducts';
-import WishlistHeart     from '@/components/WishlistHeart';
-import CartToast         from '@/components/CartToast';
+import WishlistHeart       from '@/components/WishlistHeart';
+import CartToast           from '@/components/CartToast';
 
 const ProductCard = memo(({ product, compact = false }) => {
   const navigate  = useNavigate();
@@ -31,20 +32,20 @@ const ProductCard = memo(({ product, compact = false }) => {
   const addToCartMutation = useAddToCart();
   const busy = addToCartMutation.isPending;
 
+  // ── Persistent in-cart state (survives refresh) ──────────────────────────
+  const { data: cartData } = useCartQuery();
+  const isInCart = (cartData?.items ?? []).some(
+    (item) => String(item.productId) === String(product.id)
+  );
+
   // ── Mobile prefetch via IntersectionObserver ──────────────────────────────
   useEffect(() => {
     const el = cardRef.current;
     if (!el || !('IntersectionObserver' in window)) return;
     const isTouchDevice = window.matchMedia('(hover: none)').matches;
     if (!isTouchDevice) return;
-
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          prefetch(product.id);
-          observer.disconnect();
-        }
-      },
+      (entries) => { if (entries[0].isIntersecting) { prefetch(product.id); observer.disconnect(); } },
       { threshold: 0.5 }
     );
     observer.observe(el);
@@ -55,18 +56,17 @@ const ProductCard = memo(({ product, compact = false }) => {
   const goToDetail = () => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
 
   const handleAddToCart = (e) => {
-    // Belt-and-suspenders: stop the click from reaching any parent
     e.stopPropagation();
     e.preventDefault();
     if (!user) { navigate(PATHS.LOGIN); return; }
-    if (busy || product.inStock === false) return;
+    if (busy || product.inStock === false || isInCart) return;
 
     addToCartMutation.mutate(
       { product, quantity: 1 },
       {
         onSuccess: () => {
           setShowToast(true);
-          setTimeout(() => setShowToast(false), 2500);
+          setTimeout(() => setShowToast(false), 2750); // 250ms out anim buffer
         },
       }
     );
@@ -77,31 +77,43 @@ const ProductCard = memo(({ product, compact = false }) => {
       ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
       : null;
 
-  // ── Button helpers ──────────────────────────────────────────────────────
+  // ── Button helpers ────────────────────────────────────────────────────────
+  const added = isInCart;
+
   const btnLabel = () => {
     if (product.inStock === false) return 'OUT OF STOCK';
     if (busy) return 'Adding...';
+    if (added) return '\u2713 Added to Cart';
     return 'ADD TO CART';
   };
 
-  const btnClass = () => {
-    const base = 'w-full rounded-sm py-2 text-sm font-bold transition active:scale-95 ';
-    if (product.inStock === false) return base + 'bg-gray-400 cursor-not-allowed text-white';
-    if (busy) return base + 'bg-[#ff9f00]/70 cursor-not-allowed text-white';
-    return base + 'bg-[#ff9f00] hover:bg-[#e08e00] text-white';
+  const btnStyle = () => {
+    if (product.inStock === false) return { background: '#9ca3af', cursor: 'not-allowed', color: '#fff' };
+    if (busy)  return { background: '#86efac', cursor: 'not-allowed', color: '#fff' };
+    if (added) return { background: '#22c55e', color: '#fff' };
+    return { background: '#ff9f00', color: '#fff' };
   };
+
+  const btnBase = 'w-full rounded-sm py-2 text-sm font-bold active:scale-95 disabled:cursor-not-allowed';
+  const btnTransition = 'transition-all duration-[250ms] ease-in-out';
+
+  /* ─── Image + info block (shared between compact and standard) ─── */
+  const DiscountBadge = discount ? (
+    <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+      {discount}% OFF
+    </div>
+  ) : null;
 
   /* ─── COMPACT variant ─── */
   if (compact) {
     return (
       <>
-        {/* Outer div: NO onClick, NO role=button — it is purely a layout container */}
         <div
           ref={cardRef}
           className="group flex flex-col items-center rounded-sm border p-3 hover:shadow-md transition"
           style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
         >
-          {/* Clickable area: image + name + price */}
+          {/* Clickable: image + name + price */}
           <div
             className="w-full cursor-pointer"
             onClick={goToDetail}
@@ -113,40 +125,22 @@ const ProductCard = memo(({ product, compact = false }) => {
             <div
               className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
               style={{
-                aspectRatio: '1 / 1',
-                padding: '8px',
+                aspectRatio: '1 / 1', padding: '8px',
                 background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
                 borderRadius: '8px',
               }}
             >
-              {discount ? (
-                <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
-                  {discount}% OFF
-                </div>
-              ) : null}
-
+              {DiscountBadge}
               <WishlistHeart productId={product.id} productName={product.name} />
-
               {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  width={200}
-                  height={200}
-                  decoding="async"
-                  loading="lazy"
+                <img src={product.imageUrl} alt={product.name} width={200} height={200}
+                  decoding="async" loading="lazy"
                   style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 220ms ease' }}
-                  className="group-hover:scale-[1.04]"
-                />
-              ) : (
-                <span className="text-4xl">🛍️</span>
-              )}
+                  className="group-hover:scale-[1.04]" />
+              ) : <span className="text-4xl">🛍️</span>}
             </div>
-
-            <p
-              className="text-center line-clamp-2 group-hover:text-[#2874f0] transition"
-              style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}
-            >
+            <p className="text-center line-clamp-2 group-hover:text-[#2874f0] transition"
+              style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
               {product.name}
             </p>
             <div className="mt-1 w-full">
@@ -157,18 +151,17 @@ const ProductCard = memo(({ product, compact = false }) => {
             </p>
           </div>
 
-          {/* Add to Cart button — completely outside the clickable area */}
+          {/* Add to Cart — outside clickable area */}
           <button
-            className={btnClass()}
-            style={{ marginTop: '8px' }}
+            className={`${btnBase} ${btnTransition}`}
+            style={{ marginTop: '8px', ...btnStyle() }}
             onClick={handleAddToCart}
             disabled={busy || product.inStock === false}
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={added ? `${product.name} is in your cart` : `Add ${product.name} to cart`}
           >
             {btnLabel()}
           </button>
         </div>
-
         <CartToast visible={showToast} />
       </>
     );
@@ -177,13 +170,12 @@ const ProductCard = memo(({ product, compact = false }) => {
   /* ─── STANDARD grid card ─── */
   return (
     <>
-      {/* Outer div: NO onClick, NO role=button — layout container only */}
       <div
         ref={cardRef}
         className="group flex flex-col rounded-sm border shadow-sm transition hover:shadow-md"
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
       >
-        {/* Clickable area: image + info */}
+        {/* Clickable: image + info */}
         <div
           className="flex flex-1 flex-col cursor-pointer"
           onClick={goToDetail}
@@ -195,11 +187,8 @@ const ProductCard = memo(({ product, compact = false }) => {
           <div
             className="relative flex w-full items-center justify-center overflow-hidden"
             style={{
-              aspectRatio: '1 / 1',
-              margin: '7px',
-              width: 'calc(100% - 14px)',
-              borderRadius: '8px',
-              padding: '8px',
+              aspectRatio: '1 / 1', margin: '7px', width: 'calc(100% - 14px)',
+              borderRadius: '8px', padding: '8px',
               background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
             }}
           >
@@ -208,37 +197,23 @@ const ProductCard = memo(({ product, compact = false }) => {
                 {discount}% OFF
               </div>
             ) : null}
-
             <WishlistHeart productId={product.id} productName={product.name} />
-
             {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                width={300}
-                height={300}
-                decoding="async"
-                loading="lazy"
+              <img src={product.imageUrl} alt={product.name} width={300} height={300}
+                decoding="async" loading="lazy"
                 style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 220ms ease' }}
-                className="group-hover:scale-[1.04]"
-              />
-            ) : (
-              <span className="text-6xl">🛍️</span>
-            )}
+                className="group-hover:scale-[1.04]" />
+            ) : <span className="text-6xl">🛍️</span>}
           </div>
 
           <div className="flex flex-1 flex-col gap-1 p-3">
-            <h3
-              className="line-clamp-2 group-hover:text-[#2874f0] transition"
-              style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}
-            >
+            <h3 className="line-clamp-2 group-hover:text-[#2874f0] transition"
+              style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}>
               {product.name}
             </h3>
-
             <div className="mt-0.5">
               <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} />
             </div>
-
             <div className="mt-1 flex items-baseline gap-2">
               <p style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
                 {formatCurrency(product.price)}
@@ -249,25 +224,18 @@ const ProductCard = memo(({ product, compact = false }) => {
                 </p>
               ) : null}
             </div>
-
             <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
-
             {product.inStock === false ? (
               <p className="text-xs font-semibold text-red-500">Out of Stock</p>
             ) : null}
-
             <div className="flex items-center gap-1 flex-wrap">
-              <span
-                className="w-fit rounded-full px-2 py-0.5"
-                style={{ fontSize: '13px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}
-              >
+              <span className="w-fit rounded-full px-2 py-0.5"
+                style={{ fontSize: '13px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}>
                 {product.category}
               </span>
               {product.subcategory ? (
-                <span
-                  className="w-fit rounded-full px-2 py-0.5"
-                  style={{ fontSize: '10px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}
-                >
+                <span className="w-fit rounded-full px-2 py-0.5"
+                  style={{ fontSize: '10px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}>
                   {product.subcategory}
                 </span>
               ) : null}
@@ -275,13 +243,14 @@ const ProductCard = memo(({ product, compact = false }) => {
           </div>
         </div>
 
-        {/* Add to Cart button — completely outside the clickable area, never bubbles to goToDetail */}
+        {/* Add to Cart — outside clickable area, never bubbles to goToDetail */}
         <div className="px-3 pb-3">
           <button
-            className={btnClass()}
+            className={`${btnBase} ${btnTransition}`}
+            style={btnStyle()}
             onClick={handleAddToCart}
             disabled={busy || product.inStock === false}
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={added ? `${product.name} is in your cart` : `Add ${product.name} to cart`}
           >
             {btnLabel()}
           </button>
@@ -294,5 +263,4 @@ const ProductCard = memo(({ product, compact = false }) => {
 });
 
 ProductCard.displayName = 'ProductCard';
-
 export default ProductCard;

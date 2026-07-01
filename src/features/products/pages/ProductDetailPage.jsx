@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProduct } from "../hooks/useProducts";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useAddToCart } from "@/features/cart/hooks/useCart";
+import { useAddToCart, useCartQuery } from "@/features/cart/hooks/useCart";
 import {
   useWishlistQuery,
   useAddToWishlist,
@@ -29,10 +29,16 @@ const ProductDetailPage = () => {
 
   const addToCartMutation = useAddToCart();
 
-  // ── Wishlist ───────────────────────────────────────────────
-  const { data: wishlistItems = [] } = useWishlistQuery();
-  const addToWishlistMutation      = useAddToWishlist();
-  const removeFromWishlistMutation = useRemoveFromWishlist();
+  // ── Persistent in-cart check (survives refresh) ────────────────────────
+  const { data: cartData } = useCartQuery();
+  const isInCart = (cartData?.items ?? []).some(
+    (item) => String(item.productId) === String(id)
+  );
+
+  // ── Wishlist ────────────────────────────────────────────────────────────
+  const { data: wishlistItems = [] }   = useWishlistQuery();
+  const addToWishlistMutation          = useAddToWishlist();
+  const removeFromWishlistMutation     = useRemoveFromWishlist();
 
   const isWishlisted = wishlistItems.some(
     (item) => String(item.productId) === String(id)
@@ -53,24 +59,25 @@ const ProductDetailPage = () => {
     }
   };
 
-  // ── Cart toast (replaces old inline toast state) ────────────────────
-  const [showToast, setShowToast]       = useState(false);
-  const [errorToast, setErrorToast]     = useState(false);
+  // ── Toast + button loading state ────────────────────────────────────────
+  const [showToast,    setShowToast]    = useState(false);
+  const [errorToast,   setErrorToast]   = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [buyingNow, setBuyingNow]       = useState(false);
+  const [buyingNow,    setBuyingNow]    = useState(false);
 
   const triggerSuccessToast = () => {
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
+    setTimeout(() => setShowToast(false), 2750); // 250ms exit anim buffer
   };
 
   const triggerErrorToast = () => {
     setErrorToast(true);
-    setTimeout(() => setErrorToast(false), 2500);
+    setTimeout(() => setErrorToast(false), 2750);
   };
 
   const handleAddToCart = async () => {
     if (!user) { navigate(PATHS.LOGIN); return; }
+    if (isInCart) return; // already in cart — button is green, do nothing
     setAddingToCart(true);
     try {
       await addToCartMutation.mutateAsync({ product, quantity: 1 });
@@ -155,6 +162,7 @@ const ProductDetailPage = () => {
             onBuyNow={handleBuyNow}
             addingToCart={addingToCart}
             buyingNow={buyingNow}
+            isInCart={isInCart}
           />
         </div>
       </div>
@@ -167,13 +175,23 @@ const ProductDetailPage = () => {
         <ReviewList productId={id} currentUser={user ?? null} />
       </div>
 
-      {/* Shared floating green toast — success */}
+      {/* Floating green success toast */}
       <CartToast visible={showToast} />
 
-      {/* Error toast — reuses pdp-toast CSS directly */}
+      {/* Error toast */}
       {errorToast && (
-        <div className="pdp-toast pdp-toast--error" role="alert">
-          ✗ Failed to add to cart. Please try again.
+        <div
+          role="alert"
+          style={{
+            position: 'fixed', bottom: 'calc(28px + env(safe-area-inset-bottom, 0px))',
+            left: '50%', transform: 'translateX(-50%)', zIndex: 99999,
+            background: '#dc2626', color: '#fff', borderRadius: '9999px',
+            padding: '13px 24px', fontWeight: 600, fontSize: '0.9375rem',
+            boxShadow: '0 4px 16px rgba(220,38,38,0.4)', whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+          }}
+        >
+          ✕ Failed to add to cart. Please try again.
         </div>
       )}
     </div>
