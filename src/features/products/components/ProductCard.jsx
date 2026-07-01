@@ -1,12 +1,14 @@
 /**
  * ProductCard.jsx
  *
- * Changes:
- *   - Removed duplicate `import { useCart }` (was unused, caused lint warning)
- *   - Replaced button-level "✓ Added to Cart" label with shared <CartToast>
- *     so the floating green pill from ProductDetailPage appears here too
- *   - Button resets to "ADD TO CART" immediately after click (no lingering label)
- *   - Added/Busy states still disable the button to prevent double-submits
+ * Fix: Removed role="button" + onClick from the outer wrapper <div>.
+ * The entire card was a single giant button, which caused the card's
+ * goToDetail onClick to fire when the user clicked "ADD TO CART" —
+ * navigating away before onSuccess could trigger the toast.
+ *
+ * Solution: only the inner .card-clickable section (image + info) is
+ * navigable. The Add to Cart button sits outside that area and has no
+ * parent click handler to bubble into.
  */
 import { memo, useEffect, useRef, useState } from 'react';
 import { useNavigate }   from 'react-router-dom';
@@ -50,8 +52,12 @@ const ProductCard = memo(({ product, compact = false }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
+  const goToDetail = () => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
+
   const handleAddToCart = (e) => {
+    // Belt-and-suspenders: stop the click from reaching any parent
     e.stopPropagation();
+    e.preventDefault();
     if (!user) { navigate(PATHS.LOGIN); return; }
     if (busy || product.inStock === false) return;
 
@@ -71,8 +77,6 @@ const ProductCard = memo(({ product, compact = false }) => {
       ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
       : null;
 
-  const goToDetail = () => navigate(buildPath(PATHS.PRODUCT_DETAIL, product.id));
-
   // ── Button helpers ──────────────────────────────────────────────────────
   const btnLabel = () => {
     if (product.inStock === false) return 'OUT OF STOCK';
@@ -91,62 +95,69 @@ const ProductCard = memo(({ product, compact = false }) => {
   if (compact) {
     return (
       <>
+        {/* Outer div: NO onClick, NO role=button — it is purely a layout container */}
         <div
           ref={cardRef}
-          className="group flex cursor-pointer flex-col items-center rounded-sm border p-3 hover:shadow-md transition"
+          className="group flex flex-col items-center rounded-sm border p-3 hover:shadow-md transition"
           style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
-          onClick={goToDetail}
-          onMouseEnter={() => prefetch(product.id)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
         >
+          {/* Clickable area: image + name + price */}
           <div
-            className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
-            style={{
-              aspectRatio: '1 / 1',
-              padding: '8px',
-              background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
-              borderRadius: '8px',
-            }}
+            className="w-full cursor-pointer"
+            onClick={goToDetail}
+            onMouseEnter={() => prefetch(product.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
           >
-            {discount ? (
-              <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
-                {discount}% OFF
-              </div>
-            ) : null}
+            <div
+              className="relative flex w-full items-center justify-center overflow-hidden rounded mb-2"
+              style={{
+                aspectRatio: '1 / 1',
+                padding: '8px',
+                background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
+                borderRadius: '8px',
+              }}
+            >
+              {discount ? (
+                <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                  {discount}% OFF
+                </div>
+              ) : null}
 
-            <WishlistHeart productId={product.id} productName={product.name} />
+              <WishlistHeart productId={product.id} productName={product.name} />
 
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                width={200}
-                height={200}
-                decoding="async"
-                loading="lazy"
-                style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 220ms ease' }}
-                className="group-hover:scale-[1.04]"
-              />
-            ) : (
-              <span className="text-4xl">🛍️</span>
-            )}
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  width={200}
+                  height={200}
+                  decoding="async"
+                  loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 220ms ease' }}
+                  className="group-hover:scale-[1.04]"
+                />
+              ) : (
+                <span className="text-4xl">🛍️</span>
+              )}
+            </div>
+
+            <p
+              className="text-center line-clamp-2 group-hover:text-[#2874f0] transition"
+              style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}
+            >
+              {product.name}
+            </p>
+            <div className="mt-1 w-full">
+              <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} showCount={false} />
+            </div>
+            <p className="mt-1 font-bold" style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
+              {formatCurrency(product.price)}
+            </p>
           </div>
 
-          <p
-            className="text-center line-clamp-2 group-hover:text-[#2874f0] transition"
-            style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}
-          >
-            {product.name}
-          </p>
-          <div className="mt-1 w-full">
-            <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} showCount={false} />
-          </div>
-          <p className="mt-1 font-bold" style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
-            {formatCurrency(product.price)}
-          </p>
-
+          {/* Add to Cart button — completely outside the clickable area */}
           <button
             className={btnClass()}
             style={{ marginTop: '8px' }}
@@ -166,98 +177,105 @@ const ProductCard = memo(({ product, compact = false }) => {
   /* ─── STANDARD grid card ─── */
   return (
     <>
+      {/* Outer div: NO onClick, NO role=button — layout container only */}
       <div
         ref={cardRef}
-        className="group flex cursor-pointer flex-col rounded-sm border shadow-sm transition hover:shadow-md"
+        className="group flex flex-col rounded-sm border shadow-sm transition hover:shadow-md"
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
-        onClick={goToDetail}
-        onMouseEnter={() => prefetch(product.id)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
       >
+        {/* Clickable area: image + info */}
         <div
-          className="relative flex w-full items-center justify-center overflow-hidden"
-          style={{
-            aspectRatio: '1 / 1',
-            margin: '7px',
-            width: 'calc(100% - 14px)',
-            borderRadius: '8px',
-            padding: '8px',
-            background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
-          }}
+          className="flex flex-1 flex-col cursor-pointer"
+          onClick={goToDetail}
+          onMouseEnter={() => prefetch(product.id)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && goToDetail()}
         >
-          {discount ? (
-            <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
-              {discount}% OFF
-            </div>
-          ) : null}
-
-          <WishlistHeart productId={product.id} productName={product.name} />
-
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              width={300}
-              height={300}
-              decoding="async"
-              loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 220ms ease' }}
-              className="group-hover:scale-[1.04]"
-            />
-          ) : (
-            <span className="text-6xl">🛍️</span>
-          )}
-        </div>
-
-        <div className="flex flex-1 flex-col gap-1 p-3">
-          <h3
-            className="line-clamp-2 group-hover:text-[#2874f0] transition"
-            style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}
+          <div
+            className="relative flex w-full items-center justify-center overflow-hidden"
+            style={{
+              aspectRatio: '1 / 1',
+              margin: '7px',
+              width: 'calc(100% - 14px)',
+              borderRadius: '8px',
+              padding: '8px',
+              background: 'linear-gradient(135deg, var(--featured-image-start) 0%, var(--featured-image-end) 100%)',
+            }}
           >
-            {product.name}
-          </h3>
-
-          <div className="mt-0.5">
-            <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} />
-          </div>
-
-          <div className="mt-1 flex items-baseline gap-2">
-            <p style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
-              {formatCurrency(product.price)}
-            </p>
-            {product.originalPrice && product.originalPrice > product.price ? (
-              <p className="text-xs line-through" style={{ color: 'var(--text-tertiary)' }}>
-                {formatCurrency(product.originalPrice)}
-              </p>
+            {discount ? (
+              <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
+                {discount}% OFF
+              </div>
             ) : null}
+
+            <WishlistHeart productId={product.id} productName={product.name} />
+
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                width={300}
+                height={300}
+                decoding="async"
+                loading="lazy"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 220ms ease' }}
+                className="group-hover:scale-[1.04]"
+              />
+            ) : (
+              <span className="text-6xl">🛍️</span>
+            )}
           </div>
 
-          <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
-
-          {product.inStock === false ? (
-            <p className="text-xs font-semibold text-red-500">Out of Stock</p>
-          ) : null}
-
-          <div className="flex items-center gap-1 flex-wrap">
-            <span
-              className="w-fit rounded-full px-2 py-0.5"
-              style={{ fontSize: '13px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}
+          <div className="flex flex-1 flex-col gap-1 p-3">
+            <h3
+              className="line-clamp-2 group-hover:text-[#2874f0] transition"
+              style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)' }}
             >
-              {product.category}
-            </span>
-            {product.subcategory ? (
+              {product.name}
+            </h3>
+
+            <div className="mt-0.5">
+              <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} />
+            </div>
+
+            <div className="mt-1 flex items-baseline gap-2">
+              <p style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
+                {formatCurrency(product.price)}
+              </p>
+              {product.originalPrice && product.originalPrice > product.price ? (
+                <p className="text-xs line-through" style={{ color: 'var(--text-tertiary)' }}>
+                  {formatCurrency(product.originalPrice)}
+                </p>
+              ) : null}
+            </div>
+
+            <p className="text-xs font-semibold text-green-500">✓ Free Delivery</p>
+
+            {product.inStock === false ? (
+              <p className="text-xs font-semibold text-red-500">Out of Stock</p>
+            ) : null}
+
+            <div className="flex items-center gap-1 flex-wrap">
               <span
                 className="w-fit rounded-full px-2 py-0.5"
-                style={{ fontSize: '10px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}
+                style={{ fontSize: '13px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}
               >
-                {product.subcategory}
+                {product.category}
               </span>
-            ) : null}
+              {product.subcategory ? (
+                <span
+                  className="w-fit rounded-full px-2 py-0.5"
+                  style={{ fontSize: '10px', color: 'var(--text-secondary)', backgroundColor: 'var(--badge-bg)' }}
+                >
+                  {product.subcategory}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 
+        {/* Add to Cart button — completely outside the clickable area, never bubbles to goToDetail */}
         <div className="px-3 pb-3">
           <button
             className={btnClass()}
