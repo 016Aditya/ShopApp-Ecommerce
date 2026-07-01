@@ -153,7 +153,7 @@ function Navbar() {
                 type="submit"
                 aria-label="Search"
                 style={{
-                  width:           "52px",
+                  width:           "62px",
                   display:         "flex",
                   alignItems:      "center",
                   justifyContent:  "center",
