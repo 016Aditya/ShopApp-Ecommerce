@@ -1,26 +1,24 @@
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '@/features/auth/context/AuthContext';
 import AppRoutes from '@/routes/AppRoutes';
 import CartToastPortal from '@/components/CartToastPortal';
 
 /**
  * App.jsx — root component
  *
- * CartToastPortal is mounted here — above the router, outside any
- * page or feature component. It uses ReactDOM.createPortal to render
- * directly into document.body, completely immune to any CSS stacking
- * context, overflow:hidden, or transform on any ancestor element.
+ * Auth state is managed by Zustand (src/store/authStore.js) — there is
+ * no React Context Provider for auth in this project. Components read
+ * auth state directly via useAuthStore() or the useAuth() hook wrapper.
  *
- * One portal, one toast, works from every page automatically.
+ * CartToastPortal is mounted once here, above all routes. It uses
+ * ReactDOM.createPortal to render into document.body, so the toast is
+ * immune to any ancestor CSS stacking context or overflow:hidden.
  */
 const App = () => {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-        {/* Single global toast portal — renders into document.body */}
-        <CartToastPortal />
-      </AuthProvider>
+      <AppRoutes />
+      {/* Single global cart toast — renders into document.body via portal */}
+      <CartToastPortal />
     </BrowserRouter>
   );
 };
