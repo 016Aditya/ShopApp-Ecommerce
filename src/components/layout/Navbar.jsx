@@ -94,7 +94,7 @@ function Navbar() {
               // padding: top right bottom left
               // left: 6px base + 7px extra = 13px total
               padding:   "4px 8px 4px 13px",
-              minWidth:  "160px",
+              minWidth:  "150px",
               flexShrink: 0,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
@@ -178,7 +178,7 @@ function Navbar() {
           </form>
 
           {/* ── Right nav — desktop only, gap 6px ── */}
-          <div className="hidden md:flex" style={{ alignItems: "center", gap: "6px", flexShrink: 0 }}>
+          <div className="hidden md:flex" style={{ alignItems: "center", gap: "5.5px", flexShrink: 0 }}>
 
             {/* Account */}
             {user ? (
@@ -188,12 +188,12 @@ function Navbar() {
                     ...navItemBase,
                     flexDirection: "column",
                     alignItems:    "flex-start",
-                    padding:       "4px 10px",
+                    padding:       "4px 10.5px",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#fff")}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
                 >
-                  <span style={{ fontSize: "11px", color: "#cbd5e1", lineHeight: 1.4 }}>Hello, {displayName}</span>
+                  <span style={{ fontSize: "11.5px", color: "#cbd5e1", lineHeight: 1.4 }}>Hello, {displayName}</span>
                   <span style={{ fontSize: "14px", fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>Account</span>
                 </div>
                 <div
@@ -362,7 +362,7 @@ function Navbar() {
               <div key={link.label} className="group" style={{ position:"relative", flexShrink:0 }}>
                 <Link
                   to={link.path}
-                  style={{ display:"flex", alignItems:"center", gap:"4px", border:"1px solid transparent", padding:"8px 12px", fontSize:"13px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
+                  style={{ display:"flex", alignItems:"center", gap:"4px", border:"1px solid transparent", padding:"8px 12px", fontSize:"15px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
                   onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
                   onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}
                 >
@@ -379,7 +379,7 @@ function Navbar() {
                     <Link
                       key={item.label}
                       to={item.sub ? `${PATHS.PRODUCTS}?category=Clothing&subcategory=${item.sub}` : `${PATHS.PRODUCTS}?category=Clothing`}
-                      style={{ display:"block", padding:"9px 16px", fontSize:"13px", color:"var(--text-primary)", textDecoration:"none" }}
+                      style={{ display:"block", padding:"9px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none" }}
                       onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"}
                       onMouseLeave={(e)=>e.currentTarget.style.background=""}
                     >{item.label}</Link>
@@ -390,7 +390,7 @@ function Navbar() {
               <Link
                 key={link.label}
                 to={link.path}
-                style={{ display:"flex", flexShrink:0, border:"1px solid transparent", padding:"8px 12px", fontSize:"13px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
+                style={{ display:"flex", flexShrink:0, border:"1px solid transparent", padding:"8px 12px", fontSize:"15px", fontWeight:500, color:"#fff", textDecoration:"none", transition:"border-color 0.15s", borderRadius:"2px" }}
                 onMouseEnter={(e)=>e.currentTarget.style.borderColor="#fff"}
                 onMouseLeave={(e)=>e.currentTarget.style.borderColor="transparent"}
               >
