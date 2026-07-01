@@ -27,14 +27,14 @@ const CART_CONFIG = {
 
 // ── Wishlist toast config ────────────────────────────────────────────────────
 const WISHLIST_ADD_CONFIG = {
-  message:      '\u2764\ufe0f Added to Wishlist!',
+  message:      '❤️ Added to Wishlist!',
   bgColor:      '#f43f5e',
   shadowColor:  'rgba(244, 63, 94, 0.45)',
   bottomOffset: '88px',
 };
 
 const WISHLIST_REMOVE_CONFIG = {
-  message:      '\ud83d\udc94 Removed from Wishlist',
+  message:      '💔 Removed from Wishlist',
   bgColor:      '#6b7280',
   shadowColor:  'rgba(107, 114, 128, 0.40)',
   bottomOffset: '88px',
@@ -49,7 +49,7 @@ const CartAction = () => {
       onClick={() => navigate(PATHS.CART)}
       aria-label="View cart"
     >
-      View Cart \u2192
+      View Cart →
     </button>
   );
 };
@@ -78,7 +78,7 @@ const CartToastPortal = () => {
       {/* Cart toast — lower position */}
       <AppToast
         visible={cartVisible}
-        message="\u2713 Added to Cart!"
+        message="Added to Cart!"
         icon={<CartIcon />}
         action={<CartAction />}
         bgColor={CART_CONFIG.bgColor}
