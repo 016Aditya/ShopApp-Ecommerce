@@ -104,17 +104,21 @@ function Navbar() {
             onSubmit={handleSearch}
             style={{ flex: 1, display: "flex", minWidth: 0, marginRight: "-10px" }}
           >
+            {/*
+              Use border (not outline) so the orange ring is visible on all 4 sides.
+              overflow:hidden clips outline, but border is part of the box model and renders correctly.
+              border:2px means the inner content shrinks by 2px — compensate with negative margin
+              so the overall form width stays identical.
+            */}
             <div
               style={{
                 display:      "flex",
                 width:        "100%",
                 borderRadius: "2px",
                 overflow:     "hidden",
-                // Single clean orange outline on focus — no double border, no shadow ring
-                outline:      searchFocused ? "2px solid var(--accent, #ff9f00)" : "2px solid transparent",
-                outlineOffset: "0px",
-                boxShadow:    "none",
-                transition:   "outline-color 0.2s ease",
+                border:       searchFocused ? "2px solid var(--accent, #ff9f00)" : "2px solid transparent",
+                boxSizing:    "border-box",
+                transition:   "border-color 0.2s ease",
               }}
             >
               <input
