@@ -4,9 +4,12 @@
  * Single source of truth for mapping ANY backend order shape
  * into the consistent frontend shape consumed by all order components.
  *
- * FIX: Now passes through return fields:
- *   returnRequestedAt, returnCompletedAt, refundStatus
- * These are optional — old orders without them stay compatible (null defaults).
+ * Backend Address entity fields (Java / Spring):
+ *   fullName, phoneNumber, addressLine1, addressLine2,
+ *   city, state, postalCode (also zipCode), country
+ *
+ * Normalised frontend shape:
+ *   { name, phone, line1, line2, city, state, zipCode, country }
  */
 
 const ORDER_IMAGE_PLACEHOLDER =
@@ -105,16 +108,31 @@ const normalizeOrderItem = (item = {}, index = 0) => {
   };
 };
 
+/**
+ * normalizeAddress
+ *
+ * Covers ALL known backend field name variants so ShippingInfo always
+ * receives a fully-populated object regardless of API version:
+ *
+ *   name    ← fullName | recipientName | customerName | name
+ *   phone   ← phoneNumber | mobile | phone
+ *   line1   ← addressLine1 | street | address | line1
+ *   line2   ← addressLine2 | landmark | line2
+ *   city    ← city | town
+ *   state   ← state | region
+ *   zipCode ← postalCode | zipCode | pincode
+ *   country ← country  (default: "India")
+ */
 const normalizeAddress = (address = {}) => ({
-  name:    pickFirst(address.name, address.fullName, address.recipientName, address.customerName, ""),
-  phone:   pickFirst(address.phone, address.phoneNumber, address.mobile, ""),
-  email:   pickFirst(address.email, ""),
-  line1:   pickFirst(address.line1, address.addressLine1, address.street, address.address, ""),
-  line2:   pickFirst(address.line2, address.addressLine2, address.landmark, ""),
-  city:    pickFirst(address.city, address.town, ""),
-  state:   pickFirst(address.state, address.region, ""),
-  zipCode: pickFirst(address.zipCode, address.postalCode, address.pincode, ""),
-  country: pickFirst(address.country, "India"),
+  name:    pickFirst(address.fullName,     address.name,    address.recipientName, address.customerName, ""),
+  phone:   pickFirst(address.phoneNumber,  address.mobile,  address.phone,         ""),
+  email:   pickFirst(address.email,        ""),
+  line1:   pickFirst(address.addressLine1, address.street,  address.address,       address.line1,  ""),
+  line2:   pickFirst(address.addressLine2, address.landmark,                       address.line2,  ""),
+  city:    pickFirst(address.city,         address.town,    ""),
+  state:   pickFirst(address.state,        address.region,  ""),
+  zipCode: pickFirst(address.postalCode,   address.zipCode, address.pincode,       ""),
+  country: pickFirst(address.country,      "India"),
 });
 
 export const normalizeOrder = (order = {}) => {
@@ -146,7 +164,7 @@ export const normalizeOrder = (order = {}) => {
     taxPrice:      toNumber(pickFirst(order.taxPrice, order.taxAmount, order.gst), 0),
     address:       normalizeAddress(pickFirst(order.address, order.shippingAddress, order.deliveryAddress, {})),
     items,
-    // ── Return fields (additive — null for old orders without these fields) ──
+    // ── Return fields (null for old orders without these fields) ──
     returnRequestedAt: pickFirst(order.returnRequestedAt, null),
     returnCompletedAt: pickFirst(order.returnCompletedAt, null),
     refundStatus:      pickFirst(order.refundStatus, null),
