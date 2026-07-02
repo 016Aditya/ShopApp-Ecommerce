@@ -7,7 +7,6 @@ import {
   useProductsBySubcategory,
 } from '@/hooks/useQueryProducts';
 import ProductGrid from '../components/ProductGrid';
-import ProductSearch from '../components/ProductSearch';
 import ProductFilter from '../components/ProductFilter';
 import SearchPagination from '../components/SearchPagination'; // <-- 1. NEW IMPORT
 import { ProductCardSkeleton } from '@/components/skeleton';
@@ -50,25 +49,6 @@ const ProductsPage = () => {
       prefetchProductDetailPage();
     }
   }, [loading, products.length]);
-
-  const handleSearch = useCallback(
-    (keyword) => {
-      if (activeSearch === keyword) return;
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (keyword) {
-          next.set('search', keyword.trim());
-          next.set('page', '0');
-          next.delete('subcategory');
-        } else {
-          next.delete('search');
-          next.delete('page');
-        }
-        return next;
-      });
-    },
-    [activeSearch, setSearchParams]
-  );
 
   const handleClearSearch = useCallback(() => {
     if (!activeSearch) return;
@@ -132,14 +112,6 @@ const ProductsPage = () => {
             border: '1px solid var(--border-color)',
           }}
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <ProductSearch
-              key={activeSearch}
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-              initialValue={activeSearch}
-            />
-          </div>
           <ProductFilter
             activeCategory={activeCat}
             activeSubcategory={activeSub}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import SearchInput from './SearchInput';
 
-export default function SearchOverlayMobile({ initialValue = '', onSearch, onClear }) {
+export default function SearchOverlayMobile({ initialValue = '', onSearch, onClose }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
 
@@ -12,12 +12,12 @@ export default function SearchOverlayMobile({ initialValue = '', onSearch, onCle
 
   useEffect(() => {
     function handleEsc(event) {
-      if (event.key === 'Escape') onClear();
+      if (event.key === 'Escape') onClose();
     }
 
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [onClear]);
+  }, [onClose]);
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -27,14 +27,20 @@ export default function SearchOverlayMobile({ initialValue = '', onSearch, onCle
       >
         <button
           type="button"
-          onClick={onClear}
+          onClick={onClose}
           aria-label="Back"
           className="p-1 text-lg transition-opacity hover:opacity-70"
           style={{ color: 'var(--text-secondary)' }}
         >
           &larr;
         </button>
-        <SearchInput initialValue={initialValue} onSearch={onSearch} autoFocus />
+        <SearchInput
+          initialValue={initialValue}
+          onSearch={onSearch}
+          onSubmitSearch={onClose}
+          onCloseDropdown={onClose}
+          autoFocus
+        />
       </div>
     </div>
   );

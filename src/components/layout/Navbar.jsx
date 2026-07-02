@@ -1,10 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import PATHS from "@/routes/paths";
 import { useCartQuery } from "@/features/cart/hooks/useCart";
 import { useWishlistQuery } from "@/features/wishlist/hooks/useWishlist";
 import useAuth from "@/features/auth/hooks/useAuth";
 import ThemeToggle from "@/components/common/ThemeToggle";
+import SearchInput from "@/features/products/components/SearchInput";
+import SearchOverlayMobile from "@/features/products/components/SearchOverlayMobile";
 
 const CLOTHING_SUBS = [
   { label: "All Fashion", sub: null },
@@ -106,10 +108,12 @@ function Navbar() {
   const wishlistCount                = wishlistItems.length;
   const { user, logout }             = useAuth();
   const navigate                     = useNavigate();
-  const [query, setQuery]            = useState("");
+  const [searchParams]               = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [drawerOpen, setDrawerOpen]   = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const query = searchParams.get("search") || "";
 
   useEffect(() => {
     if (drawerOpen) {
@@ -125,9 +129,9 @@ function Navbar() {
     setTimeout(() => setDrawerOpen(false), 260);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (query.trim()) navigate(`${PATHS.PRODUCTS}?search=${encodeURIComponent(query.trim())}`);
+  const handleSearch = (term) => {
+    if (!term.trim()) return;
+    navigate(`${PATHS.PRODUCTS}?search=${encodeURIComponent(term.trim())}`);
   };
   const handleLogout = () => { logout(); navigate(PATHS.LOGIN); };
   const displayName = user?.firstName || user?.name || "User";
@@ -148,19 +152,24 @@ function Navbar() {
             <span style={{ fontSize:"10px", color:"#94a3b8", lineHeight:1, marginTop:"2px", fontStyle:"italic" }}>.in</span>
           </Link>
 
-          <form onSubmit={handleSearch} style={{ flex:1, display:"flex", minWidth:0, marginRight:"-10px" }}>
-            <div style={{ display:"flex", width:"100%", borderRadius:"2px", overflow:"hidden", border:"2px solid var(--accent, #ff9f00)", boxSizing:"border-box" }}>
-              <input type="text" placeholder="Search products, brands and more..." value={query} onChange={(e)=>setQuery(e.target.value)}
-                style={{ flex:1, padding:"8px 16px", fontSize:"14px", outline:"none", border:"none", backgroundColor:"#fff", color:"#0f1111", minWidth:0 }} />
-              <button type="submit" aria-label="Search"
-                style={{ width:"62px", display:"flex", alignItems:"center", justifyContent:"center", backgroundColor:"var(--accent, #ff9f00)", border:"none", cursor:"pointer", flexShrink:0, transition:"opacity 0.15s" }}
-                onMouseEnter={(e)=>(e.currentTarget.style.opacity="0.88")} onMouseLeave={(e)=>(e.currentTarget.style.opacity="1")}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f1111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-                </svg>
-              </button>
-            </div>
-          </form>
+          <SearchInput
+            initialValue={query}
+            onSearch={handleSearch}
+            placeholder="Search products, brands and more..."
+            className="flex-1 min-w-0 mr-[-10px]"
+            containerStyle={{
+              borderRadius: "2px",
+              overflow: "hidden",
+              border: "2px solid var(--accent, #ff9f00)",
+              backgroundColor: "#fff",
+              padding: "0",
+              gap: "0",
+            }}
+            inputClassName="px-4 py-2 text-[14px]"
+            inputStyle={{ color: "#0f1111" }}
+            buttonClassName="flex h-full w-[62px] items-center justify-center"
+            buttonStyle={{ backgroundColor: "var(--accent, #ff9f00)", color: "#0f1111" }}
+          />
 
           <div style={{ display:"flex", alignItems:"center", gap:"5.5px", flexShrink:0 }}>
             {user ? (
@@ -279,19 +288,31 @@ function Navbar() {
 
         {/* Row 2: Search */}
         <div style={{ padding:"0 14px 10px" }}>
-          <form onSubmit={handleSearch}>
-            <div style={{ display:"flex", borderRadius:"8px", overflow:"hidden", border:"2px solid var(--accent, #ff9f00)", boxSizing:"border-box" }}>
-              <input type="text" placeholder="Search products, brands and more..."
-                value={query} onChange={(e)=>setQuery(e.target.value)}
-                style={{ flex:1, padding:"12px 16px", fontSize:"14px", outline:"none", border:"none", backgroundColor:"var(--input-bg, #2a2a2a)", color:"var(--text-primary, #fff)", minWidth:0 }} />
-              <button type="submit" aria-label="Search"
-                style={{ width:"54px", display:"flex", alignItems:"center", justifyContent:"center", backgroundColor:"var(--accent, #ff9f00)", border:"none", cursor:"pointer", flexShrink:0, borderRadius:"0 6px 6px 0" }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f1111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-                </svg>
-              </button>
-            </div>
-          </form>
+          <button
+            type="button"
+            onClick={() => setMobileSearchOpen(true)}
+            aria-label="Open search"
+            style={{
+              display:"flex",
+              width:"100%",
+              alignItems:"center",
+              gap:"10px",
+              borderRadius:"8px",
+              border:"2px solid var(--accent, #ff9f00)",
+              backgroundColor:"var(--input-bg, #2a2a2a)",
+              color:"var(--text-secondary)",
+              padding:"12px 16px",
+              textAlign:"left",
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+              {query || "Search products, brands and more..."}
+            </span>
+          </button>
         </div>
 
         {/* ══ Row 3: Shop By — 5 items (Icon Top, Label Bottom) ══ */}
@@ -430,6 +451,14 @@ function Navbar() {
             )}
           </div>
         </>
+      )}
+
+      {mobileSearchOpen && (
+        <SearchOverlayMobile
+          initialValue={query}
+          onSearch={handleSearch}
+          onClose={() => setMobileSearchOpen(false)}
+        />
       )}
 
       {/* ══ MORE — RIGHT-SIDE DRAWER ══ */}

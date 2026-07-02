@@ -7,6 +7,15 @@ export default function SearchInput({
   onSearch,
   autoFocus = false,
   placeholder = 'Search products...',
+  onSubmitSearch,
+  onCloseDropdown,
+  className = '',
+  inputClassName = '',
+  buttonClassName = '',
+  containerStyle,
+  inputStyle,
+  buttonStyle,
+  dropdownStyle,
 }) {
   const [inputValue, setInputValue] = useState(initialValue);
   const [isOpen, setIsOpen] = useState(false);
@@ -60,7 +69,9 @@ export default function SearchInput({
     setInputValue(term);
     setIsOpen(false);
     setActiveIndex(-1);
+    onCloseDropdown?.();
     onSearch(term);
+    onSubmitSearch?.(term);
   };
 
   const handleChange = (event) => {
@@ -103,16 +114,18 @@ export default function SearchInput({
     if (event.key === 'Escape') {
       setIsOpen(false);
       setActiveIndex(-1);
+      onCloseDropdown?.();
     }
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className={`relative w-full ${className}`.trim()}>
       <div
         className="flex items-center gap-2 rounded-xl border px-3 py-2"
         style={{
           backgroundColor: 'var(--bg-primary)',
           borderColor: 'var(--border-color)',
+          ...containerStyle,
         }}
       >
         <input
@@ -125,8 +138,8 @@ export default function SearchInput({
           type="search"
           value={inputValue}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm outline-none"
-          style={{ color: 'var(--text-primary)' }}
+          className={`w-full bg-transparent text-sm outline-none ${inputClassName}`.trim()}
+          style={{ color: 'var(--text-primary)', ...inputStyle }}
           onChange={handleChange}
           onFocus={() => {
             if (trimmedDebounced.length >= 2) {
@@ -139,8 +152,8 @@ export default function SearchInput({
           type="button"
           onClick={() => submitSearch(trimmedInput)}
           aria-label="Search"
-          className="shrink-0 transition-opacity hover:opacity-70"
-          style={{ color: 'var(--text-secondary)' }}
+          className={`shrink-0 transition-opacity hover:opacity-70 ${buttonClassName}`.trim()}
+          style={{ color: 'var(--text-secondary)', ...buttonStyle }}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="7" />
@@ -155,6 +168,7 @@ export default function SearchInput({
           style={{
             backgroundColor: 'var(--card-bg-elevated)',
             borderColor: 'var(--border-color)',
+            ...dropdownStyle,
           }}
         >
           {isLoading ? (
