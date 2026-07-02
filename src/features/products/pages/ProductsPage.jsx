@@ -9,6 +9,7 @@ import {
 import ProductGrid from '../components/ProductGrid';
 import ProductSearch from '../components/ProductSearch';
 import ProductFilter from '../components/ProductFilter';
+import SearchPagination from '../components/SearchPagination'; // <-- 1. NEW IMPORT
 import { ProductCardSkeleton } from '@/components/skeleton';
 import { prefetchProductDetailPage } from '@/utils/prefetch';
 import { useProductSearchParams } from '../hooks/useProductSearchParams';
@@ -174,40 +175,20 @@ const ProductsPage = () => {
             <p className="mb-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
               {products.length} product{products.length !== 1 ? 's' : ''} found
             </p>
+            
             <ProductGrid products={products} />
+            
+            {/* 2. NEW CLEAN PAGINATION COMPONENT */}
             {isSearchMode && totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPage(Math.max(page - 1, 0))}
-                  disabled={!hasPrevious}
-                  className="rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                  style={{
-                    backgroundColor: 'var(--card-bg-elevated)',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  Previous
-                </button>
-                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Page {page + 1} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPage(page + 1)}
-                  disabled={!hasNext}
-                  className="rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                  style={{
-                    backgroundColor: 'var(--card-bg-elevated)',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  Next
-                </button>
-              </div>
+              <SearchPagination 
+                currentPage={page}
+                totalPages={totalPages}
+                hasNext={hasNext}
+                hasPrevious={hasPrevious}
+                onPageChange={setPage}
+              />
             )}
+            
           </div>
         )}
       </div>
