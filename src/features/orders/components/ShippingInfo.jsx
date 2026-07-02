@@ -1,41 +1,22 @@
 import { useState } from "react";
 
 /**
- * ShippingInfo — short address shown by default.
- * A chevron button toggles the full address inline.
+ * ShippingInfo — mirrors the SavedAddressesList collapsed/expanded format.
  *
- * Reads backend Address fields:
- *   fullName, phoneNumber, addressLine1, addressLine2, city, state, zipCode, country
- * Also accepts the old short aliases for backwards compatibility.
+ * Collapsed: name + phone, then "line1, city" preview + Show more button
+ * Expanded:  full address (line1, line2, city+state+zip, country)
+ *
+ * Accepts backend field names (fullName, phoneNumber, addressLine1, addressLine2)
+ * and old short aliases for backwards compatibility.
  */
-const ChevronIcon = ({ open }) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    style={{
-      transition: "transform 220ms ease",
-      transform: open ? "rotate(180deg)" : "rotate(0deg)",
-      display: "block",
-    }}
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
 const ShippingInfo = ({ address }) => {
   const [expanded, setExpanded] = useState(false);
 
   if (!address) {
-    return <p className="shipping-info__line">No address on file.</p>;
+    return <p style={{ color: "var(--text-secondary)" }}>No address on file.</p>;
   }
 
-  // Accept both backend field names and old short aliases
+  // Normalise field names — backend uses fullName/phoneNumber/addressLine1/addressLine2
   const name    = address.fullName     || address.name     || "";
   const phone   = address.phoneNumber  || address.phone    || "";
   const line1   = address.addressLine1 || address.line1    || address.street || "";
@@ -45,110 +26,96 @@ const ShippingInfo = ({ address }) => {
   const zipCode = address.zipCode || address.pincode || address.zip || "";
   const country = address.country || "India";
 
-  // Short one-liner: "City, State - ZipCode"
-  let shortLine = "";
-  if (city && state)   shortLine = `${city}, ${state}`;
-  else                 shortLine = city || state;
-  if (zipCode)         shortLine = shortLine ? `${shortLine} - ${zipCode}` : zipCode;
-
-  const hasAnyContent = name || phone || line1 || line2 || shortLine || country;
-  if (!hasAnyContent) {
-    return <p className="shipping-info__line">No address on file.</p>;
-  }
+  // Same preview line as SavedAddressesList: "line1, city"
+  const previewLine = [line1, city].filter(Boolean).join(", ");
 
   return (
-    <div className="shipping-info">
-
-      {/* Short address row with expand toggle */}
+    <div>
+      {/* Row 1: name + phone */}
       <div
         style={{
           display: "flex",
+          flexWrap: "wrap",
           alignItems: "center",
-          justifyContent: "space-between",
           gap: "8px",
+          marginBottom: "2px",
         }}
       >
-        <div>
-          {shortLine && (
-            <p className="shipping-info__line" style={{ margin: 0 }}>
-              {shortLine}
-            </p>
-          )}
-          {!expanded && country && (
-            <p
-              className="shipping-info__line shipping-info__country"
-              style={{ margin: "2px 0 0", opacity: 0.7, fontSize: "13px" }}
-            >
-              {country}
-            </p>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          aria-label={expanded ? "Hide full address" : "Show full address"}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            background: "none",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "50%",
-            width: "28px",
-            height: "28px",
-            cursor: "pointer",
-            color: "var(--text-muted, #94a3b8)",
-            transition: "border-color 0.15s, color 0.15s",
-            padding: 0,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)";
-            e.currentTarget.style.color = "#fff";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-            e.currentTarget.style.color = "var(--text-muted, #94a3b8)";
-          }}
-        >
-          <ChevronIcon open={expanded} />
-        </button>
+        {name && (
+          <span
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "var(--text-primary)",
+            }}
+          >
+            {name}
+          </span>
+        )}
+        {phone && (
+          <span
+            style={{
+              fontSize: "14px",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {phone}
+          </span>
+        )}
       </div>
 
-      {/* Full address revealed on expand */}
+      {/* Row 2: short preview */}
+      <p
+        style={{
+          fontSize: "14px",
+          lineHeight: 1.4,
+          color: "var(--text-secondary)",
+          margin: 0,
+        }}
+      >
+        {previewLine || "—"}
+      </p>
+
+      {/* Show more / Show less */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        style={{
+          marginTop: "4px",
+          fontSize: "12px",
+          fontWeight: 500,
+          color: "var(--accent)",
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+        }}
+      >
+        {expanded ? "Show less" : "Show more"}
+      </button>
+
+      {/* Expanded full address — same fields as SavedAddressesList */}
       {expanded && (
         <div
           style={{
-            marginTop: "12px",
-            paddingTop: "12px",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
+            marginTop: "8px",
             display: "flex",
             flexDirection: "column",
-            gap: "3px",
+            gap: "2px",
+            fontSize: "14px",
+            color: "var(--text-secondary)",
           }}
         >
-          {name  && (
-            <p className="shipping-info__name" style={{ margin: 0, fontWeight: 600 }}>
-              {name}
-            </p>
-          )}
-          {phone && (
-            <p className="shipping-info__phone" style={{ margin: 0 }}>
-              <span style={{ color: "#ec4899" }}>📞</span> {phone}
-            </p>
-          )}
-          {line1 && <p className="shipping-info__line" style={{ margin: 0 }}>{line1}</p>}
-          {line2 && <p className="shipping-info__line" style={{ margin: 0 }}>{line2}</p>}
-          {shortLine && (
-            <p className="shipping-info__line" style={{ margin: 0 }}>{shortLine}</p>
-          )}
-          {country && (
-            <p className="shipping-info__line shipping-info__country" style={{ margin: 0 }}>
-              {country}
-            </p>
-          )}
+          {line1 && <p style={{ margin: 0 }}>{line1}</p>}
+          {line2 && <p style={{ margin: 0 }}>{line2}</p>}
+          <p style={{ margin: 0 }}>
+            {[city, state].filter(Boolean).join(", ")}
+            {zipCode ? ` — ${zipCode}` : ""}
+          </p>
+          <p style={{ margin: 0, color: "var(--text-primary)" }}>
+            {country}
+          </p>
         </div>
       )}
     </div>
