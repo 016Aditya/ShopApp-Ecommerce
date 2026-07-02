@@ -1,18 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import SearchInput from './SearchInput';
 
-export default function SearchOverlayMobile({
-  inputValue,
-  setInputValue,
-  suggestions,
-  activeIndex,
-  onSelect,
-  onClear,
-}) {
-  const inputRef = useRef(null);
-
+export default function SearchOverlayMobile({ initialValue = '', onSearch, onClear }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    inputRef.current?.focus();
 
     return () => {
       document.body.style.overflow = '';
@@ -43,56 +34,7 @@ export default function SearchOverlayMobile({
         >
           &larr;
         </button>
-        <input
-          ref={inputRef}
-          type="search"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Search products..."
-          className="flex-1 rounded-xl px-4 py-2 text-sm outline-none"
-          style={{
-            backgroundColor: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            color: 'var(--text-primary)',
-          }}
-        />
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        {suggestions.length > 0 ? (
-          <ul role="listbox" className="flex flex-col gap-2">
-            {suggestions.map((suggestion, index) => (
-              <li
-                key={suggestion.id}
-                role="option"
-                aria-selected={activeIndex === index}
-                className="flex cursor-pointer items-center gap-3 rounded-lg p-3"
-                style={{
-                  border: '1px solid var(--border-color)',
-                  backgroundColor:
-                    activeIndex === index ? 'var(--bg-secondary)' : 'var(--card-bg-elevated)',
-                }}
-                onClick={() => onSelect(suggestion.name)}
-              >
-                {suggestion.thumbnail && (
-                  <img src={suggestion.thumbnail} alt="" className="h-10 w-10 rounded-md object-cover" />
-                )}
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {suggestion.name}
-                  </span>
-                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                    {suggestion.category}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-10 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {inputValue.trim().length >= 2 ? 'No matching products found.' : 'Type at least 2 characters to search.'}
-          </p>
-        )}
+        <SearchInput initialValue={initialValue} onSearch={onSearch} autoFocus />
       </div>
     </div>
   );
