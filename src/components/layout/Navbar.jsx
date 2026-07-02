@@ -34,7 +34,7 @@ const MOBILE_PRIMARY = [
     label: "Deals",
     path: PATHS.PRODUCTS,
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
         <line x1="7" y1="7" x2="7.01" y2="7"/>
       </svg>
@@ -44,7 +44,7 @@ const MOBILE_PRIMARY = [
     label: "Mobiles",
     path: `${PATHS.PRODUCTS}?category=Electronics&subcategory=Mobile`,
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
         <line x1="12" y1="18" x2="12.01" y2="18"/>
       </svg>
@@ -54,7 +54,7 @@ const MOBILE_PRIMARY = [
     label: "Fashion",
     path: `${PATHS.PRODUCTS}?category=Clothing`,
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
       </svg>
     ),
@@ -63,7 +63,7 @@ const MOBILE_PRIMARY = [
     label: "Electronics",
     path: `${PATHS.PRODUCTS}?category=Electronics`,
     icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
         <line x1="8" y1="21" x2="16" y2="21"/>
         <line x1="12" y1="17" x2="12" y2="21"/>
@@ -283,10 +283,10 @@ function Navbar() {
             <div style={{ display:"flex", borderRadius:"8px", overflow:"hidden", border:"2px solid var(--accent, #ff9f00)", boxSizing:"border-box" }}>
               <input type="text" placeholder="Search products, brands and more..."
                 value={query} onChange={(e)=>setQuery(e.target.value)}
-                style={{ flex:1, padding:"10px 14px", fontSize:"14px", outline:"none", border:"none", backgroundColor:"var(--input-bg, #2a2a2a)", color:"var(--text-primary, #fff)", minWidth:0 }} />
+                style={{ flex:1, padding:"12px 16px", fontSize:"14px", outline:"none", border:"none", backgroundColor:"var(--input-bg, #2a2a2a)", color:"var(--text-primary, #fff)", minWidth:0 }} />
               <button type="submit" aria-label="Search"
-                style={{ width:"52px", display:"flex", alignItems:"center", justifyContent:"center", backgroundColor:"var(--accent, #ff9f00)", border:"none", cursor:"pointer", flexShrink:0, borderRadius:"0 6px 6px 0" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f1111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                style={{ width:"54px", display:"flex", alignItems:"center", justifyContent:"center", backgroundColor:"var(--accent, #ff9f00)", border:"none", cursor:"pointer", flexShrink:0, borderRadius:"0 6px 6px 0" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f1111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                 </svg>
               </button>
@@ -294,11 +294,10 @@ function Navbar() {
           </form>
         </div>
 
-        {/* ══ Row 3: Shop By — 4 cats + More, icon LEFT + label RIGHT per item ══ */}
+        {/* ══ Row 3: Shop By — 5 items (Icon Top, Label Bottom) ══ */}
         <div style={{
-          backgroundColor: "color-mix(in srgb, var(--navbar-bg) 92%, white 8%)",
-          padding: "14px 6px 16px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          backgroundColor: "var(--navbar-bg)",
+          padding: "8px 16px 12px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
           {/* Heading */}
@@ -306,43 +305,42 @@ function Navbar() {
             fontSize: "13px",
             fontWeight: 400,
             color: "#9ca3af",
-            marginBottom: "14px",
+            marginBottom: "10px",
             lineHeight: 1,
-            paddingLeft: "10px",
           }}>Shop By</p>
 
-          {/* Single row — 5 items evenly distributed */}
+          {/* Grid Container */}
           <div style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-around",
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
             alignItems: "center",
+            justifyItems: "center",
             width: "100%",
           }}>
 
-            {/* 4 primary categories: icon (left) + label (right) */}
+            {/* 4 Primary Categories */}
             {MOBILE_PRIMARY.map((cat) => (
               <Link
                 key={cat.label}
                 to={cat.path}
                 style={{
                   display: "flex",
-                  flexDirection: "row",
+                  flexDirection: "column",
                   alignItems: "center",
-                  gap: "8px",
+                  justifyContent: "center",
+                  gap: "6px",
                   textDecoration: "none",
                   WebkitTapHighlightColor: "transparent",
-                  flexShrink: 0,
                 }}
               >
-                <span style={{ color: "#e2e8f0", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <span style={{ color: "#e2e8f0", display: "flex" }}>
                   {cat.icon}
                 </span>
                 <span style={{
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontWeight: 400,
-                  color: "#d1d5db",
-                  lineHeight: 1.3,
+                  color: "#F3F4F6",
+                  lineHeight: 1.2,
                   whiteSpace: "nowrap",
                 }}>
                   {cat.label}
@@ -350,7 +348,7 @@ function Navbar() {
               </Link>
             ))}
 
-            {/* More button — 3×3 dot grid + "More" label */}
+            {/* More Button */}
             <button
               onClick={openDrawer}
               aria-label="More categories"
@@ -358,17 +356,17 @@ function Navbar() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "4px",
+                justifyContent: "center",
+                gap: "6px",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
-                flexShrink: 0,
                 WebkitTapHighlightColor: "transparent",
               }}
             >
-              <span style={{ color: "#e2e8f0", display: "flex", alignItems: "center" }}>
-                <svg width="28" height="28" viewBox="0 0 26 26" fill="currentColor">
+              <span style={{ color: "#e2e8f0", display: "flex" }}>
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="currentColor">
                   <circle cx="5"  cy="5"  r="2.2"/>
                   <circle cx="13" cy="5"  r="2.2"/>
                   <circle cx="21" cy="5"  r="2.2"/>
@@ -380,7 +378,7 @@ function Navbar() {
                   <circle cx="21" cy="21" r="2.2"/>
                 </svg>
               </span>
-              <span style={{ fontSize: "12px", fontWeight: 400, color: "#d1d5db", whiteSpace: "nowrap" }}>More</span>
+              <span style={{ fontSize: "12px", fontWeight: 400, color: "#F3F4F6", whiteSpace: "nowrap" }}>More</span>
             </button>
 
           </div>
