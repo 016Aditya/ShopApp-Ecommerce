@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useProduct } from "../hooks/useProducts";
+import { useProductDetailQuery } from "@/hooks/useQueryProducts";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAddToCart, useCartQuery } from "@/features/cart/hooks/useCart";
 import {
@@ -26,7 +26,13 @@ const ProductDetailPage = () => {
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
-  const { product, loading, error } = useProduct(id);
+  const {
+    data: product = null,
+    isLoading: loading,
+    isError,
+    error: queryError,
+  } = useProductDetailQuery(id);
+  const error = isError ? (queryError?.message ?? 'Product not found') : null;
   const { user } = useAuth();
 
   const addToCartMutation = useAddToCart();

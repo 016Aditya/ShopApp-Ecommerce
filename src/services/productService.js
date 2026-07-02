@@ -47,10 +47,10 @@ export const getProductsByBrand = async (brand) => {
   return data;
 };
 
-// GET /api/products/search?keyword=...
-export const searchProducts = async (keyword) => {
+// GET /api/products/search?keyword=...&page=&size=
+export const searchProducts = async (keyword, page = 0, size = 20) => {
   const { data } = await api.get(`${API_ENDPOINTS.PRODUCTS}/search`, {
-    params: { keyword },
+    params: { keyword, page, size },
   });
   return data;
 };
@@ -88,5 +88,13 @@ export const toggleFeaturedStatus = async (id, isFeatured) => {
 // DELETE /api/products/:id
 export const deleteProduct = async (id) => {
   const { data } = await api.delete(`${API_ENDPOINTS.PRODUCTS}/${id}`);
+  return data;
+};
+
+// GET /api/products/suggestions?q=...
+export const getProductSuggestions = async (q) => {
+  const { data } = await api.get(`${API_ENDPOINTS.PRODUCTS}/suggestions`, {
+    params: { q },
+  });
   return data;
 };
