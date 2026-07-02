@@ -1,81 +1,90 @@
-import { useEffect, useRef, useState } from "react";
-import useDebounce from "@/hooks/useDebounce";
+import { useState, useRef, useEffect } from 'react';
+import { useIsMobileSearch } from '../hooks/useIsMobileSearch';
+import { useProductSuggestions } from '../hooks/useProductSuggestions';
+import SearchSuggestions from './SearchSuggestions';
+import SearchOverlayMobile from './SearchOverlayMobile';
 
-/**
- * ProductSearch
- *
- * Loop-safe design — three rules that together eliminate every redirect loop:
- *
- * 1. onSearch / onClear are stored in refs so a new function reference from
- *    the parent never re-triggers the search effect.
- *
- * 2. mountedRef guard — the search useEffect always fires once synchronously
- *    on mount (React double-invokes effects in StrictMode).  Without the
- *    guard, when ProductsPage remounts this component via key={activeSearch}
- *    the debounced value starts as "" → trimmed === "" → onClear() fires →
- *    handleClearSearch() → setSearchParams({}) wipes every URL param
- *    including ?category= and ?subcategory=.  The guard skips that first
- *    invocation entirely.
- *
- * 3. The initialValue sync useEffect is removed.  The parent passes
- *    key={activeSearch} so React remounts cleanly whenever the search param
- *    changes from outside (category click, Clear button, direct URL edit).
- *    No internal state sync = no secondary loop.
- */
-const ProductSearch = ({ onSearch, onClear, initialValue = "" }) => {
-  const [input, setInput] = useState(initialValue);
-  const debounced = useDebounce(input, 400);
-
-  // Store callbacks in refs so they never appear in useEffect dep arrays.
-  const onSearchRef = useRef(onSearch);
-  const onClearRef  = useRef(onClear);
-  useEffect(() => { onSearchRef.current = onSearch; }, [onSearch]);
-  useEffect(() => { onClearRef.current  = onClear;  }, [onClear]);
-
-  // mountedRef — true after the first effect run; skips the mount-time fire.
-  const mountedRef = useRef(false);
+export default function ProductSearch({ onSearch, onClear, initialValue = '' }) {
+  const [inputValue, setInputValue] = useState(initialValue);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const isMobile = useIsMobileSearch();
+  const { data: suggestions = [] } = useProductSuggestions(inputValue);
 
   useEffect(() => {
-    // Skip the very first invocation so mounting / key-remounting never
-    // dispatches a navigation action — only genuine user input does.
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      return;
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
     }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-    const trimmed = debounced.trim();
-    if (trimmed) {
-      onSearchRef.current(trimmed);
-    } else {
-      onClearRef.current();
+  const commitSearch = (term) => {
+    setInputValue(term);
+    setIsOpen(false);
+    onSearch(term);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) setIsOpen(true);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const selected = activeIndex >= 0 ? suggestions[activeIndex]?.name : inputValue;
+      if (selected) commitSearch(selected);
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
     }
-  }, [debounced]); // ← debounced is the only real trigger
+  };
+
+  if (isMobile) {
+    return (
+      <SearchOverlayMobile
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        suggestions={suggestions}
+        activeIndex={activeIndex}
+        onSelect={commitSearch}
+        onClear={onClear}
+      />
+    );
+  }
 
   return (
-    <div className="relative w-full sm:max-w-sm">
-      <svg
-        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-        style={{ color: "var(--text-secondary)" }}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
-      </svg>
+    <div ref={containerRef} className="relative w-full">
       <input
-        type="search"
-        data-search-bar="true"
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-controls="search-suggestions"
+        aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
+        aria-autocomplete="list"
+        value={inputValue}
         placeholder="Search products..."
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-        aria-label="Search products"
-        className="w-full rounded-xl py-2.5 pl-9 pr-4 text-sm shadow-sm outline-none transition"
+        className="w-full rounded-md border px-3 py-2 text-sm"
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          setIsOpen(true);
+          setActiveIndex(-1);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onKeyDown={handleKeyDown}
       />
+      {isOpen && (
+        <SearchSuggestions
+          suggestions={suggestions}
+          activeIndex={activeIndex}
+          onSelect={commitSearch}
+          onMouseEnterItem={setActiveIndex}
+        />
+      )}
     </div>
   );
-};
-
-export default ProductSearch;
+}
