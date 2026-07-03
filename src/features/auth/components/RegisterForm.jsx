@@ -6,110 +6,142 @@
  *   + Live password strength meter + checklist (PasswordStrength component)
  *   + Live confirm-password match indicator
  *   + Submit disabled until all password rules pass AND passwords match
- *   + react-hot-toast success and error toasts
- *   + Loading label "Creating account…" on button
+ *   + react-hot-toast success toast
+ *   + Loading label "Creating account..." on button
  *   + Fully theme-variable styled — dark mode safe
- *
- * Business logic: UNCHANGED
- *   - validate() kept as-is (same rules + phone regex)
- *   - register() call, payload shape, navigate() all identical
  */
-import { Link, useNavigate }    from "react-router-dom";
-import { useState, useMemo }    from "react";
-import toast                    from "react-hot-toast";
-import Button                   from "@/components/common/Button";
-import Input                    from "@/components/common/Input";
-import PasswordField            from "./PasswordField";
+import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import Button from "@/components/common/Button";
+import Input from "@/components/common/Input";
+import PasswordField from "./PasswordField";
 import PasswordStrength, { isPasswordValid } from "./PasswordStrength";
-import useAuth                  from "@/features/auth/hooks/useAuth";
-import { PATHS }                from "@/routes/paths";
+import { PATHS } from "@/routes/paths";
+import { useRegisterMutation } from "@/features/auth/hooks/useRegisterMutation";
+import { normalizeRegisterError } from "@/features/auth/utils/authErrorHandling";
+import { validateEmail } from "@/utils/validation";
 
 const PHONE_REGEX = /^[6-9]\d{9}$/;
 
+const EMPTY_FIELD_ERRORS = {
+  name: "",
+  phone: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
+
 function RegisterForm() {
-  const { register, loading, error, clearError } = useAuth();
   const navigate = useNavigate();
+  const registerMutation = useRegisterMutation();
+  const [generalError, setGeneralError] = useState("");
 
   const [formData, setFormData] = useState({
-    name:            "",
-    phone:           "",
-    email:           "",
-    password:        "",
+    name: "",
+    phone: "",
+    email: "",
+    password: "",
     confirmPassword: "",
   });
-  const [formErrors, setFormErrors] = useState({});
-  const [touched, setTouched]       = useState({});
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_FIELD_ERRORS);
+  const [touched, setTouched] = useState({});
+
+  const inputRefs = {
+    name: useRef(null),
+    phone: useRef(null),
+    email: useRef(null),
+    password: useRef(null),
+    confirmPassword: useRef(null),
+  };
+
+  const pwValid = isPasswordValid(formData.password);
+  const pwMatch =
+    formData.confirmPassword.length > 0 &&
+    formData.password === formData.confirmPassword;
+
+  const submitDisabled = useMemo(() => {
+    if (registerMutation.isPending) return true;
+    if (!pwValid) return true;
+    if (!pwMatch) return true;
+    return false;
+  }, [registerMutation.isPending, pwMatch, pwValid]);
+
+  const focusFirstInvalidField = (errors) => {
+    const firstInvalidField = Object.keys(EMPTY_FIELD_ERRORS).find((field) => errors[field]);
+    if (firstInvalidField) {
+      inputRefs[firstInvalidField]?.current?.focus();
+    }
+  };
+
+  const validate = () => {
+    const errors = { ...EMPTY_FIELD_ERRORS };
+
+    if (!formData.name.trim()) {
+      errors.name = "Full name is required";
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else if (!PHONE_REGEX.test(formData.phone.trim())) {
+      errors.phone = "Enter a valid 10-digit Indian mobile number";
+    }
+
+    errors.email = validateEmail(formData.email) ?? "";
+
+    if (!formData.password.trim()) {
+      errors.password = "Password is required";
+    } else if (!pwValid) {
+      errors.password = "Password does not meet requirements";
+    }
+
+    if (!formData.confirmPassword.trim()) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (formData.confirmPassword !== formData.password) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    const hasErrors = Object.values(errors).some(Boolean);
+    setFieldErrors(errors);
+
+    if (hasErrors) {
+      focusFirstInvalidField(errors);
+    }
+
+    return !hasErrors;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
-    if (formErrors[name]) setFormErrors((p) => ({ ...p, [name]: "" }));
-    if (error) clearError?.();
-  };
-
-  // ── live derived state ────────────────────────────────────────────────────
-  const pwValid    = isPasswordValid(formData.password);
-  const pwMatch    = formData.confirmPassword.length > 0
-    && formData.password === formData.confirmPassword;
-  const pwMismatch = formData.confirmPassword.length > 0
-    && formData.password !== formData.confirmPassword;
-
-  const submitDisabled = useMemo(() => {
-    if (loading) return true;
-    if (!pwValid) return true;
-    if (!pwMatch) return true;
-    return false;
-  }, [loading, pwValid, pwMatch]);
-
-  // ── validation (same rules as before) ────────────────────────────────────
-  const validate = () => {
-    const errs = {};
-    if (!formData.name.trim())  errs.name = "Full name is required";
-
-    if (!formData.phone.trim()) {
-      errs.phone = "Phone number is required";
-    } else if (!PHONE_REGEX.test(formData.phone.trim())) {
-      errs.phone = "Enter a valid 10-digit Indian mobile number";
-    }
-
-    if (!formData.email.trim()) errs.email = "Email is required";
-
-    if (!formData.password.trim()) {
-      errs.password = "Password is required";
-    } else if (!pwValid) {
-      errs.password = "Password does not meet requirements";
-    }
-
-    if (!formData.confirmPassword.trim()) {
-      errs.confirmPassword = "Please confirm your password";
-    } else if (formData.confirmPassword !== formData.password) {
-      errs.confirmPassword = "Passwords do not match";
-    }
-
-    setFormErrors(errs);
-    return Object.keys(errs).length === 0;
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (registerMutation.isPending) return;
+
+    setGeneralError("");
+    setFieldErrors({ ...EMPTY_FIELD_ERRORS });
+
     if (!validate()) return;
 
     const nameParts = formData.name.trim().split(/\s+/);
     const firstName = nameParts[0];
-    const lastName  = nameParts.slice(1).join(" ") || ".";
+    const lastName = nameParts.slice(1).join(" ") || ".";
 
     try {
-      await register({
+      await registerMutation.mutateAsync({
         firstName,
         lastName,
-        phone:    formData.phone.trim(),
-        email:    formData.email.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
         password: formData.password,
       });
 
       toast.success(
-        `✓ Account created successfully! Welcome, ${firstName}.`,
+        `Account created successfully! Welcome, ${firstName}.`,
         { duration: 3500 }
       );
 
@@ -117,11 +149,19 @@ function RegisterForm() {
         replace: true,
         state: { registered: true, firstName },
       });
-    } catch (err) {
-      toast.error(
-        err?.message || "Registration failed. Please try again.",
-        { duration: 4000 }
-      );
+    } catch (error) {
+      const { fieldErrors: nextFieldErrors, generalError: nextGeneralError } =
+        normalizeRegisterError(error);
+
+      if (Object.keys(nextFieldErrors).length > 0) {
+        const mergedErrors = { ...EMPTY_FIELD_ERRORS, ...nextFieldErrors };
+        setFieldErrors(mergedErrors);
+        focusFirstInvalidField(mergedErrors);
+      }
+
+      if (nextGeneralError) {
+        setGeneralError(nextGeneralError);
+      }
     }
   };
 
@@ -153,100 +193,104 @@ function RegisterForm() {
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        {/* Row: Full Name */}
         <Input
+          ref={inputRefs.name}
           label="Full Name"
           name="name"
           placeholder="Enter your full name"
           value={formData.name}
           onChange={handleChange}
-          error={formErrors.name}
+          error={fieldErrors.name}
           autoComplete="name"
           aria-label="Full name"
+          disabled={registerMutation.isPending}
         />
 
-        {/* Row: Phone */}
         <Input
+          ref={inputRefs.phone}
           label="Phone Number"
           name="phone"
           type="tel"
           placeholder="10-digit mobile number"
           value={formData.phone}
           onChange={handleChange}
-          error={formErrors.phone}
+          error={fieldErrors.phone}
           maxLength={10}
           inputMode="numeric"
           autoComplete="tel"
           aria-label="Phone number"
+          disabled={registerMutation.isPending}
         />
 
-        {/* Row: Email */}
         <Input
+          ref={inputRefs.email}
           label="Email address"
           name="email"
           type="email"
           placeholder="you@example.com"
           value={formData.email}
           onChange={handleChange}
-          error={formErrors.email}
+          error={fieldErrors.email}
           autoComplete="email"
           aria-label="Email address"
+          disabled={registerMutation.isPending}
         />
 
-        {/* Row: Password + strength */}
         <div className="space-y-2">
           <PasswordField
+            inputRef={inputRefs.password}
             label="Password"
             name="password"
             placeholder="Create a strong password"
             value={formData.password}
             onChange={handleChange}
-            error={formErrors.password}
+            error={fieldErrors.password}
             autoComplete="new-password"
+            disabled={registerMutation.isPending}
           />
           <PasswordStrength password={formData.password} />
         </div>
 
-        {/* Row: Confirm Password + match indicator */}
         <div className="space-y-1.5">
           <PasswordField
+            inputRef={inputRefs.confirmPassword}
             label="Confirm Password"
             name="confirmPassword"
             placeholder="Repeat your password"
             value={formData.confirmPassword}
             onChange={handleChange}
-            error={formErrors.confirmPassword}
+            error={fieldErrors.confirmPassword}
             autoComplete="new-password"
+            disabled={registerMutation.isPending}
           />
           {touched.confirmPassword && formData.confirmPassword.length > 0 && (
             <p
               className="flex items-center gap-1.5 text-xs"
               style={{ color: pwMatch ? "#22c55e" : "#ef4444" }}
             >
-              <span className="font-bold">{pwMatch ? "✓" : "✗"}</span>
+              <span className="font-bold">{pwMatch ? "OK" : "x"}</span>
               {pwMatch ? "Passwords match" : "Passwords do not match"}
             </p>
           )}
         </div>
 
-        {/* API-level error */}
-        {error && (
+        {generalError && (
           <p
-            className="rounded-xl px-3.5 py-2.5 text-sm"
+            className="whitespace-pre-line rounded-xl px-3.5 py-2.5 text-sm"
             style={{
               backgroundColor: "var(--error-bg)",
               color: "var(--error-text)",
               border: "1px solid var(--error-border)",
             }}
           >
-            {error}
+            {generalError}
           </p>
         )}
 
         <Button
           type="submit"
           fullWidth
-          loading={loading}
+          loading={registerMutation.isPending}
           disabled={submitDisabled}
           size="lg"
           className="mt-1"
@@ -256,11 +300,10 @@ function RegisterForm() {
             borderColor: "var(--button-primary)",
           } : {}}
         >
-          {loading ? "Creating account…" : "Create Account"}
+          {registerMutation.isPending ? "Creating account..." : "Create Account"}
         </Button>
       </form>
 
-      {/* Divider */}
       <div className="my-5 flex items-center gap-3">
         <div className="h-px flex-1" style={{ backgroundColor: "var(--border-color)" }} />
         <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>or</span>

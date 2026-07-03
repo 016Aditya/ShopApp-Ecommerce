@@ -30,11 +30,12 @@ function EyeOff() {
   );
 }
 
-function PasswordField({ label, name, placeholder, value, onChange, error, autoComplete, ...rest }) {
+function PasswordField({ label, name, placeholder, value, onChange, error, autoComplete, inputRef, ...rest }) {
   const [show, setShow] = useState(false);
 
   return (
     <Input
+      ref={inputRef}
       label={label}
       name={name}
       id={name}

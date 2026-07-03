@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
+import { getFriendlyGeneralError } from '@/features/auth/utils/authErrorHandling';
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -109,12 +110,20 @@ export function useLoginMutation() {
         setCaptchaRequirement(true);
         setCaptchaToken('');
       }
-      setLoginSecurity(security);
+      if (security.code) {
+        setLoginSecurity(security);
+        setError(
+          getFriendlyLoginMessage({
+            code: security.code,
+            remainingSeconds: security.remainingSeconds,
+          })
+        );
+        return;
+      }
+
+      clearLoginSecurity();
       setError(
-        getFriendlyLoginMessage({
-          code: security.code,
-          remainingSeconds: security.remainingSeconds,
-        })
+        getFriendlyGeneralError(error, 'Unable to sign in right now. Please try again.')
       );
     },
   });
