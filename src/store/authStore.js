@@ -43,6 +43,8 @@ export const useAuthStore = create(
       remainingSeconds: 0,
       lockoutCount: 0,
       retryAfter: null,
+      requiresCaptcha: false,
+      captchaToken: '',
       _hydrated: false,
 
       /**
@@ -83,6 +85,8 @@ export const useAuthStore = create(
             user:    normalisedUser,
             token,
             loading: false,
+            requiresCaptcha: false,
+            captchaToken: '',
           });
 
           return normalisedUser;
@@ -154,16 +158,25 @@ export const useAuthStore = create(
         retryAfter,
       }),
 
+      setCaptchaRequirement: (requiresCaptcha) =>
+        set({
+          requiresCaptcha: Boolean(requiresCaptcha),
+          captchaToken: requiresCaptcha ? '' : get().captchaToken,
+        }),
+
+      setCaptchaToken: (captchaToken) =>
+        set({ captchaToken: captchaToken ?? '' }),
+
       tickLoginSecurity: () =>
         set((state) => {
-          if (!state.isLocked || state.remainingSeconds <= 0) {
+          if (state.remainingSeconds <= 0) {
             return state;
           }
 
           const nextSeconds = Math.max(state.remainingSeconds - 1, 0);
           return {
             remainingSeconds: nextSeconds,
-            isLocked: nextSeconds > 0,
+            isLocked: state.loginSecurityCode === 'ACCOUNT_LOCKED' && nextSeconds > 0,
             retryAfter: nextSeconds > 0 ? state.retryAfter : null,
             loginSecurityCode: nextSeconds > 0 ? state.loginSecurityCode : null,
           };
@@ -176,6 +189,12 @@ export const useAuthStore = create(
           remainingSeconds: 0,
           lockoutCount: 0,
           retryAfter: null,
+        }),
+
+      clearCaptcha: () =>
+        set({
+          requiresCaptcha: false,
+          captchaToken: '',
         }),
 
       clearError: () => set({ error: null }),

@@ -38,8 +38,13 @@ export const register = async ({ firstName, lastName, phone, phoneNumber, email,
  * token  — signed JWT; must be sent as Authorization: Bearer <token>
  * user   — UserDto.Response profile object (for UI state only)
  */
-export const login = async ({ email, password }) => {
-  const { data } = await api.post(`${API_ENDPOINTS.AUTH}/login`, { email, password });
+export const login = async ({ email, password, captchaToken }) => {
+  const payload = { email, password };
+  if (captchaToken) {
+    payload.captchaToken = captchaToken;
+  }
+
+  const { data } = await api.post(`${API_ENDPOINTS.AUTH}/login`, payload);
   // data shape: { token: string, user: { id, firstName, ... } }
   return data;
 };

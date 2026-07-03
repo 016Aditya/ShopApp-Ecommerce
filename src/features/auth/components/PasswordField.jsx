@@ -30,7 +30,7 @@ function EyeOff() {
   );
 }
 
-function PasswordField({ label, name, placeholder, value, onChange, error, autoComplete }) {
+function PasswordField({ label, name, placeholder, value, onChange, error, autoComplete, ...rest }) {
   const [show, setShow] = useState(false);
 
   return (
@@ -44,13 +44,15 @@ function PasswordField({ label, name, placeholder, value, onChange, error, autoC
       onChange={onChange}
       error={error}
       autoComplete={autoComplete || "current-password"}
+      {...rest}
       rightElement={
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
           aria-label={show ? "Hide password" : "Show password"}
+          disabled={rest.disabled}
           style={{ color: "var(--text-tertiary)", lineHeight: 0 }}
-          className="hover:opacity-80 transition-opacity"
+          className="hover:opacity-80 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         >
           {show ? <EyeOff /> : <EyeOpen />}
         </button>

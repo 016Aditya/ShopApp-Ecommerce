@@ -10,6 +10,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
+import TurnstileWidget from "@/components/common/TurnstileWidget";
 import PasswordField from "./PasswordField";
 import useAuth from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/paths";
@@ -25,6 +26,12 @@ function LoginForm() {
   const remainingSeconds = useAuthStore((state) => state.remainingSeconds);
   const lockoutCount = useAuthStore((state) => state.lockoutCount);
   const loginSecurityCode = useAuthStore((state) => state.loginSecurityCode);
+  const requiresCaptcha = useAuthStore((state) => state.requiresCaptcha);
+  const captchaToken = useAuthStore((state) => state.captchaToken);
+  const setCaptchaToken = useAuthStore((state) => state.setCaptchaToken);
+  const isRetryBlocked = loginSecurityCode === "TOO_SOON" && remainingSeconds > 0;
+  const isCaptchaBlocked = requiresCaptcha && !captchaToken;
+  const isSubmitBlocked = isLocked || isRetryBlocked || isCaptchaBlocked;
 
   // If PrivateRoute redirected here, it stored the intended page in state.from
   const from = location.state?.from?.pathname || PATHS.HOME;
@@ -53,11 +60,14 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLocked) return;
+    if (isSubmitBlocked) return;
     if (!validate()) return;
 
     try {
-      const user = await loginMutation.mutateAsync(formData);
+      const user = await loginMutation.mutateAsync({
+        ...formData,
+        captchaToken: captchaToken || undefined,
+      });
       const name = user?.firstName || "";
       toast.success(
         name ? `Welcome back, ${name}!` : "Welcome back!",
@@ -163,7 +173,7 @@ function LoginForm() {
             onChange={handleChange}
             error={formErrors.password}
             autoComplete="current-password"
-            disabled={loginMutation.isPending || isLocked}
+            disabled={loginMutation.isPending || isSubmitBlocked}
           />
           <div className="flex justify-end">
             <Link
@@ -213,11 +223,31 @@ function LoginForm() {
           </div>
         )}
 
+        {requiresCaptcha && (
+          <div className="space-y-2">
+            <TurnstileWidget
+              onVerify={(token) => {
+                setCaptchaToken(token);
+                if (error) clearError?.();
+              }}
+              onExpire={() => setCaptchaToken("")}
+              onError={() => {
+                setCaptchaToken("");
+              }}
+            />
+            {!captchaToken && (
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                Complete the security check to continue.
+              </p>
+            )}
+          </div>
+        )}
+
         <Button
           type="submit"
           fullWidth
           loading={loginMutation.isPending}
-          disabled={isLocked}
+          disabled={isSubmitBlocked}
           size="lg"
           className="mt-1"
           style={{

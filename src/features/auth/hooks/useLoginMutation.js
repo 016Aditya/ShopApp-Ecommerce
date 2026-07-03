@@ -27,6 +27,10 @@ export function getFriendlyLoginMessage({ code, remainingSeconds }) {
       return 'Invalid email or password.';
     case 'ACCOUNT_LOCKED':
       return `Your account is temporarily locked. Try again in ${formatLockoutDuration(remainingSeconds)}.`;
+    case 'TOO_SOON':
+      return `Too many attempts. Please wait ${formatLockoutDuration(remainingSeconds)} before trying again.`;
+    case 'CAPTCHA_REQUIRED':
+      return 'Please complete the security check to continue.';
     case 'RATE_LIMIT_EXCEEDED':
       return 'Too many login attempts. Please try again later.';
     default:
@@ -71,12 +75,15 @@ export function useLoginMutation() {
   const setError = useAuthStore((state) => state.setError);
   const setLoginSecurity = useAuthStore((state) => state.setLoginSecurity);
   const clearLoginSecurity = useAuthStore((state) => state.clearLoginSecurity);
+  const setCaptchaRequirement = useAuthStore((state) => state.setCaptchaRequirement);
+  const setCaptchaToken = useAuthStore((state) => state.setCaptchaToken);
+  const clearCaptcha = useAuthStore((state) => state.clearCaptcha);
   const isLocked = useAuthStore((state) => state.isLocked);
   const remainingSeconds = useAuthStore((state) => state.remainingSeconds);
   const tickLoginSecurity = useAuthStore((state) => state.tickLoginSecurity);
 
   useEffect(() => {
-    if (!isLocked || remainingSeconds <= 0) return undefined;
+    if (remainingSeconds <= 0) return undefined;
 
     const timer = window.setInterval(() => {
       tickLoginSecurity();
@@ -94,9 +101,14 @@ export function useLoginMutation() {
     onSuccess: () => {
       clearError();
       clearLoginSecurity();
+      clearCaptcha();
     },
     onError: (error) => {
       const security = extractSecurityPayload(error);
+      if (security.code === 'CAPTCHA_REQUIRED') {
+        setCaptchaRequirement(true);
+        setCaptchaToken('');
+      }
       setLoginSecurity(security);
       setError(
         getFriendlyLoginMessage({
@@ -107,4 +119,3 @@ export function useLoginMutation() {
     },
   });
 }
-
