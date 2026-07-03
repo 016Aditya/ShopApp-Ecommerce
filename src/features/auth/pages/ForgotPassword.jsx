@@ -11,16 +11,18 @@ import { useState }           from "react";
 import { Link, useNavigate }  from "react-router-dom";
 import toast                  from "react-hot-toast";
 import { PATHS }              from "@/routes/paths";
-import { useAuthStore }       from "@/store/authStore";
 import Button                 from "@/components/common/Button";
 import Input                  from "@/components/common/Input";
+import {
+  verifyEmailForReset,
+  verifyPhoneForReset,
+} from "@/services/authService";
 
 const STEPS = { EMAIL: 1, PHONE: 2 };
 const PHONE_REGEX = /^[6-9]\d{9}$/;
 
 function ForgotPassword() {
   const navigate = useNavigate();
-  const users    = useAuthStore((s) => s.registeredUsers ?? []);
 
   const [step,  setStep]  = useState(STEPS.EMAIL);
   const [email, setEmail] = useState("");
@@ -28,36 +30,51 @@ function ForgotPassword() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (loading) return;
     if (!email.trim()) { setError("Email is required."); return; }
-    const match = users.find(
-      (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
-    );
-    if (!match) { setError("No account found with this email address."); return; }
-    setStep(STEPS.PHONE);
+    setLoading(true);
+    try {
+      await verifyEmailForReset(email.trim());
+      setStep(STEPS.PHONE);
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+        err?.message ||
+        "No account found with this email address."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePhoneSubmit = (e) => {
+  const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (loading) return;
     if (!phone.trim()) { setError("Phone number is required."); return; }
     if (!PHONE_REGEX.test(phone.trim())) {
       setError("Enter a valid 10-digit mobile number.");
       return;
     }
-    const match = users.find(
-      (u) =>
-        u.email?.toLowerCase() === email.trim().toLowerCase() &&
-        u.phone === phone.trim()
-    );
-    if (!match) {
-      toast.error("Phone number does not match the account.");
-      setError("Phone number does not match the account.");
-      return;
+    setLoading(true);
+    try {
+      await verifyPhoneForReset(email.trim(), phone.trim());
+      navigate(PATHS.RESET_PASSWORD, {
+        state: { email: email.trim(), phone: phone.trim(), verified: true },
+      });
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Phone number does not match the account.";
+      toast.error(message);
+      setError(message);
+    } finally {
+      setLoading(false);
     }
-    navigate(PATHS.RESET_PASSWORD, { state: { email: email.trim(), verified: true } });
   };
 
   return (
@@ -126,14 +143,14 @@ function ForgotPassword() {
               </p>
             )}
 
-            <Button type="submit" fullWidth size="lg"
+            <Button type="submit" fullWidth size="lg" loading={loading} disabled={loading}
               style={{
                 backgroundColor: "var(--button-primary)",
                 color: "var(--button-primary-text)",
                 borderColor: "var(--button-primary)",
               }}
             >
-              Continue
+              {loading ? "Checking..." : "Continue"}
             </Button>
 
             <p className="text-center text-sm" style={{ color: "var(--text-secondary)" }}>
@@ -179,18 +196,19 @@ function ForgotPassword() {
                 variant="secondary"
                 fullWidth
                 size="lg"
+                disabled={loading}
                 onClick={() => { setError(""); setStep(STEPS.EMAIL); }}
               >
                 Back
               </Button>
-              <Button type="submit" fullWidth size="lg"
+              <Button type="submit" fullWidth size="lg" loading={loading} disabled={loading}
                 style={{
                   backgroundColor: "var(--button-primary)",
                   color: "var(--button-primary-text)",
                   borderColor: "var(--button-primary)",
                 }}
               >
-                Verify
+                {loading ? "Verifying..." : "Verify"}
               </Button>
             </div>
           </form>

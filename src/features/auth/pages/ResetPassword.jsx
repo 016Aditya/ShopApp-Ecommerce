@@ -14,17 +14,16 @@ import { useState, useMemo }   from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast                   from "react-hot-toast";
 import { PATHS }               from "@/routes/paths";
-import { useAuthStore }        from "@/store/authStore";
 import Button                  from "@/components/common/Button";
 import PasswordField           from "@/features/auth/components/PasswordField";
 import PasswordStrength, { isPasswordValid } from "@/features/auth/components/PasswordStrength";
+import { resetPassword as resetPasswordRequest } from "@/services/authService";
 
 function ResetPassword() {
   const location  = useLocation();
   const navigate  = useNavigate();
-  const updateRegisteredUser = useAuthStore((s) => s.updateRegisteredUser);
 
-  const { email, verified } = location.state ?? {};
+  const { email, phone, verified } = location.state ?? {};
 
   if (!verified || !email) {
     navigate(PATHS.FORGOT_PASSWORD, { replace: true });
@@ -45,15 +44,29 @@ function ResetPassword() {
     [loading, pwValid, pwMatch]
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!pwValid)  { toast.error("Password does not meet requirements."); return; }
     if (!pwMatch)  { toast.error("Passwords do not match."); return; }
 
     setLoading(true);
-    updateRegisteredUser?.(email, { password });
-    toast.success("Password reset successfully! Please sign in.", { duration: 3500 });
-    setTimeout(() => navigate(PATHS.LOGIN, { replace: true }), 600);
+    try {
+      await resetPasswordRequest({
+        email,
+        phone,
+        newPassword: password,
+      });
+      toast.success("Password reset successfully! Please sign in.", { duration: 3500 });
+      setTimeout(() => navigate(PATHS.LOGIN, { replace: true }), 600);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to reset password. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
