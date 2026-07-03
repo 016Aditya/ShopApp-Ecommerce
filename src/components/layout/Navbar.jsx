@@ -167,7 +167,7 @@ function Navbar() {
             }}
             inputClassName="px-4 py-2 text-[14px]"
             inputStyle={{ color: "#0f1111" }}
-            buttonClassName="flex h-full w-[62px] items-center justify-center"
+            buttonClassName="flex w-[62px] self-stretch items-center justify-center"
             buttonStyle={{ backgroundColor: "var(--accent, #ff9f00)", color: "#0f1111" }}
           />
 

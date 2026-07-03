@@ -2,6 +2,36 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import useDebounce from '@/hooks/useDebounce';
 import { useProductSuggestionsQuery } from '@/hooks/useQueryProducts';
 
+function SuggestionThumbnail({ suggestion, hasImageError, onImageError }) {
+  const imageUrl = suggestion.imageUrl || suggestion.thumbnail || '';
+
+  if (!imageUrl || hasImageError) {
+    return (
+      <div
+        aria-hidden="true"
+        className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md"
+        style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+      >
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <rect x="3.75" y="4.75" width="16.5" height="14.5" rx="2" />
+          <circle cx="9" cy="10" r="1.25" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 16 3.5-3.5 2.5 2.5 2-2 2.5 3" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt=""
+      aria-hidden="true"
+      className="h-12 w-12 flex-shrink-0 rounded-md object-cover"
+      onError={onImageError}
+    />
+  );
+}
+
 export default function SearchInput({
   initialValue = '',
   onSearch,
@@ -20,6 +50,7 @@ export default function SearchInput({
   const [inputValue, setInputValue] = useState(initialValue);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [imageErrors, setImageErrors] = useState({});
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const debounced = useDebounce(inputValue, 300);
@@ -56,6 +87,7 @@ export default function SearchInput({
     if (trimmedDebounced.length < 2) {
       setIsOpen(false);
       setActiveIndex(-1);
+      setImageErrors({});
       return;
     }
 
@@ -192,16 +224,18 @@ export default function SearchInput({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => submitSearch(suggestion.name)}
                 >
-                  {suggestion.thumbnail && (
-                    <img
-                      src={suggestion.thumbnail}
-                      alt=""
-                      aria-hidden="true"
-                      className="h-10 w-10 rounded-md object-cover"
-                    />
-                  )}
+                  <SuggestionThumbnail
+                    suggestion={suggestion}
+                    hasImageError={Boolean(imageErrors[suggestion.id])}
+                    onImageError={() => {
+                      setImageErrors((prev) => {
+                        if (prev[suggestion.id]) return prev;
+                        return { ...prev, [suggestion.id]: true };
+                      });
+                    }}
+                  />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <p className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                       {suggestion.name}
                     </p>
                     <p className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>

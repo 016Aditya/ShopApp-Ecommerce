@@ -4,6 +4,7 @@ export { default as Input } from './Input';
 export { default as Loader } from './Loader';
 export { default as Spinner } from './Spinner';
 export { default as EmptyState } from './EmptyState';
+export { default as OptimizedImage } from './OptimizedImage';
 
 // New Components
 export { default as ToastProvider } from './ToastProvider';
