@@ -182,11 +182,11 @@ function Navbar() {
                 </div>
                 <div className="group-hover:block hidden"
                   style={{ position:"absolute", top:"100%", right:0, minWidth:"180px", backgroundColor:"var(--modal-bg, #fff)", border:"1px solid var(--border-color, #ddd)", borderRadius:"4px", boxShadow:"0 4px 16px rgba(0,0,0,0.18)", zIndex:9999 }}>
-                  <Link to={PATHS.PROFILE}  style={{ display:"block", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>Profile</Link>
-                  <Link to={PATHS.ORDERS}   style={{ display:"block", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>My Orders</Link>
-                  <Link to={PATHS.WISHLIST} style={{ display:"block", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>Wishlist {wishlistCount > 0 && `(${wishlistCount})`}</Link>
+                  <Link to={PATHS.PROFILE}  style={{ display:"block", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none", backgroundColor:"transparent" }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor="transparent"}>Profile</Link>
+                  <Link to={PATHS.ORDERS}   style={{ display:"block", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none", backgroundColor:"transparent" }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor="transparent"}>My Orders</Link>
+                  <Link to={PATHS.WISHLIST} style={{ display:"block", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none", backgroundColor:"transparent" }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor="transparent"}>Wishlist {wishlistCount > 0 && `(${wishlistCount})`}</Link>
                   <hr style={{ borderColor:"var(--border-color,#eee)", margin:0 }} />
-                  <button onClick={handleLogout} style={{ display:"block", width:"100%", textAlign:"left", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", background:"none", border:"none", cursor:"pointer" }} onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"} onMouseLeave={(e)=>e.currentTarget.style.background=""}>Sign Out</button>
+                  <button onClick={handleLogout} style={{ display:"block", width:"100%", textAlign:"left", padding:"10px 16px", fontSize:"14px", color:"var(--text-primary)", backgroundColor:"transparent", border:"none", cursor:"pointer" }} onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"} onMouseLeave={(e)=>e.currentTarget.style.backgroundColor="transparent"}>Sign Out</button>
                 </div>
               </div>
             ) : (
@@ -439,7 +439,7 @@ function Navbar() {
             ].map((item) => (
               <Link key={item.label} to={item.path} onClick={()=>setMobileMenuOpen(false)}
                 style={{ display:"block", padding:"13px 20px", fontSize:"15px", color:"var(--text-primary, #e2e8f0)", textDecoration:"none", borderBottom:"1px solid var(--border-color, rgba(255,255,255,0.07))" }}
-                onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg, rgba(255,255,255,0.06))"}
+                onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"}
                 onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=""}>{item.label}</Link>
             ))}
             {user && (
@@ -491,9 +491,9 @@ function Navbar() {
                     borderBottom: idx < MORE_CATS.length - 1 ? "1px solid var(--border-color, rgba(255,255,255,0.07))" : "none",
                     transition:"background 0.14s",
                   }}
-                  onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg, rgba(255,255,255,0.06))"}
+                  onMouseEnter={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"}
                   onMouseLeave={(e)=>e.currentTarget.style.backgroundColor=""}
-                  onTouchStart={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg, rgba(255,255,255,0.06))"}
+                  onTouchStart={(e)=>e.currentTarget.style.backgroundColor="var(--hover-bg)"}
                   onTouchEnd={(e)=>e.currentTarget.style.backgroundColor=""}
                 >{cat.label}</Link>
               ))}
@@ -533,7 +533,7 @@ function Navbar() {
                     <Link key={item.label}
                       to={item.sub ? `${PATHS.PRODUCTS}?category=Clothing&subcategory=${item.sub}` : `${PATHS.PRODUCTS}?category=Clothing`}
                       style={{ display:"block", padding:"9px 16px", fontSize:"14px", color:"var(--text-primary)", textDecoration:"none" }}
-                      onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg,#f5f5f5)"}
+                      onMouseEnter={(e)=>e.currentTarget.style.background="var(--hover-bg)"}
                       onMouseLeave={(e)=>e.currentTarget.style.background=""}>{item.label}</Link>
                   ))}
                 </div>

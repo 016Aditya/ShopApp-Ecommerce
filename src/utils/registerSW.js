@@ -8,8 +8,14 @@
  * the development experience with a stale cache.
  */
 export function registerServiceWorker() {
-  if (!import.meta.env.PROD) return;
   if (!('serviceWorker' in navigator)) return;
+
+  if (!import.meta.env.PROD) {
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch(() => {});
+    return;
+  }
 
   const register = () => {
     navigator.serviceWorker

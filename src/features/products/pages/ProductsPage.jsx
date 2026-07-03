@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   useAllProductsQuery,
@@ -9,6 +9,8 @@ import {
 import ProductGrid from '../components/ProductGrid';
 import ProductFilter from '../components/ProductFilter';
 import SearchPagination from '../components/SearchPagination'; // <-- 1. NEW IMPORT
+import SEO from '@/components/common/SEO';
+import { useSEO } from '@/hooks/useSEO';
 import { ProductCardSkeleton } from '@/components/skeleton';
 import { prefetchProductDetailPage } from '@/utils/prefetch';
 import { useProductSearchParams } from '../hooks/useProductSearchParams';
@@ -42,6 +44,37 @@ const ProductsPage = () => {
   const hasNext = isSearchMode ? Boolean(data?.hasNext) : false;
   const hasPrevious = isSearchMode ? Boolean(data?.hasPrevious) : false;
 
+  // Generate SEO meta tags based on active filter
+  const seoData = useMemo(() => {
+    if (isSearchMode) {
+      return {
+        title: `Search Results for "${activeSearch}" | Shop Fashion`,
+        description: `Find products matching "${activeSearch}". Shop the best deals on fashion, electronics, and more.`,
+      };
+    }
+    
+    if (activeSub) {
+      return {
+        title: `${activeSub} | Shop Fashion`,
+        description: `Browse our collection of ${activeSub} in ${activeCat}. Shop quality products at the best prices.`,
+      };
+    }
+    
+    if (activeCat !== 'All') {
+      return {
+        title: `${activeCat} | Shop Fashion`,
+        description: `Browse our collection of ${activeCat}. Find the latest trends and best deals on quality products.`,
+      };
+    }
+    
+    return {
+      title: 'Products | Shop Fashion',
+      description: 'Browse our complete collection of fashion, electronics, home & kitchen, and more. Find the best deals on quality products.',
+    };
+  }, [activeSearch, activeCat, activeSub, isSearchMode]);
+
+  const { seoProps } = useSEO(seoData);
+
   // Stage 1: prefetch ProductDetail during idle time once the products list
   // is visible — very likely the user will click a product next.
   useEffect(() => {
@@ -74,7 +107,8 @@ const ProductsPage = () => {
   );
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <section className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <SEO {...seoProps} />
       <div className="container-app py-6">
         {(activeCat !== 'All' || activeSearch) && (
           <div
@@ -164,7 +198,7 @@ const ProductsPage = () => {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

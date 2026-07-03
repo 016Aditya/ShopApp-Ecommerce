@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import PATHS from "@/routes/paths";
+import SEO from "@/components/common/SEO";
+import { useSEO } from "@/hooks/useSEO";
 
 /*
   Dark mode fix:
@@ -67,11 +69,17 @@ const cardStyle = {
 };
 
 function CustomerServicePage() {
+  const { seoProps } = useSEO({
+    title: 'Customer Service | Shop Fashion',
+    description: 'Get help with your orders, returns, and more. Contact our customer service team.',
+  });
+
   return (
-    <div
+    <main
       className="min-h-screen"
       style={{ backgroundColor: "var(--bg-primary)" }}
     >
+      <SEO {...seoProps} />
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
       <div
         className="py-12 text-center"
@@ -284,7 +292,7 @@ function CustomerServicePage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

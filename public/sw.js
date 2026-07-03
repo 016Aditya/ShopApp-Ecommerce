@@ -44,6 +44,7 @@ const BYPASS_PATTERNS = [
 function isCacheable(request) {
   if (request.method !== 'GET') return false;
   const url = new URL(request.url);
+  if (!['http:', 'https:'].includes(url.protocol)) return false;
   // Never cache cross-origin API / auth requests
   if (BYPASS_PATTERNS.some((p) => url.pathname.startsWith(p) || url.href.includes(p))) {
     return false;

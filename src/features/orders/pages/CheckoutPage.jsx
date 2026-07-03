@@ -7,6 +7,8 @@ import { queryKeys }           from '@/lib/queryKeys';
 import CheckoutItems           from '../components/CheckoutItems';
 import CheckoutAddress         from '../components/CheckoutAddress';
 import OrderSummary            from '../components/OrderSummary';
+import SEO from '@/components/common/SEO';
+import { useSEO } from '@/hooks/useSEO';
 import { createOrder }         from '@/services/orderService';
 import { cartKeys }            from '@/features/cart/hooks/useCart';
 import { normalizeToStore }    from '../hooks/useSavedAddresses';
@@ -19,6 +21,12 @@ const CheckoutPage = () => {
   const { data: cart, isLoading } = useCartQuery();
   const { mutateAsync: clearCartMutation } = useClearCart();
   const queryClient               = useQueryClient();
+
+  const { seoProps } = useSEO({
+    title: 'Checkout | Shop Fashion',
+    description: 'Complete your purchase securely.',
+    robots: 'noindex,nofollow',
+  });
 
   const items     = cart?.items     ?? [];
   const cartTotal = cart?.cartTotal ?? 0;
@@ -106,7 +114,8 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="checkout-page">
+    <main className="checkout-page">
+      <SEO {...seoProps} />
       <h1 className="checkout-page__title">Checkout</h1>
 
       {error && <div className="checkout-error" role="alert">{error}</div>}
@@ -141,7 +150,7 @@ const CheckoutPage = () => {
         </div>
 
       </div>
-    </div>
+    </main>
   );
 };
 

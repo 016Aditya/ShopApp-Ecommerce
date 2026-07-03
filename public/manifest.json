@@ -1,0 +1,20 @@
+{
+  "name": "Shop Fashion",
+  "short_name": "Shop",
+  "description": "Discover the latest fashion products with fast delivery. Shop clothing, electronics, home & kitchen, and more at the best prices.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#ff9f00",
+  "background_color": "#f4f6f8",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

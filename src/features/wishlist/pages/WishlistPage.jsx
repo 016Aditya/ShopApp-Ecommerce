@@ -5,6 +5,8 @@ import { useAddToCart }    from '@/features/cart/hooks/useCart';
 import { buildPath }       from '@/routes/paths';
 import PATHS               from '@/routes/paths';
 import { formatCurrency }  from '@/utils/currency';
+import SEO from '@/components/common/SEO';
+import { useSEO } from '@/hooks/useSEO';
 import {
   useWishlistQuery,
   useRemoveFromWishlist,
@@ -14,6 +16,12 @@ import '../styles/Wishlist.css';
 const WishlistPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const { seoProps } = useSEO({
+    title: 'My Wishlist | Shop Fashion',
+    description: 'View your saved wishlist items and shop your favorite products.',
+    robots: 'noindex,nofollow',
+  });
 
   const { data: items = [], isLoading, isError } = useWishlistQuery();
   const removeMutation    = useRemoveFromWishlist();
@@ -70,7 +78,8 @@ const WishlistPage = () => {
   );
 
   return (
-    <div className="wl-page">
+    <main className="wl-page">
+      <SEO {...seoProps} />
       <p className="wl-count">{items.length} saved item{items.length !== 1 ? 's' : ''}</p>
 
       <div className="wl-list">
@@ -119,7 +128,7 @@ const WishlistPage = () => {
           );
         })}
       </div>
-    </div>
+    </main>
   );
 };
 

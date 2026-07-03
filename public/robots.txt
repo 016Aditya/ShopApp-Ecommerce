@@ -1,0 +1,35 @@
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /products/*
+Allow: /customer-service
+
+# Disallow private routes
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /orders/*
+Disallow: /profile
+Disallow: /profile/*
+Disallow: /wishlist
+
+# Disallow admin and private routes
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api
+Disallow: /api/*
+
+# Allow OAuth2 callback
+Allow: /oauth2/success
+
+# Disallow authentication pages from being indexed (optional)
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Crawl delay to be respectful
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://shop.example.com/sitemap.xml

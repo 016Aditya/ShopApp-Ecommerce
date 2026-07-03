@@ -14,6 +14,9 @@ import PurchaseCard from "../components/PurchaseCard";
 import ReviewList from "@/features/reviews/components/ReviewList";
 import SimilarProducts from "../components/SimilarProducts";
 import { ProductDetailSkeleton } from "@/components/skeleton";
+import SEO from "@/components/common/SEO";
+import Breadcrumbs from "@/components/common/Breadcrumbs";
+import { useProductSEO } from "@/hooks/useSEO";
 import PATHS from "@/routes/paths";
 import "../styles/ProductDetail.css";
 
@@ -105,6 +108,10 @@ const ProductDetailPage = () => {
   };
 
   const idMismatch = product && String(product.id) !== String(id);
+  
+  // Call hook before any conditional returns (React Hooks Rule)
+  const { seoProps } = useProductSEO(product);
+
   if (loading || idMismatch) return <ProductDetailSkeleton />;
 
   if (error) {
@@ -122,20 +129,26 @@ const ProductDetailPage = () => {
 
   if (!product) return null;
 
+  // Build breadcrumb items
+  const breadcrumbItems = [
+    { label: 'Home', path: PATHS.HOME },
+    { label: 'Products', path: PATHS.PRODUCTS },
+    { label: product.category, path: `${PATHS.PRODUCTS}?category=${encodeURIComponent(product.category)}` },
+  ];
+  if (product.subcategory) {
+    breadcrumbItems.push({
+      label: product.subcategory,
+      path: `${PATHS.PRODUCTS}?category=${encodeURIComponent(product.category)}&subcategory=${encodeURIComponent(product.subcategory)}`,
+    });
+  }
+  breadcrumbItems.push({ label: product.name, isCurrent: true });
+
   return (
-    <div className="pdp-page sk-loaded">
+    <article className="pdp-page sk-loaded">
+      <SEO {...seoProps} />
       <button className="pdp-back" onClick={() => navigate(PATHS.PRODUCTS)}>← Back to Products</button>
 
-      <nav className="pdp-breadcrumb" aria-label="breadcrumb">
-        <span>Home</span>
-        <span className="pdp-breadcrumb__sep">›</span>
-        <span>{product.category}</span>
-        {product.subcategory && (
-          <><span className="pdp-breadcrumb__sep">›</span><span>{product.subcategory}</span></>
-        )}
-        <span className="pdp-breadcrumb__sep">›</span>
-        <span className="pdp-breadcrumb__current">{product.name}</span>
-      </nav>
+      <Breadcrumbs items={breadcrumbItems} className="pdp-breadcrumb" />
 
       <button
         className={`pdp-wish-btn${isWishlisted ? ' pdp-wish-btn--active' : ''}`}
@@ -192,7 +205,7 @@ const ProductDetailPage = () => {
           ✕ Failed to add to cart. Please try again.
         </div>
       )}
-    </div>
+    </article>
   );
 };
 

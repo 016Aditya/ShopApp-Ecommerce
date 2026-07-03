@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import useCart from "@/features/cart/hooks/useCart";
 import PATHS from "@/routes/paths";
+import SEO from "@/components/common/SEO";
+import { useSEO } from "@/hooks/useSEO";
 import CartItem from "@/features/cart/components/CartItem";
 import OrderSummary from "@/features/cart/components/OrderSummary";
 import CartItemSkeleton, { OrderSummarySkeleton } from "@/components/skeleton/CartItemSkeleton";
@@ -9,12 +11,19 @@ const CartPage = () => {
   const { items, cartTotal, loading, error, removeItem, updateItem, emptyCart } = useCart();
   const navigate = useNavigate();
 
+  const { seoProps } = useSEO({
+    title: 'Shopping Cart | Shop Fashion',
+    description: 'Review your shopping cart and proceed to checkout.',
+    robots: 'noindex,nofollow',
+  });
+
   const handleCheckout = () => navigate(PATHS.CHECKOUT);
 
   /* ── Loading ── */
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
+      <main className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
+        <SEO {...seoProps} />
         <div className="container-app py-8">
           <div className="sk mb-2" style={{ height: 28, width: 180 }} />
           <div className="sk mb-8" style={{ height: 14, width: 80 }} />
@@ -45,7 +54,7 @@ const CartPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -96,7 +105,8 @@ const CartPage = () => {
 
   /* ── Content ── */
   return (
-    <div className="min-h-screen sk-loaded" style={{ background: "var(--bg-primary)" }}>
+    <main className="min-h-screen sk-loaded" style={{ background: "var(--bg-primary)" }}>
+      <SEO {...seoProps} />
       <div className="container-app py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Shopping Cart</h1>
@@ -155,7 +165,7 @@ const CartPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -4,6 +4,8 @@ import { useAuth }               from '@/features/auth/hooks/useAuth';
 import { useProfileQuery }       from '@/hooks/useQueryProfile';
 import ProfileForm               from '../components/ProfileForm';
 import PasswordForm              from '../components/PasswordForm';
+import SEO from '@/components/common/SEO';
+import { useSEO } from '@/hooks/useSEO';
 import { ProfileSkeleton }       from '@/components/skeleton';
 import PATHS                     from '@/routes/paths';
 import '../styles/ProfilePage.css';
@@ -88,6 +90,12 @@ const ProfilePage = () => {
   const navigate   = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
 
+  const { seoProps } = useSEO({
+    title: 'My Profile | Shop Fashion',
+    description: 'Manage your account settings and personal information.',
+    robots: 'noindex,nofollow',
+  });
+
   const {
     data:      profile,
     isLoading: profileLoading,
@@ -147,7 +155,8 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="profile-page">
+    <main className="profile-page">
+      <SEO {...seoProps} />
 
       {/* ════════════════════════════════════════════════════════
           MY ACCOUNT — top section
@@ -266,7 +275,7 @@ const ProfilePage = () => {
           {toast.type === 'success' ? '✓' : '✗'} {toast.msg}
         </div>
       )}
-    </div>
+    </main>
   );
 };
 
