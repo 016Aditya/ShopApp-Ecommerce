@@ -38,6 +38,11 @@ export const useAuthStore = create(
       token:     null,
       loading:   false,
       error:     null,
+      loginSecurityCode: null,
+      isLocked: false,
+      remainingSeconds: 0,
+      lockoutCount: 0,
+      retryAfter: null,
       _hydrated: false,
 
       /**
@@ -132,6 +137,46 @@ export const useAuthStore = create(
             return { ...safe, ...partial };
           }),
         })),
+
+      setError: (error) => set({ error }),
+
+      setLoginSecurity: ({
+        code = null,
+        isLocked = false,
+        remainingSeconds = 0,
+        lockoutCount = 0,
+        retryAfter = null,
+      }) => set({
+        loginSecurityCode: code,
+        isLocked,
+        remainingSeconds: Math.max(Number(remainingSeconds) || 0, 0),
+        lockoutCount: Math.max(Number(lockoutCount) || 0, 0),
+        retryAfter,
+      }),
+
+      tickLoginSecurity: () =>
+        set((state) => {
+          if (!state.isLocked || state.remainingSeconds <= 0) {
+            return state;
+          }
+
+          const nextSeconds = Math.max(state.remainingSeconds - 1, 0);
+          return {
+            remainingSeconds: nextSeconds,
+            isLocked: nextSeconds > 0,
+            retryAfter: nextSeconds > 0 ? state.retryAfter : null,
+            loginSecurityCode: nextSeconds > 0 ? state.loginSecurityCode : null,
+          };
+        }),
+
+      clearLoginSecurity: () =>
+        set({
+          loginSecurityCode: null,
+          isLocked: false,
+          remainingSeconds: 0,
+          lockoutCount: 0,
+          retryAfter: null,
+        }),
 
       clearError: () => set({ error: null }),
     }),

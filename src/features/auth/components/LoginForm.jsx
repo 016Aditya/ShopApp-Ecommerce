@@ -6,39 +6,46 @@
  * an infinite /login bounce when Zustand state settled after commit.
  */
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState }          from "react";
-import toast                 from "react-hot-toast";
-import Button                from "@/components/common/Button";
-import Input                 from "@/components/common/Input";
-import PasswordField         from "./PasswordField";
-import useAuth               from "@/features/auth/hooks/useAuth";
-import { PATHS }             from "@/routes/paths";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import Button from "@/components/common/Button";
+import Input from "@/components/common/Input";
+import PasswordField from "./PasswordField";
+import useAuth from "@/features/auth/hooks/useAuth";
+import { PATHS } from "@/routes/paths";
+import { useAuthStore } from "@/store/authStore";
+import { getFriendlyLoginMessage, useLoginMutation } from "@/features/auth/hooks/useLoginMutation";
 
 function LoginForm() {
-  const { login, loading, error, clearError } = useAuth();
-  const location  = useLocation();
-  const navigate  = useNavigate();
+  const { error, clearError } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const loginMutation = useLoginMutation();
+  const isLocked = useAuthStore((state) => state.isLocked);
+  const remainingSeconds = useAuthStore((state) => state.remainingSeconds);
+  const lockoutCount = useAuthStore((state) => state.lockoutCount);
+  const loginSecurityCode = useAuthStore((state) => state.loginSecurityCode);
 
   // If PrivateRoute redirected here, it stored the intended page in state.from
   const from = location.state?.from?.pathname || PATHS.HOME;
 
-  const regState        = location.state;
+  const regState = location.state;
   const [showBanner, setShowBanner] = useState(() => !!(regState?.registered));
-  const registeredName  = regState?.firstName ?? "";
+  const registeredName = regState?.firstName ?? "";
 
-  const [formData, setFormData]     = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [formErrors, setFormErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (formErrors[name]) setFormErrors((p) => ({ ...p, [name]: "" }));
+    if (formErrors[name]) setFormErrors((prev) => ({ ...prev, [name]: "" }));
     if (error) clearError?.();
   };
 
   const validate = () => {
     const errs = {};
-    if (!formData.email.trim())    errs.email    = "Email is required";
+    if (!formData.email.trim()) errs.email = "Email is required";
     if (!formData.password.trim()) errs.password = "Password is required";
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -46,20 +53,31 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLocked) return;
     if (!validate()) return;
+
     try {
-      const user = await login(formData);
+      const user = await loginMutation.mutateAsync(formData);
       const name = user?.firstName || "";
       toast.success(
-        name ? `Welcome back, ${name}! 👋` : "Welcome back!",
+        name ? `Welcome back, ${name}!` : "Welcome back!",
         { duration: 3500 }
       );
       // Navigate immediately — don't wait for PublicRoute to detect user
       navigate(from, { replace: true });
-    } catch (err) {
-      toast.error(err?.message || "Invalid email or password", { duration: 4000 });
+    } catch {
+      // Error state is handled centrally by the login mutation + auth store.
     }
   };
+
+  const displayError = loginSecurityCode
+    ? getFriendlyLoginMessage({
+        code: loginSecurityCode,
+        remainingSeconds,
+      })
+    : error;
+
+  const showResetBanner = lockoutCount >= 2 && Boolean(displayError);
 
   return (
     <div
@@ -99,7 +117,7 @@ function LoginForm() {
           role="alert"
           aria-live="polite"
         >
-          <span className="mt-0.5 text-sm" style={{ color: "#22c55e" }}>✓</span>
+          <span className="mt-0.5 text-sm" style={{ color: "#22c55e" }}>OK</span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold" style={{ color: "#22c55e" }}>
               Account Created Successfully
@@ -117,7 +135,7 @@ function LoginForm() {
             className="ml-1 text-lg leading-none opacity-50 hover:opacity-80 transition-opacity"
             style={{ color: "var(--text-primary)" }}
           >
-            ×
+            x
           </button>
         </div>
       )}
@@ -133,6 +151,7 @@ function LoginForm() {
           error={formErrors.email}
           autoComplete="email"
           aria-label="Email address"
+          disabled={loginMutation.isPending}
         />
 
         <div className="space-y-1.5">
@@ -144,6 +163,7 @@ function LoginForm() {
             onChange={handleChange}
             error={formErrors.password}
             autoComplete="current-password"
+            disabled={loginMutation.isPending || isLocked}
           />
           <div className="flex justify-end">
             <Link
@@ -156,8 +176,7 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* API-level error */}
-        {error && (
+        {displayError && (
           <p
             className="rounded-xl px-3.5 py-2.5 text-sm"
             style={{
@@ -166,14 +185,39 @@ function LoginForm() {
               border: "1px solid var(--error-border)",
             }}
           >
-            {error}
+            {displayError}
           </p>
+        )}
+
+        {showResetBanner && (
+          <div
+            className="rounded-xl px-3.5 py-3 text-sm"
+            style={{
+              backgroundColor: "var(--warning-bg)",
+              color: "var(--warning-text)",
+              border: "1px solid var(--warning-border)",
+            }}
+            role="status"
+            aria-live="polite"
+          >
+            <p className="font-semibold">Having trouble signing in? Reset your password.</p>
+            <div className="mt-2">
+              <Link
+                to={PATHS.FORGOT_PASSWORD}
+                className="font-semibold hover:underline"
+                style={{ color: "var(--accent)" }}
+              >
+                Reset Password
+              </Link>
+            </div>
+          </div>
         )}
 
         <Button
           type="submit"
           fullWidth
-          loading={loading}
+          loading={loginMutation.isPending}
+          disabled={isLocked}
           size="lg"
           className="mt-1"
           style={{
@@ -182,7 +226,7 @@ function LoginForm() {
             borderColor: "var(--button-primary)",
           }}
         >
-          {loading ? "Signing in…" : "Sign In"}
+          {loginMutation.isPending ? "Signing in..." : "Sign In"}
         </Button>
       </form>
 
