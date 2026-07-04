@@ -13,7 +13,7 @@ export const env = {
   API_URL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api',
 
   /** Cloudflare Turnstile site key for conditional CAPTCHA challenges */
-  TURNSTILE_SITE_KEY: import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '',
+  TURNSTILE_SITE_KEY: import.meta.env.VITE_TURNSTILE_SITE_KEY || '',
 
   /** Current build environment: 'development' | 'production' | 'test' */
   MODE: import.meta.env.MODE,

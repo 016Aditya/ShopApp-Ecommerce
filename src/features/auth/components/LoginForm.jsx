@@ -6,7 +6,7 @@
  * an infinite /login bounce when Zustand state settled after commit.
  */
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
@@ -16,6 +16,7 @@ import useAuth from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/paths";
 import { useAuthStore } from "@/store/authStore";
 import { getFriendlyLoginMessage, useLoginMutation } from "@/features/auth/hooks/useLoginMutation";
+import { env } from "@/config/env";
 
 function LoginForm() {
   const { error, clearError } = useAuth();
@@ -42,6 +43,13 @@ function LoginForm() {
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [formErrors, setFormErrors] = useState({});
+  const turnstileRef = useRef(null);
+
+  useEffect(() => {
+    if (env.IS_DEV) {
+      console.log("Captcha Token:", captchaToken);
+    }
+  }, [captchaToken]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,13 +68,25 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitBlocked) return;
     if (!validate()) return;
+    if (requiresCaptcha && !captchaToken) {
+      toast.error("Please complete the CAPTCHA.");
+      return;
+    }
+    if (isSubmitBlocked) return;
+
+    if (env.IS_DEV) {
+      console.log({
+        email: formData.email,
+        password: formData.password,
+        captchaToken,
+      });
+    }
 
     try {
       const user = await loginMutation.mutateAsync({
         ...formData,
-        captchaToken: captchaToken || undefined,
+        captchaToken,
       });
       const name = user?.firstName || "";
       toast.success(
@@ -76,7 +96,8 @@ function LoginForm() {
       // Navigate immediately — don't wait for PublicRoute to detect user
       navigate(from, { replace: true });
     } catch {
-      // Error state is handled centrally by the login mutation + auth store.
+      setCaptchaToken("");
+      turnstileRef.current?.reset?.();
     }
   };
 
@@ -226,13 +247,18 @@ function LoginForm() {
         {requiresCaptcha && (
           <div className="space-y-2">
             <TurnstileWidget
+              ref={turnstileRef}
               onVerify={(token) => {
                 setCaptchaToken(token);
                 if (error) clearError?.();
               }}
-              onExpire={() => setCaptchaToken("")}
+              onExpire={() => {
+                setCaptchaToken("");
+                turnstileRef.current?.reset?.();
+              }}
               onError={() => {
                 setCaptchaToken("");
+                turnstileRef.current?.reset?.();
               }}
             />
             {!captchaToken && (
