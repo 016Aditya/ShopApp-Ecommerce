@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFeaturedProducts } from '@/features/products/hooks/useFeaturedProducts';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrencyTrimmed } from '@/utils/currency';
 import RatingBadge from '@/components/common/RatingBadge';
 import PATHS, { buildPath } from '@/routes/paths';
 
@@ -124,12 +124,12 @@ const FeaturedCard = memo(function FeaturedCard({ product }) {
         </div>
 
         <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
-          <span style={{ fontSize: '15px', fontWeight: 700, color: '#22c55e' }}>
-            {formatCurrency(product.price)}
+          <span style={{ fontSize: '16.8px', fontWeight: 800, color: '#22c55e' }}>
+            {formatCurrencyTrimmed(product.price)}
           </span>
           {product.originalPrice && product.originalPrice > product.price ? (
             <span className="text-xs line-through" style={{ color: 'var(--text-tertiary)' }}>
-              {formatCurrency(product.originalPrice)}
+              {formatCurrencyTrimmed(product.originalPrice)}
             </span>
           ) : null}
           {discount ? (

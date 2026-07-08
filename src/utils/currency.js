@@ -28,6 +28,27 @@ export function formatCurrency(
 }
 
 /**
+ * Formats a number as a currency string and removes redundant ".00" for whole values.
+ * formatCurrencyTrimmed(1499.9) → "₹1,499.90"
+ * formatCurrencyTrimmed(1499)   → "₹1,499"
+ */
+export function formatCurrencyTrimmed(
+  amount,
+  locale = DEFAULT_LOCALE,
+  currency = DEFAULT_CURRENCY
+) {
+  const safeAmount = Number(amount) || 0;
+  const hasFraction = Math.round((safeAmount % 1) * 100) !== 0;
+
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(safeAmount);
+}
+
+/**
  * Formats a number as a compact currency string.
  * formatCurrencyCompact(149900) → "₹1.5L"
  */

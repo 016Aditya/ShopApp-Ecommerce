@@ -2,11 +2,11 @@
  * PurchaseCard.jsx
  *
  * Updated for premium Add-to-Cart UX:
- *  - Accepts `isInCart` boolean prop.
- *  - Add to Cart button turns green ("✓ Added to Cart") when isInCart=true.
- *  - Smooth 250ms transition — no layout shift.
+ * - Accepts `isInCart` boolean prop.
+ * - Add to Cart button turns green ("✓ Added to Cart") when isInCart=true.
+ * - Smooth 250ms transition — no layout shift.
  */
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatCurrencyTrimmed } from "@/utils/currency";
 
 const PurchaseCard = ({
   product,
@@ -22,8 +22,8 @@ const PurchaseCard = ({
   const cartBtnDisabled = outOfStock || addingToCart || buyingNow;
 
   const cartBtnStyle = () => {
-    if (outOfStock)    return { background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' };
-    if (addingToCart)  return { background: '#86efac', color: '#fff' };
+    if (outOfStock)  return { background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' };
+    if (addingToCart) return { background: '#86efac', color: '#fff' };
     if (isInCart)      return { background: '#22c55e', color: '#fff' };
     return { background: 'var(--accent, #ff9f00)', color: '#fff' };
   };
@@ -58,12 +58,14 @@ const PurchaseCard = ({
       {/* Price */}
       <div className="mb-3">
         <span className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          {formatCurrency(product.price)}
+          {formatCurrencyTrimmed(Number(product.price))}
         </span>
-        {product.originalPrice && product.originalPrice > product.price && (
+        
+        {/* FIXED BUG HERE: Replaced 'product.originalPrice && ...' to prevent a stray "0" */}
+        {product.originalPrice > product.price && (
           <>
             <span className="ml-2 text-sm line-through" style={{ color: 'var(--text-tertiary)' }}>
-              {formatCurrency(product.originalPrice)}
+              {formatCurrencyTrimmed(product.originalPrice)}
             </span>
             <span className="ml-2 text-sm font-semibold text-green-500">
               {Math.round(
@@ -121,6 +123,14 @@ const PurchaseCard = ({
           </span>
         ) : outOfStock ? 'UNAVAILABLE' : 'BUY NOW'}
       </button>
+
+      <div
+        className="mt-3 flex items-center gap-2 text-sm"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <span aria-hidden="true">🔒</span>
+        <span>Secure checkout</span>
+      </div>
     </div>
   );
 };

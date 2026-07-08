@@ -13,7 +13,7 @@ import { useNavigate }     from 'react-router-dom';
 import PATHS, { buildPath } from '@/routes/paths';
 import { useAuth }         from '@/features/auth/hooks/useAuth';
 import { useAddToCart, useCartQuery } from '@/features/cart/hooks/useCart';
-import { formatCurrency }  from '@/utils/currency';
+import { formatCurrencyTrimmed }  from '@/utils/currency';
 import RatingBadge         from '@/components/common/RatingBadge';
 import { usePrefetchProductDetail } from '@/hooks/useQueryProducts';
 import WishlistHeart       from '@/components/WishlistHeart';
@@ -126,7 +126,7 @@ const ProductCard = memo(({ product, compact = false }) => {
             <RatingBadge rating={product.averageRating || 0} count={product.reviewCount || 0} showCount={false} />
           </div>
           <p className="mt-1" style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
-            {formatCurrency(product.price)}
+            {formatCurrencyTrimmed(product.price)}
           </p>
         </div>
         <button
@@ -189,11 +189,11 @@ const ProductCard = memo(({ product, compact = false }) => {
           </div>
           <div className="mt-1 flex items-baseline gap-2">
             <p style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>
-              {formatCurrency(product.price)}
+              {formatCurrencyTrimmed(product.price)}
             </p>
             {product.originalPrice && product.originalPrice > product.price ? (
               <p className="text-xs line-through" style={{ color: 'var(--text-tertiary)' }}>
-                {formatCurrency(product.originalPrice)}
+                {formatCurrencyTrimmed(product.originalPrice)}
               </p>
             ) : null}
           </div>

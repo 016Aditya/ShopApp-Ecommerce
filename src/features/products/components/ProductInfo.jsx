@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, formatCurrencyTrimmed } from "@/utils/currency";
 import "../styles/ProductDetail.css";
 
 /**
@@ -120,10 +120,10 @@ const ProductInfo = ({ product, reviewsSectionRef }) => {
       />
 
       <div className="pdp-info__price-row">
-        <span className="pdp-info__price">{formatCurrency(product.price)}</span>
+        <span className="pdp-info__price">{formatCurrencyTrimmed(product.price)}</span>
         {product.originalPrice && product.originalPrice > product.price ? (
           <span className="pdp-info__original-price">
-            M.R.P: <s>{formatCurrency(product.originalPrice)}</s>
+            M.R.P: <s>{formatCurrencyTrimmed(product.originalPrice)}</s>
           </span>
         ) : null}
         {discount ? (
