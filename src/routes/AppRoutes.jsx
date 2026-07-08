@@ -19,13 +19,15 @@ const ProductDetailPage   = lazy(() => import("@/features/products/pages/Product
 const CustomerServicePage = lazy(() => import("@/features/customerService/pages/CustomerServicePage"));
 const WishlistPage        = lazy(() => import("@/features/wishlist/pages/WishlistPage"));
 
-const CartPage           = lazy(() => import("@/features/cart/pages/CartPage"));
-const CheckoutPage       = lazy(() => import("@/features/orders/pages/CheckoutPage"));
-const OrdersPage         = lazy(() => import("@/features/orders/pages/OrdersPage"));
-const OrderDetailPage    = lazy(() => import("@/features/orders/pages/OrderDetailPage"));
-const OrderSuccessPage   = lazy(() => import("@/features/orders/pages/OrderSuccessPage"));
-const ProfilePage        = lazy(() => import("@/features/profile/pages/ProfilePage"));
-const SavedAddressesPage = lazy(() => import("@/features/profile/pages/SavedAddressesPage"));
+const CartPage         = lazy(() => import("@/features/cart/pages/CartPage"));
+const CheckoutPage     = lazy(() => import("@/features/orders/pages/CheckoutPage"));
+const OrdersPage       = lazy(() => import("@/features/orders/pages/OrdersPage"));
+const OrderDetailPage  = lazy(() => import("@/features/orders/pages/OrderDetailPage"));
+const OrderSuccessPage = lazy(() => import("@/features/orders/pages/OrderSuccessPage"));
+const ProfilePage      = lazy(() => import("@/features/profile/pages/ProfilePage"));
+
+// Canonical import — address feature module (replaces profile/pages/SavedAddressesPage)
+const SavedAddresses = lazy(() => import("@/features/address/pages/SavedAddresses"));
 
 const NotFound = lazy(() => import("@/errors/NotFound"));
 
@@ -96,7 +98,7 @@ const AppRoutes = () => (
         <Route path={PATHS.ORDER_DETAIL}    element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
         <Route path={PATHS.ORDER_SUCCESS}   element={<Suspense fallback={<PageLoader />}><OrderSuccessPage /></Suspense>} />
         <Route path={PATHS.PROFILE}         element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
-        <Route path={PATHS.SAVED_ADDRESSES} element={<Suspense fallback={<PageLoader />}><SavedAddressesPage /></Suspense>} />
+        <Route path={PATHS.SAVED_ADDRESSES} element={<Suspense fallback={<PageLoader />}><SavedAddresses /></Suspense>} />
       </Route>
 
       {/* 404 */}
