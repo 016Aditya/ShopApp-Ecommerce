@@ -63,6 +63,19 @@ export const ORDERS = {
   cancel:         (id) => `/orders/${id}/cancel`,
 };
 
+// ── Addresses ─────────────────────────────────────────────────────────────────
+// Backend: AddressController at /api/v1/addresses
+// All endpoints are automatically JWT-protected via SecurityConfig anyRequest().authenticated()
+export const ADDRESSES = {
+  BASE:           '/addresses',
+  list:           ()   => '/addresses',
+  detail:         (id) => `/addresses/${id}`,
+  create:         ()   => '/addresses',
+  update:         (id) => `/addresses/${id}`,
+  delete:         (id) => `/addresses/${id}`,
+  setDefault:     (id) => `/addresses/${id}/default`,
+};
+
 // ── Reviews ───────────────────────────────────────────────────────────────────
 export const REVIEWS = {
   BASE:           '/reviews',
