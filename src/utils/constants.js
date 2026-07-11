@@ -1,7 +1,10 @@
-// ─── API ──────────────────────────────────────────────────────────────────────
+// API Base URL
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// NOTE: API_ENDPOINTS and ADDRESSES are defined in src/api/apiEndpoints.js
+// Do NOT duplicate them here. Import from '@/api/apiEndpoints' in services.
+
+// Auth
 export const USER_ROLES = {
   ADMIN: "ADMIN",
   USER: "USER",
@@ -11,7 +14,7 @@ export const LOCAL_STORAGE_KEYS = {
   USER: "user",
 };
 
-// ─── Order statuses — must match your backend Order entity exactly ────────────
+// Order statuses - must match your backend Order entity exactly
 export const ORDER_STATUS = {
   PENDING: "PENDING",
   CONFIRMED: "CONFIRMED",
@@ -29,7 +32,7 @@ export const ORDER_STATUS_LABELS = {
   [ORDER_STATUS.CANCELLED]: "Cancelled",
 };
 
-// Colour classes (Tailwind) per status — use in badges/chips
+// Color classes (Tailwind) per status - use in badges/chips
 export const ORDER_STATUS_COLORS = {
   [ORDER_STATUS.PENDING]: "bg-yellow-100 text-yellow-800",
   [ORDER_STATUS.CONFIRMED]: "bg-blue-100 text-blue-800",
@@ -38,7 +41,7 @@ export const ORDER_STATUS_COLORS = {
   [ORDER_STATUS.CANCELLED]: "bg-red-100 text-red-800",
 };
 
-// ─── Product categories — keep in sync with your backend seed data ────────────
+// Product categories - keep in sync with your backend seed data
 export const PRODUCT_CATEGORIES = [
   "Electronics",
   "Clothing",
@@ -50,18 +53,18 @@ export const PRODUCT_CATEGORIES = [
   "Automotive",
 ];
 
-// ─── Review ratings ───────────────────────────────────────────────────────────
+// Review ratings
 export const RATING_MIN = 1;
 export const RATING_MAX = 5;
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
+// Pagination
 export const DEFAULT_PAGE_SIZE = 12;
 
-// ─── Cart ─────────────────────────────────────────────────────────────────────
+// Cart
 export const MAX_CART_QUANTITY = 99;
 export const MIN_CART_QUANTITY = 1;
 
-// ─── App routes — single source of truth for all <Link to="..." /> ────────────
+// App routes - single source of truth for all <Link to="..." />
 export const ROUTES = {
   HOME: "/",
   LOGIN: "/login",

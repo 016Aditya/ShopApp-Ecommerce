@@ -1,18 +1,18 @@
 /**
  * endpoints.js
  *
- * Single source of truth for every API URL segment.
+ * Secondary endpoint definitions for feature-level imports.
+ * The canonical source of truth is src/api/apiEndpoints.js.
+ * This file re-exports from apiEndpoints so legacy imports
+ * (import { ADDRESSES } from '@/api/endpoints') keep working.
  *
  * Rules:
  *  - Strings are path segments only (no base URL, no trailing slash)
- *  - Dynamic segments are builder functions, not template literals scattered in services
- *  - When the backend URL changes, this is the ONLY file that needs updating
- *
- * Usage in services:
- *   import { CART, PRODUCTS, AUTH_ENDPOINTS } from '@/api/endpoints';
- *   api.get(CART.byUser(userId))
- *   api.get(PRODUCTS.detail(productId))
+ *  - Axios baseURL = http://localhost:8080/api
+ *  - All paths are relative to /api
  */
+
+export { API_ENDPOINTS, ADDRESSES } from '@/api/apiEndpoints';
 
 // ── Auth / Users ──────────────────────────────────────────────────────────────
 export const AUTH = {
@@ -61,19 +61,6 @@ export const ORDERS = {
   byUser:         (userId) => `/orders/user/${userId}`,
   place:          () => '/orders',
   cancel:         (id) => `/orders/${id}/cancel`,
-};
-
-// ── Addresses ─────────────────────────────────────────────────────────────────
-// Backend: AddressController at /api/v1/addresses
-// All endpoints are automatically JWT-protected via SecurityConfig anyRequest().authenticated()
-export const ADDRESSES = {
-  BASE:           '/addresses',
-  list:           ()   => '/addresses',
-  detail:         (id) => `/addresses/${id}`,
-  create:         ()   => '/addresses',
-  update:         (id) => `/addresses/${id}`,
-  delete:         (id) => `/addresses/${id}`,
-  setDefault:     (id) => `/addresses/${id}/default`,
 };
 
 // ── Reviews ───────────────────────────────────────────────────────────────────

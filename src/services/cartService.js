@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from "@/api/apiEndpoints";
 // GET /api/cart/:userId
 export const getCart = async (userId) => {
   const { data } = await api.get(`${API_ENDPOINTS.CART}/${userId}`);
-  return data; 
+  return data;
 };
 
 // POST /api/cart/:userId/add  — body: { productId, quantity }
