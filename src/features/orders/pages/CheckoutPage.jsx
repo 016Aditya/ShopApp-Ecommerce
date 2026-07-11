@@ -7,11 +7,11 @@ import { queryKeys }           from '@/lib/queryKeys';
 import CheckoutItems           from '../components/CheckoutItems';
 import CheckoutAddress         from '../components/CheckoutAddress';
 import OrderSummary            from '../components/OrderSummary';
-import SEO from '@/components/common/SEO';
-import { useSEO } from '@/hooks/useSEO';
+import SEO                     from '@/components/common/SEO';
+import { useSEO }              from '@/hooks/useSEO';
 import { createOrder }         from '@/services/orderService';
 import { cartKeys }            from '@/features/cart/hooks/useCart';
-import { normalizeToStore }    from '../hooks/useSavedAddresses';
+import { toRequestBody }       from '@/features/address/utils/addressMapper';
 import PATHS                   from '@/routes/paths';
 import '../styles/Checkout.css';
 
@@ -53,9 +53,8 @@ const CheckoutPage = () => {
     setPlacingOrder(true);
 
     try {
-      // normalizeToStore maps frontend form keys → exact backend Address entity keys:
-      // { fullName, phoneNumber, addressLine1, addressLine2, city, state, zipCode, country }
-      const shippingAddress = normalizeToStore(selectedAddress);
+      // Use the actual mapper function from addressMapper.js
+      const shippingAddress = toRequestBody(selectedAddress);
 
       const orderPromises = items.map((item) =>
         createOrder({
