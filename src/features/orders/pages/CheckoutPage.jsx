@@ -11,6 +11,7 @@ import SEO                     from '@/components/common/SEO';
 import { useSEO }              from '@/hooks/useSEO';
 import { createOrder }         from '@/services/orderService';
 import { cartKeys }            from '@/features/cart/hooks/useCart';
+// Corrected to match the singular 'address' folder shown in your image
 import { toRequestBody }       from '@/features/address/utils/addressMapper';
 import PATHS                   from '@/routes/paths';
 import '../styles/Checkout.css';
@@ -53,7 +54,6 @@ const CheckoutPage = () => {
     setPlacingOrder(true);
 
     try {
-      // Use the actual mapper function from addressMapper.js
       const shippingAddress = toRequestBody(selectedAddress);
 
       const orderPromises = items.map((item) =>
@@ -121,7 +121,6 @@ const CheckoutPage = () => {
 
       <div className="checkout-layout">
 
-        {/* ── Left column ── */}
         <div className="checkout-layout__main">
           <section className="checkout-section">
             <h2 className="checkout-section__title">📬 Delivery Address</h2>
@@ -137,7 +136,6 @@ const CheckoutPage = () => {
           </section>
         </div>
 
-        {/* ── Right column ── */}
         <div className="checkout-layout__sidebar">
           <OrderSummary
             items={items}

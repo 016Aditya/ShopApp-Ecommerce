@@ -1,6 +1,6 @@
 // 1. Point to the API instance that has the Interceptor!
 import api from "@/api/api";
-import { API_ENDPOINTS } from "../utils/constants"; 
+import { API_ENDPOINTS } from "@/api/apiEndpoints";
 
 // GET /api/cart/:userId
 export const getCart = async (userId) => {
