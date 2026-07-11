@@ -6,7 +6,7 @@
  * - Add to Cart button turns green ("✓ Added to Cart") when isInCart=true.
  * - Smooth 250ms transition — no layout shift.
  */
-import { formatCurrency, formatCurrencyTrimmed } from "@/utils/currency";
+import { formatCurrencyTrimmed } from "@/utils/currency";
 
 const PurchaseCard = ({
   product,
