@@ -1,22 +1,23 @@
-import { useState }         from 'react';
-import { useAddresses }     from '@/features/address/hooks/useAddresses';
-import { useCreateAddress } from '@/features/address/hooks/useCreateAddress';
-import AddressList          from '@/features/address/components/AddressList';
-import AddressForm          from '@/features/address/components/AddressForm';
+import { useState, useEffect }  from 'react';
+import { useAddresses }         from '@/features/address/hooks/useAddresses';
+import { useCreateAddress }     from '@/features/address/hooks/useCreateAddress';
+import AddressList              from '@/features/address/components/AddressList';
+import AddressForm              from '@/features/address/components/AddressForm';
 
 /**
  * CheckoutAddress
  *
  * Step 1 of the checkout flow — Delivery Address.
  *
- * BEFORE: read/wrote addresses to localStorage via useSavedAddresses.
- * AFTER:  fetches saved addresses from GET /api/v1/addresses via useAddresses.
- *         User selects a saved address (passes addressId to parent)
- *         or adds a new one inline (POSTs then selects).
+ * Fetches saved addresses from GET /api/v1/addresses via the shared
+ * useAddresses hook (same TanStack Query cache — no double network request).
+ *
+ * User selects a saved address (notifies parent via onSelect with address id)
+ * or adds a new one inline (POSTs, then auto-selects the new entry).
  *
  * Props:
  *   selectedAddressId  {string|null}  — controlled: the id currently selected
- *   onSelect           {function}     — called with addressId string when user picks one
+ *   onSelect           {function}     — called with address id when user picks one
  */
 const CheckoutAddress = ({ selectedAddressId, onSelect }) => {
   const { data: addresses = [], isLoading } = useAddresses();
@@ -25,24 +26,37 @@ const CheckoutAddress = ({ selectedAddressId, onSelect }) => {
   const [showForm, setShowForm] = useState(false);
   const [error,    setError]    = useState('');
 
-  // Auto-select default address on first load if nothing is selected yet
-  // This runs on render; if addresses loaded and no selection exists, pick default.
-  const defaultAddr = addresses.find((a) => a.defaultAddress) ?? addresses[0] ?? null;
-  if (!selectedAddressId && defaultAddr && !showForm) {
-    onSelect(defaultAddr.id);
-  }
+  // Auto-select default (or first) address after addresses load.
+  // MUST be useEffect — NOT inline render-body logic.
+  // Calling onSelect() directly during render causes an infinite re-render loop:
+  //   onSelect -> setState in parent -> parent re-renders -> CheckoutAddress
+  //   re-renders -> onSelect again -> ...
+  useEffect(() => {
+    if (selectedAddressId || showForm || addresses.length === 0) return;
 
+    const defaultAddr = addresses.find((a) => a.defaultAddress) ?? addresses[0];
+    if (defaultAddr) {
+      onSelect?.(defaultAddr.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addresses, selectedAddressId, showForm]);
+  // Note: onSelect intentionally omitted from deps — stable function reference.
+
+  // User clicks a saved address card
   const handleSelect = (addr) => {
-    onSelect(addr.id);
+    if (typeof onSelect === 'function') {
+      onSelect(addr.id);
+    }
     setShowForm(false);
     setError('');
   };
 
+  // User submits the inline add-new-address form
   const handleAddNew = (formData) => {
     setError('');
     createMutation.mutate(formData, {
       onSuccess: ({ data }) => {
-        onSelect(data.id);
+        onSelect?.(data.id);
         setShowForm(false);
       },
       onError: () => setError('Failed to save address. Please try again.'),
@@ -80,13 +94,17 @@ const CheckoutAddress = ({ selectedAddressId, onSelect }) => {
         {error && (
           <div
             className="mb-4 rounded-lg px-4 py-3 text-sm"
-            style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#dc2626' }}
+            style={{
+              backgroundColor: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              color: '#dc2626',
+            }}
           >
             {error}
           </div>
         )}
 
-        {/* ── Saved address list (select mode) ────────────────────────── */}
+        {/* Saved address list (select mode) */}
         {!showForm && (
           <>
             <AddressList
@@ -110,11 +128,14 @@ const CheckoutAddress = ({ selectedAddressId, onSelect }) => {
           </>
         )}
 
-        {/* ── Inline new address form ──────────────────────────────────── */}
+        {/* Inline new address form */}
         {showForm && (
           <div
             className="rounded-xl p-5"
-            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+            }}
           >
             <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
               Add New Address

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Shopping bag icon, brand colour #ff9f00 -->
+  <rect width="64" height="64" rx="12" fill="#ff9f00"/>
+  <!-- Bag body -->
+  <path
+    d="M18 26h28l-3.5 22H21.5L18 26z"
+    fill="white"
+    stroke="white"
+    stroke-width="1"
+  />
+  <!-- Bag handle -->
+  <path
+    d="M24 26c0-4.418 3.582-8 8-8s8 3.582 8 8"
+    stroke="white"
+    stroke-width="3"
+    stroke-linecap="round"
+    fill="none"
+  />
+</svg>
