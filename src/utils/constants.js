@@ -1,16 +1,8 @@
-// ─── API ──────────────────────────────────────────────────────────────────────
+// ─── API Base URL ─────────────────────────────────────────────────────────────
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
-// ─── API Endpoints ────────────────────────────────────────────────────────────
-export const API_ENDPOINTS = {
-  // Assuming your other endpoints look something like this:
-  USERS: "/users",
-  PRODUCTS: "/products",
-  ORDERS: "/orders",
-  
-  REVIEWS: "/reviews", 
-  CART: "/cart",
-};
+// NOTE: API_ENDPOINTS and ADDRESSES are defined in src/api/apiEndpoints.js
+// Do NOT duplicate them here. Import from '@/api/apiEndpoints' in services.
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const USER_ROLES = {
@@ -22,7 +14,7 @@ export const LOCAL_STORAGE_KEYS = {
   USER: "user",
 };
 
-// ─── Order statuses — must match your backend Order entity exactly ────────────
+// ─── Order statuses — must match your backend Order entity exactly ─────────────
 export const ORDER_STATUS = {
   PENDING: "PENDING",
   CONFIRMED: "CONFIRMED",
