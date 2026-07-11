@@ -6,6 +6,9 @@ import {
   logout as logoutService,
 } from '@/services/authService';
 
+/** 7 days in milliseconds */
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 /**
  * authStore
  *
@@ -23,6 +26,12 @@ import {
  *   2. localStorage['auth_token']  — direct write for the Axios interceptor to
  *      read during the brief pre-hydration window on page reload
  *
+ * Session expiry:
+ *   loginAt is persisted alongside token. On rehydration, if
+ *   Date.now() - loginAt > SESSION_TTL_MS (7 days) the session is
+ *   cleared client-side so the user is sent to /login.
+ *   The backend JWT also expires at 7 days, so both guards agree.
+ *
  * PrivateRoute guards on `user !== null`.
  * Axios interceptor guards on `token` (Zustand store → localStorage fallback).
  *
@@ -36,6 +45,7 @@ export const useAuthStore = create(
     (set, get) => ({
       user:      null,
       token:     null,
+      loginAt:   null,
       loading:   false,
       error:     null,
       loginSecurityCode: null,
@@ -69,12 +79,12 @@ export const useAuthStore = create(
           const { token, user } = await loginService(credentials);
 
           // Normalise: guarantee user.id is always the string used for API calls.
-          // Backend sends { id } from UserDto.Response, but guard against legacy
-          // sessions that might still carry { _id } from pre-JWT responses.
           const normalisedUser = {
             ...user,
             id: user.id ?? user._id,
           };
+
+          const loginAt = Date.now();
 
           // Write token to localStorage directly so the Axios interceptor can
           // read it immediately on the next request, before Zustand rehydrates.
@@ -84,6 +94,7 @@ export const useAuthStore = create(
           set({
             user:    normalisedUser,
             token,
+            loginAt,
             loading: false,
             requiresCaptcha: false,
             captchaToken: '',
@@ -125,7 +136,7 @@ export const useAuthStore = create(
       // ── Logout ───────────────────────────────────────────────────────────────
       logout: () => {
         logoutService();                          // clears localStorage auth_token + auth_user
-        set({ user: null, token: null });
+        set({ user: null, token: null, loginAt: null });
       },
 
       // ── Helpers ──────────────────────────────────────────────────────────────
@@ -204,10 +215,23 @@ export const useAuthStore = create(
       partialize: (state) => ({
         user:            state.user,
         token:           state.token,
+        loginAt:         state.loginAt,
         registeredUsers: state.registeredUsers,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
+          // ── Session TTL check ──────────────────────────────────────────────
+          // If more than 7 days have passed since login, wipe the session so
+          // the user is redirected to /login on the next PrivateRoute access.
+          if (state.loginAt && Date.now() - state.loginAt > SESSION_TTL_MS) {
+            logoutService();   // clears localStorage auth_token + auth_user
+            state.user    = null;
+            state.token   = null;
+            state.loginAt = null;
+            state.setHydrated();
+            return;
+          }
+
           // Normalise user.id from stale localStorage (pre-JWT sessions)
           if (state.user && !state.user.id && state.user._id) {
             state.user = { ...state.user, id: state.user._id };
