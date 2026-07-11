@@ -88,10 +88,10 @@ const AppRoutes = () => (
       <Route path={PATHS.PRODUCTS}         element={<Suspense fallback={<PageLoader />}><ProductsPage /></Suspense>} />
       <Route path={PATHS.PRODUCT_DETAIL}   element={<KeyedProductDetail />} />
       <Route path={PATHS.CUSTOMER_SERVICE} element={<Suspense fallback={<PageLoader />}><CustomerServicePage /></Suspense>} />
-      <Route path={PATHS.WISHLIST}         element={<Suspense fallback={<PageLoader />}><WishlistPage /></Suspense>} />
 
       {/* Protected routes */}
       <Route element={<PrivateRoute />}>
+        <Route path={PATHS.WISHLIST}        element={<Suspense fallback={<PageLoader />}><WishlistPage /></Suspense>} />
         <Route path={PATHS.CART}            element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
         <Route path={PATHS.CHECKOUT}        element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
         <Route path={PATHS.ORDERS}          element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
