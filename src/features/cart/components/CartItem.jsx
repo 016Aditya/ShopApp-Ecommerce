@@ -2,6 +2,7 @@ import { useUpdateCartItem, useRemoveFromCart } from "../hooks/useCart";
 import { useWishlistStore }                     from "@/store/wishlistStore";
 import { useAddToWishlist }                     from "@/features/wishlist/hooks/useWishlist";
 import { formatCurrency }                       from "@/utils/currency";
+import { isAtQuantityLimit }                    from '../utils/cartValidation';
 
 /**
  * CartItem — uses granular TanStack Query hooks.
@@ -133,14 +134,20 @@ const CartItem = ({ item }) => {
             </span>
             <button
               onClick={() => handleUpdateQty(quantity + 1)}
-              disabled={isBusy}
+              disabled={isBusy || isAtQuantityLimit(quantity, item.stock, item.maxOrderQuantity)}
               className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
               aria-label="Increase quantity"
+              title={
+                isAtQuantityLimit(quantity, item.stock, item.maxOrderQuantity)
+                  ? (item.stock === quantity
+                      ? `Only ${item.stock} item${item.stock === 1 ? '' : 's'} left`
+                      : `Maximum ${item.maxOrderQuantity} items allowed`)
+                  : undefined
+              }
             >
               {isUpdating ? '…' : '+'}
             </button>
           </div>
-
           <div className="text-right">
             <p className="text-sm text-gray-600">Subtotal</p>
             <p className="text-lg font-bold text-gray-900">{formatCurrency(subtotal)}</p>

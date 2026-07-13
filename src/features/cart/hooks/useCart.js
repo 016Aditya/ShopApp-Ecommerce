@@ -19,13 +19,15 @@ import { useToastStore } from '@/store/toastStore';
  * and category must be fetched separately via the products API.
  */
 const normalizeItem = (item) => ({
-  productId:   item.productId   ?? '',
-  productName: item.productName ?? '',
-  imageUrl:    item.imageUrl    ?? '',
-  brand:       item.brand       ?? '',
-  category:    item.category    ?? '',
-  unitPrice:   item.unitPrice   ?? 0,
-  quantity:    item.quantity    ?? 1,
+  productId:        item.productId        ?? '',
+  productName:      item.productName      ?? '',
+  imageUrl:         item.imageUrl         ?? '',
+  brand:            item.brand            ?? '',
+  category:         item.category         ?? '',
+  unitPrice:        item.unitPrice        ?? 0,
+  quantity:         item.quantity         ?? 1,
+  stock:            item.stock            ?? 0,
+  maxOrderQuantity: item.maxOrderQuantity ?? 10,
 });
 
 // ── Query key factory ─────────────────────────────────────────────────
@@ -50,13 +52,15 @@ export const useCartQuery = () => {
           try {
             const product = await getProductById(item.productId);
             return {
-              productId:   item.productId,
-              productName: product?.name      ?? product?.title ?? '',
-              imageUrl:    product?.imageUrl  ?? product?.image ?? '',
-              brand:       product?.brand     ?? '',
-              category:    product?.category  ?? '',
-              unitPrice:   item.unitPrice     ?? product?.price ?? 0,
-              quantity:    item.quantity      ?? 1,
+              productId:        item.productId,
+              productName:      product?.name      ?? product?.title ?? '',
+              imageUrl:         product?.imageUrl  ?? product?.image ?? '',
+              brand:            product?.brand     ?? '',
+              category:         product?.category  ?? '',
+              unitPrice:        item.unitPrice     ?? product?.price ?? 0,
+              quantity:         item.quantity      ?? 1,
+              stock:            product?.stock            ?? 0,
+              maxOrderQuantity: product?.maxOrderQuantity ?? 10,
             };
           } catch {
             return normalizeItem(item);
@@ -111,9 +115,10 @@ export const useAddToCart = () => {
 
 // ── Update item quantity ──────────────────────────────────────────────
 export const useUpdateCartItem = () => {
-  const queryClient = useQueryClient();
-  const user        = useAuthStore((s) => s.user);
-  const logout      = useAuthStore((s) => s.logout);
+  const queryClient    = useQueryClient();
+  const user           = useAuthStore((s) => s.user);
+  const logout         = useAuthStore((s) => s.logout);
+  const showErrorToast = useToastStore((s) => s.showErrorToast);
   const userId = user?.id;
 
   return useMutation({
@@ -123,7 +128,17 @@ export const useUpdateCartItem = () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.all(userId) });
     },
     onError: (error) => {
-      if (error?.response?.status === 401) logout();
+      if (error?.response?.status === 401) { 
+        logout(); 
+        return; 
+      }
+      
+      const data = error?.response?.data;
+      if (data?.code === 'INSUFFICIENT_STOCK' || data?.code === 'MAX_QUANTITY_EXCEEDED') {
+        if (showErrorToast) {
+          showErrorToast(data.message); 
+        }
+      }
     },
   });
 };
