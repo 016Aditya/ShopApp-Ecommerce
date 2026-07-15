@@ -1,8 +1,9 @@
+import { toast }                               from 'react-toastify';
 import { useUpdateCartItem, useRemoveFromCart } from "../hooks/useCart";
 import { useWishlistStore }                     from "@/store/wishlistStore";
 import { useAddToWishlist }                     from "@/features/wishlist/hooks/useWishlist";
 import { formatCurrency }                       from "@/utils/currency";
-import { isAtQuantityLimit }                    from '../utils/cartValidation';
+import { isAtQuantityLimit, validateQuantity }  from '../utils/cartValidation';
 
 /**
  * CartItem — uses granular TanStack Query hooks.
@@ -11,21 +12,14 @@ import { isAtQuantityLimit }                    from '../utils/cartValidation';
  * buttons on one row disable only that row while its mutation is
  * in-flight, not the entire cart.
  *
- * FIX: wishlistStore no longer exposes addToWishlist after the
- * TanStack migration (it only holds UI flags now). The actual
- * "add to wishlist" mutation lives in:
- *   src/features/wishlist/hooks/useWishlist.js → useAddToWishlist()
- * Import that hook instead of trying to read a non-existent
- * function from the Zustand store.
+ * UX enhancement: clicking + beyond stock or purchase limit now fires
+ * a contextual toast instead of silently doing nothing.
  */
 const CartItem = ({ item }) => {
   const updateMutation = useUpdateCartItem();
   const removeMutation = useRemoveFromCart();
 
-  // Wishlist UI flag (open/close drawer) — still from Zustand
-  const openWishlist = useWishlistStore((s) => s.openWishlist);
-
-  // Wishlist server mutation — from TanStack hook (NOT from Zustand store)
+  const openWishlist         = useWishlistStore((s) => s.openWishlist);
   const addToWishlistMutation = useAddToWishlist();
 
   const {
@@ -51,6 +45,27 @@ const CartItem = ({ item }) => {
     updateMutation.mutate({ productId, quantity: newQty });
   };
 
+  /**
+   * Increment handler — validates before mutating.
+   * Uses the shared validateQuantity() utility; never duplicates logic here.
+   */
+  const handleIncrement = () => {
+    if (isBusy) return;
+
+    const validation = validateQuantity({
+      quantity,
+      stock:            item.stock,
+      maxOrderQuantity: item.maxOrderQuantity,
+    });
+
+    if (!validation.valid) {
+      toast.warning(validation.message);
+      return;
+    }
+
+    handleUpdateQty(quantity + 1);
+  };
+
   const handleRemove = () => {
     if (isBusy) return;
     removeMutation.mutate({ productId });
@@ -58,17 +73,18 @@ const CartItem = ({ item }) => {
 
   const handleSaveForLater = () => {
     if (isBusy) return;
-    // Add to wishlist via TanStack mutation, then remove from cart
     addToWishlistMutation.mutate(
       { productId },
       {
         onSuccess: () => {
           removeMutation.mutate({ productId });
-          openWishlist();   // slide open the wishlist drawer (optional UX)
+          openWishlist();
         },
       }
     );
   };
+
+  const atLimit = isAtQuantityLimit(quantity, item.stock, item.maxOrderQuantity);
 
   return (
     <div className="flex gap-4 border-b border-gray-200 py-4 sm:gap-6 sm:py-6">
@@ -129,18 +145,20 @@ const CartItem = ({ item }) => {
             >
               {isUpdating ? '…' : '−'}
             </button>
+
             <span className="px-4 py-2 font-semibold text-gray-900 min-w-[40px] text-center">
               {quantity}
             </span>
+
             <button
-              onClick={() => handleUpdateQty(quantity + 1)}
-              disabled={isBusy || isAtQuantityLimit(quantity, item.stock, item.maxOrderQuantity)}
+              onClick={handleIncrement}
+              disabled={isBusy || atLimit}
               className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
               aria-label="Increase quantity"
               title={
-                isAtQuantityLimit(quantity, item.stock, item.maxOrderQuantity)
+                atLimit
                   ? (item.stock === quantity
-                      ? `Only ${item.stock} item${item.stock === 1 ? '' : 's'} left`
+                      ? `Only ${item.stock} item${item.stock === 1 ? '' : 's'} available`
                       : `Maximum ${item.maxOrderQuantity} items allowed`)
                   : undefined
               }
@@ -148,6 +166,7 @@ const CartItem = ({ item }) => {
               {isUpdating ? '…' : '+'}
             </button>
           </div>
+
           <div className="text-right">
             <p className="text-sm text-gray-600">Subtotal</p>
             <p className="text-lg font-bold text-gray-900">{formatCurrency(subtotal)}</p>

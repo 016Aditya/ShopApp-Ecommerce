@@ -1,5 +1,5 @@
 /**
- * cartValidation.js — Commit 1
+ * cartValidation.js
  *
  * Single source of truth for all frontend quantity validation.
  * Components must NOT duplicate these rules internally.
@@ -8,22 +8,59 @@
  *   1. requestedQuantity must be <= stock
  *   2. requestedQuantity must be <= maxOrderQuantity
  *
- * No stock is ever modified here. Commit 2 scope.
+ * Stock is NEVER modified here — backend remains the source of truth.
  */
 
 /**
  * Returns the effective upper limit for a quantity selector.
- * Always use this instead of reading stock or maxOrderQuantity directly.
  *
- * @param {number} stock            - product.stock from API
- * @param {number} maxOrderQuantity - product.maxOrderQuantity from API (default 10)
+ * @param {number} stock
+ * @param {number} maxOrderQuantity
  * @returns {number}
  */
 export const getQuantityLimit = (stock, maxOrderQuantity = 10) =>
   Math.min(stock ?? 0, maxOrderQuantity ?? 10);
 
 /**
- * Validate a quantity change before calling the backend.
+ * Validate whether the quantity can be incremented by one.
+ *
+ * Validation order (stock always checked first):
+ *   1. Stock limit
+ *   2. Purchase limit
+ *
+ * @param {{ quantity: number, stock: number, maxOrderQuantity?: number }} params
+ * @returns {{ valid: boolean, reason?: 'STOCK_LIMIT'|'PURCHASE_LIMIT', message?: string }}
+ */
+export const validateQuantity = ({ quantity, stock, maxOrderQuantity = 10 }) => {
+  const requestedQty = quantity + 1;
+  const effectiveStock = stock ?? 0;
+  const effectiveLimit = maxOrderQuantity > 0 ? maxOrderQuantity : 10;
+
+  // ── 1. Stock check (always first) ─────────────────────────────────────────
+  if (requestedQty > effectiveStock) {
+    const itemWord = effectiveStock === 1 ? 'item' : 'items';
+    return {
+      valid: false,
+      reason: 'STOCK_LIMIT',
+      message: `Only ${effectiveStock} ${itemWord} available in stock.`,
+    };
+  }
+
+  // ── 2. Purchase limit check ────────────────────────────────────────────────
+  if (requestedQty > effectiveLimit) {
+    return {
+      valid: false,
+      reason: 'PURCHASE_LIMIT',
+      message: `Maximum ${effectiveLimit} items allowed per order.`,
+    };
+  }
+
+  return { valid: true };
+};
+
+/**
+ * Legacy helper — validates a raw requestedQuantity value.
+ * Kept for any future use; components should prefer validateQuantity().
  *
  * @param {number} requestedQuantity
  * @param {number} stock
@@ -32,7 +69,7 @@ export const getQuantityLimit = (stock, maxOrderQuantity = 10) =>
  */
 export const validateCartQuantity = (requestedQuantity, stock, maxOrderQuantity = 10) => {
   if (requestedQuantity < 1) {
-    return { valid: false, message: null }; // removal — caller handles
+    return { valid: false, message: null };
   }
 
   if (stock === 0) {
@@ -61,7 +98,6 @@ export const validateCartQuantity = (requestedQuantity, stock, maxOrderQuantity 
 
 /**
  * Returns true when the + button should be disabled.
- * Use this as the single disabled condition on the increment button.
  *
  * @param {number} currentQuantity
  * @param {number} stock
