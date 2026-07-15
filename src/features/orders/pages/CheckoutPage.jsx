@@ -3,7 +3,7 @@ import { useNavigate }                from 'react-router-dom';
 import { useAuth }                    from '@/features/auth/hooks/useAuth';
 import { useCartQuery }               from '@/features/cart/hooks/useCart';
 import { useAddresses }               from '@/features/address/hooks/useAddresses';
-import { useCheckout }                from '../hooks/useCheckout'; // ← CORRECTED IMPORT
+import { useCheckout }                from '../hooks/useCheckout';
 import CheckoutItems                  from '../components/CheckoutItems';
 import CheckoutAddress                from '../components/CheckoutAddress';
 import OrderSummary                   from '../components/OrderSummary';
@@ -101,7 +101,7 @@ const CheckoutPage = () => {
             onPlaceOrder={handlePlaceOrder}
             onBackToCart={() => navigate(PATHS.CART)}
             loading={placing}
-            disabled={placing || hasOutOfStockItems}  {/* ← NEW */}
+            disabled={placing || hasOutOfStockItems}
           />
         </div>
       </div>
