@@ -11,6 +11,7 @@ import ShippingInfo         from "../components/ShippingInfo";
 import { useOrder, useCancelOrder } from "../hooks/useOrders";
 import { useReturn }        from "../hooks/useReturn";
 import { ORDER_IMAGE_PLACEHOLDER } from "../utils/normalizeOrder";
+import { useToastStore }    from '@/store/toastStore';
 import "../styles/Orders.css";
 
 const CANCELLABLE = new Set(["PENDING", "CONFIRMED"]);
@@ -116,6 +117,7 @@ const ProductPreviewCard = ({ items, placeholder }) => {
 const OrderDetailPage = () => {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const showToast = useToastStore((state) => state.showToast);
   const { order, loading, error } = useOrder(id);
   const { returnStatus, requestReturn } = useReturn(id);
   const { cancelOrder: cancelOrderAction, loading: cancelling, error: cancelError } = useCancelOrder();
@@ -123,6 +125,7 @@ const OrderDetailPage = () => {
   const [cancelled,         setCancelled]         = useState(false);
   const [localReturnStatus, setLocalReturnStatus] = useState(null);
   const [returnModalOpen,   setReturnModalOpen]   = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
   const [returnSuccess,     setReturnSuccess]     = useState(false);
   const [returnError,       setReturnError]       = useState(null);
   const [returnLoading,     setReturnLoading]     = useState(false);
@@ -139,8 +142,25 @@ const OrderDetailPage = () => {
   }, [order]);
 
   const handleCancel = async () => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-    try { await cancelOrderAction(id); setCancelled(true); } catch { /* cancelError surfaced below */ }
+    try {
+      await cancelOrderAction(id);
+      showToast({
+        type: 'success',
+        title: 'Order Cancelled',
+        message: '',
+      });
+      setCancelConfirmOpen(false);
+      setCancelled(true);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Cancellation Failed',
+        message:
+          err?.response?.data?.message ||
+          err?.message ||
+          'Unable to cancel order.',
+      });
+    }
   };
 
   const handleReturnRequest = async () => {
@@ -311,7 +331,11 @@ const OrderDetailPage = () => {
             <div className="odp-card odp-actions-card">
               <div className="odp-actions-row">
                 {showCancel && (
-                  <button className="odp-btn odp-btn--cancel" onClick={handleCancel} disabled={cancelDisabled}>
+                  <button
+                    className="odp-btn odp-btn--cancel"
+                    onClick={() => setCancelConfirmOpen(true)}
+                    disabled={cancelDisabled}
+                  >
                     <span>🗑</span> {cancelling ? "Cancelling…" : "Cancel Order"}
                   </button>
                 )}
@@ -342,6 +366,52 @@ const OrderDetailPage = () => {
         onConfirm={handleReturnRequest}
         loading={returnLoading}
       />
+
+      {cancelConfirmOpen && (
+        <div
+          className="odp-confirm-overlay"
+          role="presentation"
+          onClick={() => !cancelling && setCancelConfirmOpen(false)}
+        >
+          <div
+            className="odp-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-order-title"
+            aria-describedby="cancel-order-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="odp-confirm-dialog__icon" aria-hidden="true">🗑</div>
+            <div className="odp-confirm-dialog__content">
+              <p className="odp-confirm-dialog__eyebrow">Cancel order</p>
+              <h2 id="cancel-order-title" className="odp-confirm-dialog__title">
+                Are you sure you want to cancel this order?
+              </h2>
+              <p id="cancel-order-description" className="odp-confirm-dialog__description">
+                This action will stop processing for this order and cannot be easily undone.
+              </p>
+            </div>
+            <div className="odp-confirm-dialog__actions">
+              <button
+                type="button"
+                className="odp-btn odp-btn--ghost"
+                onClick={() => setCancelConfirmOpen(false)}
+                disabled={cancelling}
+              >
+                Keep Order
+              </button>
+              <button
+                type="button"
+                className="odp-btn odp-btn--danger"
+                onClick={handleCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? "Cancelling…" : "Yes, Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

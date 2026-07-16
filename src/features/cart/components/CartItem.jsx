@@ -1,6 +1,6 @@
-import { toast }                               from 'react-toastify';
 import { useUpdateCartItem, useRemoveFromCart } from "../hooks/useCart";
 import { useWishlistStore }                     from "@/store/wishlistStore";
+import { useToastStore }                        from '@/store/toastStore';
 import { useAddToWishlist }                     from "@/features/wishlist/hooks/useWishlist";
 import { formatCurrency }                       from "@/utils/currency";
 import { isAtQuantityLimit, validateQuantity }  from '../utils/cartValidation';
@@ -20,6 +20,7 @@ const CartItem = ({ item }) => {
   const removeMutation = useRemoveFromCart();
 
   const openWishlist         = useWishlistStore((s) => s.openWishlist);
+  const showToast            = useToastStore((s) => s.showToast);
   const addToWishlistMutation = useAddToWishlist();
 
   const {
@@ -59,7 +60,11 @@ const CartItem = ({ item }) => {
     });
 
     if (!validation.valid) {
-      toast.warning(validation.message);
+      showToast({
+        type: 'warning',
+        title: validation.title,
+        message: validation.message,
+      });
       return;
     }
 
@@ -152,7 +157,7 @@ const CartItem = ({ item }) => {
 
             <button
               onClick={handleIncrement}
-              disabled={isBusy || atLimit}
+              disabled={isBusy}
               className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
               aria-label="Increase quantity"
               title={

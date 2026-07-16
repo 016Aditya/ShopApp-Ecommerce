@@ -16,7 +16,7 @@
  * No backend code, inventory logic, or API calls live here.
  */
 import { useState }              from 'react';
-import { toast }                  from 'react-toastify';
+import { useToastStore }         from '@/store/toastStore';
 import { validateQuantity, isAtQuantityLimit } from '../../../features/cart/utils/cartValidation';
 
 /**
@@ -27,6 +27,7 @@ import { validateQuantity, isAtQuantityLimit } from '../../../features/cart/util
  */
 const ProductDetail = ({ product, onQuantityChange, initialQty = 1 }) => {
   const [quantity, setQuantity] = useState(initialQty);
+  const showToast = useToastStore((s) => s.showToast);
 
   const stock            = product?.stock           ?? 0;
   const maxOrderQuantity = product?.maxOrderQuantity ?? 10;
@@ -36,7 +37,11 @@ const ProductDetail = ({ product, onQuantityChange, initialQty = 1 }) => {
     const validation = validateQuantity({ quantity, stock, maxOrderQuantity });
 
     if (!validation.valid) {
-      toast.warning(validation.message);
+      showToast({
+        type: 'warning',
+        title: validation.title,
+        message: validation.message,
+      });
       return;
     }
 
@@ -78,14 +83,13 @@ const ProductDetail = ({ product, onQuantityChange, initialQty = 1 }) => {
         {/* Increment */}
         <button
           onClick={handleIncrement}
-          disabled={atLimit}
           className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
           aria-label="Increase quantity"
           title={
             atLimit
               ? (stock === quantity
-                  ? `Only ${stock} item${stock === 1 ? '' : 's'} available in stock`
-                  : `Maximum ${maxOrderQuantity} items allowed per order`)
+                  ? `Only ${stock} items available.`
+                  : `Maximum ${maxOrderQuantity} items allowed.`)
               : undefined
           }
         >

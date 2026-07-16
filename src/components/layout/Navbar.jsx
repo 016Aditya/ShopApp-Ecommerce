@@ -4,6 +4,7 @@ import PATHS from "@/routes/paths";
 import { useCartQuery } from "@/features/cart/hooks/useCart";
 import { useWishlistQuery } from "@/features/wishlist/hooks/useWishlist";
 import useAuth from "@/features/auth/hooks/useAuth";
+import { useToastStore } from '@/store/toastStore';
 import ThemeToggle from "@/components/common/ThemeToggle";
 import SearchInput from "@/features/products/components/SearchInput";
 import SearchOverlayMobile from "@/features/products/components/SearchOverlayMobile";
@@ -107,6 +108,7 @@ function Navbar() {
   const { data: wishlistItems = [] }  = useWishlistQuery();
   const wishlistCount                = wishlistItems.length;
   const { user, logout }             = useAuth();
+  const showToast                    = useToastStore((state) => state.showToast);
   const navigate                     = useNavigate();
   const [searchParams]               = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -133,7 +135,15 @@ function Navbar() {
     if (!term.trim()) return;
     navigate(`${PATHS.PRODUCTS}?search=${encodeURIComponent(term.trim())}`);
   };
-  const handleLogout = () => { logout(); navigate(PATHS.LOGIN); };
+  const handleLogout = () => {
+    logout();
+    showToast({
+      type: 'success',
+      title: 'See You Again',
+      message: 'Signed out successfully.',
+    });
+    navigate(PATHS.LOGIN);
+  };
   const displayName = user?.firstName || user?.name || "User";
 
   return (

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProductDetailQuery } from "@/hooks/useQueryProducts";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useAddToCart, useCartQuery } from "@/features/cart/hooks/useCart";
+import { useAddToCart, useCartQuery, useRemoveFromCart } from "@/features/cart/hooks/useCart";
 import {
   useWishlistQuery,
   useAddToWishlist,
@@ -39,6 +39,7 @@ const ProductDetailPage = () => {
   const { user } = useAuth();
 
   const addToCartMutation = useAddToCart();
+  const removeFromCartMutation = useRemoveFromCart();
 
   // ── Persistent in-cart check ──────────────────────────────────────────────
   const { data: cartData } = useCartQuery();
@@ -72,8 +73,9 @@ const ProductDetailPage = () => {
 
   // ── Button loading state ─────────────────────────────────────────────────
   const [addingToCart, setAddingToCart] = useState(false);
-  const [buyingNow,    setBuyingNow]    = useState(false);
-  const [errorToast,   setErrorToast]   = useState(false);
+  const [removingFromCart, setRemovingFromCart] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
+  const [errorToast, setErrorToast] = useState(false);
 
   const triggerErrorToast = () => {
     setErrorToast(true);
@@ -91,6 +93,19 @@ const ProductDetailPage = () => {
       triggerErrorToast();
     } finally {
       setAddingToCart(false);
+    }
+  };
+
+  const handleRemoveFromCart = async () => {
+    if (!user) { navigate(PATHS.LOGIN); return; }
+    if (!isInCart) return;
+    setRemovingFromCart(true);
+    try {
+      await removeFromCartMutation.mutateAsync({ productId: id });
+    } catch {
+      triggerErrorToast();
+    } finally {
+      setRemovingFromCart(false);
     }
   };
 
@@ -174,8 +189,10 @@ const ProductDetailPage = () => {
           <PurchaseCard
             product={product}
             onAddToCart={handleAddToCart}
+            onRemoveFromCart={handleRemoveFromCart}
             onBuyNow={handleBuyNow}
             addingToCart={addingToCart}
+            removingFromCart={removingFromCart}
             buyingNow={buyingNow}
             isInCart={isInCart}
           />

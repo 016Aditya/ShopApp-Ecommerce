@@ -1,4 +1,4 @@
-import { useState, useEffect }        from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate }                from 'react-router-dom';
 import { useAuth }                    from '@/features/auth/hooks/useAuth';
 import { useCartQuery }               from '@/features/cart/hooks/useCart';
@@ -28,6 +28,10 @@ const CheckoutPage = () => {
     description: 'Complete your purchase securely.',
     robots: 'noindex,nofollow',
   });
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => { if (!user) navigate(PATHS.LOGIN); }, [user, navigate]);
 

@@ -12,6 +12,34 @@ function mapFieldName(field) {
   return fieldMap[field] ?? field;
 }
 
+export function getBackendErrorMessage(error, fallback = 'Something went wrong. Please try again.') {
+  if (!error?.response || error?.code === 'ERR_NETWORK') {
+    return 'Unable to connect to the server.\n\nPlease check your internet connection and try again.';
+  }
+
+  const payload = error.response.data ?? {};
+
+  if (typeof payload.message === 'string' && payload.message.trim()) {
+    return payload.message.trim();
+  }
+
+  if (payload.errors && typeof payload.errors === 'object') {
+    const firstFieldMessage = Object.values(payload.errors).find(
+      (message) => typeof message === 'string' && message.trim()
+    );
+
+    if (firstFieldMessage) {
+      return firstFieldMessage.trim();
+    }
+  }
+
+  if (error.response.status >= 500) {
+    return 'Something went wrong.\n\nPlease try again in a few minutes.';
+  }
+
+  return fallback;
+}
+
 export function getFriendlyGeneralError(error, fallback = 'Something went wrong. Please try again.') {
   if (!error?.response || error?.code === 'ERR_NETWORK') {
     return 'Unable to connect to the server.\n\nPlease check your internet connection and try again.';
@@ -78,4 +106,3 @@ export function normalizeRegisterError(error) {
       : 'Registration failed. Please try again.',
   };
 }
-

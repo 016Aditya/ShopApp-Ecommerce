@@ -386,7 +386,7 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: background 200ms, opacity 200ms;
+  transition: background 200ms, opacity 200ms, border-color 200ms, transform 200ms;
 }
 .odp-btn--cancel {
   background: transparent;
@@ -395,6 +395,32 @@
 }
 .odp-btn--cancel:hover:not(:disabled) { background: rgba(239,68,68,0.08); }
 .odp-btn--cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+.odp-btn--ghost {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+.odp-btn--ghost:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  transform: translateY(-1px);
+}
+.odp-btn--danger {
+  background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(220,38,38,0.92));
+  border: 1px solid rgba(248,113,113,0.5);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(239,68,68,0.18);
+}
+.odp-btn--danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(220,38,38,1), rgba(185,28,28,0.95));
+  transform: translateY(-1px);
+}
+.odp-btn--ghost:disabled,
+.odp-btn--danger:disabled,
+.odp-btn--return:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 .odp-btn--return {
   background: #f59e0b;
   border: 1px solid #fbbf24;
@@ -402,6 +428,103 @@
 }
 .odp-btn--return:hover:not(:disabled) { background: #d97706; }
 .odp-btn--return:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.odp-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24px 16px max(24px, env(safe-area-inset-bottom));
+  background: rgba(3, 7, 18, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.odp-confirm-dialog {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background:
+    radial-gradient(circle at top left, rgba(239,68,68,0.14), transparent 42%),
+    linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,15,26,0.98));
+  color: var(--text-primary);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  transform: translateY(-6vh);
+}
+
+.odp-confirm-dialog__icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(239,68,68,0.14);
+  border: 1px solid rgba(248,113,113,0.22);
+  font-size: 1.25rem;
+}
+
+.odp-confirm-dialog__content {
+  display: grid;
+  gap: 8px;
+}
+
+.odp-confirm-dialog__eyebrow {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fca5a5;
+}
+
+.odp-confirm-dialog__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.odp-confirm-dialog__description {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.odp-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .odp-confirm-overlay {
+    padding: 16px 12px max(16px, env(safe-area-inset-bottom));
+  }
+
+  .odp-confirm-dialog {
+    width: 100%;
+    padding: 18px;
+    border-radius: 18px;
+    transform: none;
+  }
+
+  .odp-confirm-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .odp-confirm-dialog__actions .odp-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
 
 /* ── Pricing panel (right column) ────────────────────────────── */
 .odp-pricing-panel {

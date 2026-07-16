@@ -6,19 +6,19 @@
  *   + Live password strength meter + checklist (PasswordStrength component)
  *   + Live confirm-password match indicator
  *   + Submit disabled until all password rules pass AND passwords match
- *   + react-hot-toast success toast
+ *   + app-wide success toast via toastStore
  *   + Loading label "Creating account..." on button
  *   + Fully theme-variable styled — dark mode safe
  */
 import { Link, useNavigate } from "react-router-dom";
 import { useMemo, useRef, useState } from "react";
-import toast from "react-hot-toast";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import PasswordField from "./PasswordField";
 import PasswordStrength, { isPasswordValid } from "./PasswordStrength";
 import { PATHS } from "@/routes/paths";
 import { useRegisterMutation } from "@/features/auth/hooks/useRegisterMutation";
+import { useToastStore } from '@/store/toastStore';
 import { normalizeRegisterError } from "@/features/auth/utils/authErrorHandling";
 import { validateEmail } from "@/utils/validation";
 
@@ -35,6 +35,7 @@ const EMPTY_FIELD_ERRORS = {
 function RegisterForm() {
   const navigate = useNavigate();
   const registerMutation = useRegisterMutation();
+  const showToast = useToastStore((state) => state.showToast);
   const [generalError, setGeneralError] = useState("");
 
   const [formData, setFormData] = useState({
@@ -140,10 +141,11 @@ function RegisterForm() {
         password: formData.password,
       });
 
-      toast.success(
-        `Account created successfully! Welcome, ${firstName}.`,
-        { duration: 3500 }
-      );
+      showToast({
+        type: 'success',
+        title: 'Welcome!',
+        message: 'Account created successfully.',
+      });
 
       navigate(PATHS.LOGIN, {
         replace: true,
@@ -162,6 +164,7 @@ function RegisterForm() {
       if (nextGeneralError) {
         setGeneralError(nextGeneralError);
       }
+
     }
   };
 

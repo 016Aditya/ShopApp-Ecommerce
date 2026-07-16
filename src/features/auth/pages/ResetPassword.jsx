@@ -7,21 +7,22 @@
  *   + PasswordStrength meter + checklist
  *   + Live confirm-password match indicator
  *   + Submit disabled until password is valid + confirmed
- *   + react-hot-toast success toast
+ *   + app-wide success toast via toastStore
  *   + Loading label "Resetting password…"
  */
 import { useState, useMemo }   from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import toast                   from "react-hot-toast";
 import { PATHS }               from "@/routes/paths";
 import Button                  from "@/components/common/Button";
 import PasswordField           from "@/features/auth/components/PasswordField";
 import PasswordStrength, { isPasswordValid } from "@/features/auth/components/PasswordStrength";
 import { resetPassword as resetPasswordRequest } from "@/services/authService";
+import { useToastStore }       from '@/store/toastStore';
 
 function ResetPassword() {
   const location  = useLocation();
   const navigate  = useNavigate();
+  const showToast = useToastStore((state) => state.showToast);
 
   const { email, phone, verified } = location.state ?? {};
 
@@ -46,8 +47,22 @@ function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!pwValid)  { toast.error("Password does not meet requirements."); return; }
-    if (!pwMatch)  { toast.error("Passwords do not match."); return; }
+    if (!pwValid)  {
+      showToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Password does not meet requirements.',
+      });
+      return;
+    }
+    if (!pwMatch)  {
+      showToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Passwords do not match.',
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -56,14 +71,21 @@ function ResetPassword() {
         phone,
         newPassword: password,
       });
-      toast.success("Password reset successfully! Please sign in.", { duration: 3500 });
-      setTimeout(() => navigate(PATHS.LOGIN, { replace: true }), 600);
+      showToast({
+        type: 'success',
+        title: 'Password Changed Successfully',
+        message: '',
+      });
+      navigate(PATHS.LOGIN, { replace: true });
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to reset password. Please try again."
-      );
+      showToast({
+        type: 'error',
+        title: 'Update Failed',
+        message:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to reset password. Please try again.",
+      });
     } finally {
       setLoading(false);
     }

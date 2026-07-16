@@ -9,10 +9,10 @@
  */
 import { useState }           from "react";
 import { Link, useNavigate }  from "react-router-dom";
-import toast                  from "react-hot-toast";
 import { PATHS }              from "@/routes/paths";
 import Button                 from "@/components/common/Button";
 import Input                  from "@/components/common/Input";
+import { useToastStore }      from '@/store/toastStore';
 import {
   verifyEmailForReset,
   verifyPhoneForReset,
@@ -23,6 +23,7 @@ const PHONE_REGEX = /^[6-9]\d{9}$/;
 
 function ForgotPassword() {
   const navigate = useNavigate();
+  const showToast = useToastStore((state) => state.showToast);
 
   const [step,  setStep]  = useState(STEPS.EMAIL);
   const [email, setEmail] = useState("");
@@ -40,11 +41,11 @@ function ForgotPassword() {
       await verifyEmailForReset(email.trim());
       setStep(STEPS.PHONE);
     } catch (err) {
-      setError(
+      const message =
         err?.response?.data?.message ||
         err?.message ||
-        "No account found with this email address."
-      );
+        "No account found with this email address.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -62,6 +63,11 @@ function ForgotPassword() {
     setLoading(true);
     try {
       await verifyPhoneForReset(email.trim(), phone.trim());
+      showToast({
+        type: 'success',
+        title: 'Identity Verified',
+        message: '',
+      });
       navigate(PATHS.RESET_PASSWORD, {
         state: { email: email.trim(), phone: phone.trim(), verified: true },
       });
@@ -69,8 +75,7 @@ function ForgotPassword() {
       const message =
         err?.response?.data?.message ||
         err?.message ||
-        "Phone number does not match the account.";
-      toast.error(message);
+        "Phone number not found.";
       setError(message);
     } finally {
       setLoading(false);

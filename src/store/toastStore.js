@@ -1,60 +1,94 @@
-/**
- * toastStore.js — Global toast state (Zustand)
- *
- * Manages two independent toast channels:
- *   cart     — green "✓ Added to Cart!"  (showCartToast)
- *   wishlist — pink  "❤️ Added to Wishlist!" / "💔 Removed from Wishlist!"
- *              (showWishlistToast(type))  type: 'add' | 'remove'
- *
- * Each channel is independent: both can be visible simultaneously
- * (e.g. add to cart AND wishlist in rapid succession).
- *
- * Debounce: calling show* while already visible resets the hide timer
- * instead of stacking multiple toasts.
- */
 import { create } from 'zustand';
 
-const AUTO_HIDE_MS = 2260; // 2 s visible + 260 ms exit-animation buffer
+const AUTO_HIDE_MS = 2260;
+
+const EMPTY_TOAST = {
+  type: 'info',
+  title: '',
+  message: '',
+  action: null,
+};
+
+const showTimedToast = (set, get, timerKey, visibleKey, toastKey, toastValue) => {
+  const existing = get()[timerKey];
+  if (existing) clearTimeout(existing);
+
+  set({
+    [visibleKey]: true,
+    [toastKey]: toastValue,
+    [timerKey]: null,
+  });
+
+  const timer = setTimeout(() => set({
+    [visibleKey]: false,
+    [toastKey]: EMPTY_TOAST,
+    [timerKey]: null,
+  }), AUTO_HIDE_MS);
+
+  set({ [timerKey]: timer });
+};
 
 export const useToastStore = create((set, get) => ({
-  // ── Cart toast ──────────────────────────────────────────────────────
   cartVisible: false,
+  cartToast: EMPTY_TOAST,
   _cartTimer: null,
 
+  showToast: ({ type = 'info', title = '', message = '', action = null } = {}) => {
+    showTimedToast(set, get, '_cartTimer', 'cartVisible', 'cartToast', {
+      type,
+      title,
+      message,
+      action,
+    });
+  },
+
   showCartToast: () => {
-    const existing = get()._cartTimer;
-    if (existing) clearTimeout(existing);
-    set({ cartVisible: true, _cartTimer: null });
-    const timer = setTimeout(() => set({ cartVisible: false, _cartTimer: null }), AUTO_HIDE_MS);
-    set({ _cartTimer: timer });
+    showTimedToast(set, get, '_cartTimer', 'cartVisible', 'cartToast', {
+      type: 'success',
+      title: '🛒 Added to Cart',
+      message: '',
+      action: 'view-cart',
+    });
   },
 
   hideCartToast: () => {
     const existing = get()._cartTimer;
     if (existing) clearTimeout(existing);
-    set({ cartVisible: false, _cartTimer: null });
+    set({ cartVisible: false, cartToast: EMPTY_TOAST, _cartTimer: null });
   },
 
-  // ── Wishlist toast ──────────────────────────────────────────────────
-  // type: 'add' | 'remove'
   wishlistVisible: false,
   wishlistType: 'add',
+  wishlistToast: EMPTY_TOAST,
   _wishlistTimer: null,
 
   showWishlistToast: (type = 'add') => {
-    const existing = get()._wishlistTimer;
-    if (existing) clearTimeout(existing);
-    set({ wishlistVisible: true, wishlistType: type, _wishlistTimer: null });
-    const timer = setTimeout(
-      () => set({ wishlistVisible: false, _wishlistTimer: null }),
-      AUTO_HIDE_MS
-    );
-    set({ _wishlistTimer: timer });
+    showTimedToast(set, get, '_wishlistTimer', 'wishlistVisible', 'wishlistToast', (
+      type === 'remove'
+        ? {
+            type: 'info',
+            title: '💔 Removed from Wishlist',
+            message: '',
+            action: null,
+          }
+        : {
+            type: 'success',
+            title: '❤️ Added to Wishlist',
+            message: '',
+            action: null,
+          }
+    ));
+
+    set({ wishlistType: type });
   },
 
   hideWishlistToast: () => {
     const existing = get()._wishlistTimer;
     if (existing) clearTimeout(existing);
-    set({ wishlistVisible: false, _wishlistTimer: null });
+    set({
+      wishlistVisible: false,
+      wishlistToast: EMPTY_TOAST,
+      _wishlistTimer: null,
+    });
   },
 }));

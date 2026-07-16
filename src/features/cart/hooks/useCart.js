@@ -118,7 +118,7 @@ export const useUpdateCartItem = () => {
   const queryClient    = useQueryClient();
   const user           = useAuthStore((s) => s.user);
   const logout         = useAuthStore((s) => s.logout);
-  const showErrorToast = useToastStore((s) => s.showErrorToast);
+  const showToast      = useToastStore((s) => s.showToast);
   const userId = user?.id;
 
   return useMutation({
@@ -135,9 +135,11 @@ export const useUpdateCartItem = () => {
       
       const data = error?.response?.data;
       if (data?.code === 'INSUFFICIENT_STOCK' || data?.code === 'MAX_QUANTITY_EXCEEDED') {
-        if (showErrorToast) {
-          showErrorToast(data.message); 
-        }
+        showToast({
+          type: 'warning',
+          title: data?.code === 'MAX_QUANTITY_EXCEEDED' ? 'Purchase Limit' : 'Stock Limit',
+          message: data.message,
+        });
       }
     },
   });
@@ -149,6 +151,7 @@ export const useRemoveFromCart = () => {
   const user             = useAuthStore((s) => s.user);
   const logout           = useAuthStore((s) => s.logout);
   const removeOptimistic = useCartStore((s) => s.removeOptimistic);
+  const showToast        = useToastStore((s) => s.showToast);
   const userId = user?.id;
 
   return useMutation({
@@ -158,6 +161,11 @@ export const useRemoveFromCart = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartKeys.all(userId) });
+      showToast({
+        type: 'info',
+        title: '',
+        message: 'Removed from cart',
+      });
     },
     onError: (error) => {
       if (error?.response?.status === 401) logout();

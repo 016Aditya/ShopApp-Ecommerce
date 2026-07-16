@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { Routes, Route, useParams } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Routes, Route, useLocation, useParams } from "react-router-dom";
 import PATHS from "./paths";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
@@ -31,6 +31,25 @@ const SavedAddresses = lazy(() => import("@/features/address/pages/SavedAddresse
 
 const NotFound = lazy(() => import("@/errors/NotFound"));
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const scrollRoot = document.scrollingElement || document.documentElement;
+
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      scrollRoot.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
+
+  return null;
+};
+
 /**
  * KeyedProductDetail
  *
@@ -61,50 +80,53 @@ const KeyedProductDetail = () => {
 };
 
 const AppRoutes = () => (
-  <Routes>
-    {/* OAuth2 callback — no layout wrapper */}
-    <Route
-      path={PATHS.OAUTH2_SUCCESS}
-      element={
-        <Suspense fallback={null}>
-          <OAuth2Success />
-        </Suspense>
-      }
-    />
+  <>
+    <ScrollToTop />
+    <Routes>
+      {/* OAuth2 callback — no layout wrapper */}
+      <Route
+        path={PATHS.OAUTH2_SUCCESS}
+        element={
+          <Suspense fallback={null}>
+            <OAuth2Success />
+          </Suspense>
+        }
+      />
 
-    {/* All other routes share PageWrapper (Navbar + Footer via Outlet) */}
-    <Route element={<PageWrapper />}>
+      {/* All other routes share PageWrapper (Navbar + Footer via Outlet) */}
+      <Route element={<PageWrapper />}>
 
-      {/* Public-only routes */}
-      <Route element={<PublicRoute />}>
-        <Route path={PATHS.LOGIN}           element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
-        <Route path={PATHS.REGISTER}        element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
-        <Route path={PATHS.FORGOT_PASSWORD} element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
-        <Route path={PATHS.RESET_PASSWORD}  element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+        {/* Public-only routes */}
+        <Route element={<PublicRoute />}>
+          <Route path={PATHS.LOGIN}           element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
+          <Route path={PATHS.REGISTER}        element={<Suspense fallback={<PageLoader />}><Register /></Suspense>} />
+          <Route path={PATHS.FORGOT_PASSWORD} element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
+          <Route path={PATHS.RESET_PASSWORD}  element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+        </Route>
+
+        {/* Open routes */}
+        <Route path={PATHS.HOME}             element={<HomePage />} />
+        <Route path={PATHS.PRODUCTS}         element={<Suspense fallback={<PageLoader />}><ProductsPage /></Suspense>} />
+        <Route path={PATHS.PRODUCT_DETAIL}   element={<KeyedProductDetail />} />
+        <Route path={PATHS.CUSTOMER_SERVICE} element={<Suspense fallback={<PageLoader />}><CustomerServicePage /></Suspense>} />
+
+        {/* Protected routes */}
+        <Route element={<PrivateRoute />}>
+          <Route path={PATHS.WISHLIST}        element={<Suspense fallback={<PageLoader />}><WishlistPage /></Suspense>} />
+          <Route path={PATHS.CART}            element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
+          <Route path={PATHS.CHECKOUT}        element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
+          <Route path={PATHS.ORDERS}          element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
+          <Route path={PATHS.ORDER_DETAIL}    element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
+          <Route path={PATHS.ORDER_SUCCESS}   element={<Suspense fallback={<PageLoader />}><OrderSuccessPage /></Suspense>} />
+          <Route path={PATHS.PROFILE}         element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
+          <Route path={PATHS.SAVED_ADDRESSES} element={<Suspense fallback={<PageLoader />}><SavedAddresses /></Suspense>} />
+        </Route>
+
+        {/* 404 */}
+        <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
       </Route>
-
-      {/* Open routes */}
-      <Route path={PATHS.HOME}             element={<HomePage />} />
-      <Route path={PATHS.PRODUCTS}         element={<Suspense fallback={<PageLoader />}><ProductsPage /></Suspense>} />
-      <Route path={PATHS.PRODUCT_DETAIL}   element={<KeyedProductDetail />} />
-      <Route path={PATHS.CUSTOMER_SERVICE} element={<Suspense fallback={<PageLoader />}><CustomerServicePage /></Suspense>} />
-
-      {/* Protected routes */}
-      <Route element={<PrivateRoute />}>
-        <Route path={PATHS.WISHLIST}        element={<Suspense fallback={<PageLoader />}><WishlistPage /></Suspense>} />
-        <Route path={PATHS.CART}            element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
-        <Route path={PATHS.CHECKOUT}        element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
-        <Route path={PATHS.ORDERS}          element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
-        <Route path={PATHS.ORDER_DETAIL}    element={<Suspense fallback={<PageLoader />}><OrderDetailPage /></Suspense>} />
-        <Route path={PATHS.ORDER_SUCCESS}   element={<Suspense fallback={<PageLoader />}><OrderSuccessPage /></Suspense>} />
-        <Route path={PATHS.PROFILE}         element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
-        <Route path={PATHS.SAVED_ADDRESSES} element={<Suspense fallback={<PageLoader />}><SavedAddresses /></Suspense>} />
-      </Route>
-
-      {/* 404 */}
-      <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
-    </Route>
-  </Routes>
+    </Routes>
+  </>
 );
 
 export default AppRoutes;

@@ -7,7 +7,6 @@
  */
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import TurnstileWidget from "@/components/common/TurnstileWidget";
@@ -15,6 +14,7 @@ import PasswordField from "./PasswordField";
 import useAuth from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/paths";
 import { useAuthStore } from "@/store/authStore";
+import { useToastStore } from '@/store/toastStore';
 import { getFriendlyLoginMessage, useLoginMutation } from "@/features/auth/hooks/useLoginMutation";
 import { env } from "@/config/env";
 
@@ -23,6 +23,7 @@ function LoginForm() {
   const location = useLocation();
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
+  const showToast = useToastStore((state) => state.showToast);
   const isLocked = useAuthStore((state) => state.isLocked);
   const remainingSeconds = useAuthStore((state) => state.remainingSeconds);
   const lockoutCount = useAuthStore((state) => state.lockoutCount);
@@ -70,7 +71,11 @@ function LoginForm() {
     e.preventDefault();
     if (!validate()) return;
     if (requiresCaptcha && !captchaToken) {
-      toast.error("Please complete the CAPTCHA.");
+      showToast({
+        type: 'error',
+        title: 'Login Failed',
+        message: 'Please complete the CAPTCHA.',
+      });
       return;
     }
     if (isSubmitBlocked) return;
@@ -84,16 +89,17 @@ function LoginForm() {
     }
 
     try {
-      const user = await loginMutation.mutateAsync({
+      await loginMutation.mutateAsync({
         ...formData,
         captchaToken,
       });
-      const name = user?.firstName || "";
-      toast.success(
-        name ? `Welcome back, ${name}!` : "Welcome back!",
-        { duration: 3500 }
-      );
-      // Navigate immediately — don't wait for PublicRoute to detect user
+
+      showToast({
+        type: 'success',
+        title: 'Welcome Back',
+        message: "You're signed in.",
+      });
+
       navigate(from, { replace: true });
     } catch {
       setCaptchaToken("");

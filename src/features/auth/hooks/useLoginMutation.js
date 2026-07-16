@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { getFriendlyGeneralError } from '@/features/auth/utils/authErrorHandling';
+import { getBackendErrorMessage, getFriendlyGeneralError } from '@/features/auth/utils/authErrorHandling';
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -105,6 +105,10 @@ export function useLoginMutation() {
       clearCaptcha();
     },
     onError: (error) => {
+      const backendMessage = getBackendErrorMessage(
+        error,
+        'Unable to sign in right now. Please try again.'
+      );
       const security = extractSecurityPayload(error);
       if (security.code === 'CAPTCHA_REQUIRED') {
         setCaptchaRequirement(true);
@@ -112,19 +116,13 @@ export function useLoginMutation() {
       }
       if (security.code) {
         setLoginSecurity(security);
-        setError(
-          getFriendlyLoginMessage({
-            code: security.code,
-            remainingSeconds: security.remainingSeconds,
-          })
-        );
+        setError(backendMessage);
         return;
       }
 
       clearLoginSecurity();
-      setError(
-        getFriendlyGeneralError(error, 'Unable to sign in right now. Please try again.')
-      );
+      const message = getFriendlyGeneralError(error, 'Unable to sign in right now. Please try again.');
+      setError(message);
     },
   });
 }
