@@ -55,10 +55,58 @@ const CONTACT_CARDS = [
 ];
 
 const FAQ = [
-  { q: "How do I track my order?", a: "Go to Account → My Orders to view real-time status of all your orders." },
+  { q: "How do I track my order?", a: "Go to Account \u2192 My Orders to view real-time status of all your orders." },
   { q: "What is the return policy?", a: "We offer a 30-day hassle-free return policy on all products. Contact us via email to initiate a return." },
-  { q: "How long does delivery take?", a: "Standard delivery takes 3–7 business days. Express delivery (1–2 days) is available at checkout." },
+  { q: "How long does delivery take?", a: "Standard delivery takes 3\u20137 business days. Express delivery (1\u20132 days) is available at checkout." },
   { q: "Are my payments secure?", a: "Yes. All payments are processed over HTTPS with industry-standard encryption. We never store your card details." },
+];
+
+// ── Tech stack data ──────────────────────────────────────────────────────────
+const TECH_STACK = [
+  {
+    category: "Frontend",
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+    items: [
+      "React.js",
+      "Vite",
+      "Tailwind CSS",
+      "React Router DOM",
+      "TanStack Query",
+      "Zustand",
+      "Axios",
+      "React Hot Toast",
+      "React Toastify",
+      "Cloudflare Turnstile",
+      "Yup Validation",
+    ],
+  },
+  {
+    category: "Backend",
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <path d="M8 21h8M12 17v4" />
+      </svg>
+    ),
+    items: [
+      "Spring Boot",
+      "Spring Security",
+      "MongoDB",
+      "Spring Data MongoDB",
+      "JWT Authentication",
+      "Google OAuth2",
+      "REST API",
+      "Bucket4j Rate Limiting",
+      "ModelMapper",
+      "Jakarta Validation",
+      "Lombok",
+    ],
+  },
 ];
 
 /* Shared card style helper */
@@ -95,7 +143,7 @@ function CustomerServicePage() {
           Customer Service
         </h1>
         <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: "var(--footer-text)" }}>
-          We’re here to help. Reach out via any channel below and we’ll get back to you as soon as possible.
+          We're here to help. Reach out via any channel below and we'll get back to you as soon as possible.
         </p>
       </div>
 
@@ -120,23 +168,66 @@ function CustomerServicePage() {
             project covering the complete software development lifecycle — from REST API design to React state
             management and responsive UI.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["React.js", "Spring Boot", "MongoDB", "JWT Auth", "Google OAuth2", "Tailwind CSS", "REST API"].map(
-              (tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full px-3 py-1 text-xs font-semibold"
-                  style={{
-                    backgroundColor: "var(--accent-subtle)",
-                    color: "var(--accent)",
-                    border: "1px solid var(--accent-border)",
-                  }}
-                >
-                  {tag}
-                </span>
-              )
-            )}
+
+          {/* ── Technologies Used ──────────────────────────────────────── */}
+          <div
+            className="mt-6 rounded-xl p-5"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border-color)",
+            }}
+          >
+            <h3
+              className="text-sm font-bold uppercase tracking-widest mb-5"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              Technologies Used
+            </h3>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              {TECH_STACK.map(({ category, icon, items }) => (
+                <div key={category}>
+                  {/* Category label */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span
+                      className="flex items-center justify-center h-6 w-6 rounded-md"
+                      style={{
+                        backgroundColor: "var(--accent-subtle)",
+                        color: "var(--accent)",
+                      }}
+                    >
+                      {icon}
+                    </span>
+                    <span
+                      className="text-xs font-bold uppercase tracking-wider"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {category}
+                    </span>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {items.map((tech) => (
+                      <span
+                        key={tech}
+                        className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                        style={{
+                          backgroundColor: "var(--accent-subtle)",
+                          color: "var(--accent)",
+                          border: "1px solid var(--accent-border)",
+                          letterSpacing: "0.01em",
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+          {/* ── /Technologies Used ─────────────────────────────────────── */}
         </section>
 
         {/* ── Contact Us ────────────────────────────────────────────────── */}
@@ -288,7 +379,7 @@ function CustomerServicePage() {
               color: "var(--button-primary-text)",
             }}
           >
-            ← Back to Shopping
+            \u2190 Back to Shopping
           </Link>
         </div>
       </div>
