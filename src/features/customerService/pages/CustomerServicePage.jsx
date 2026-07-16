@@ -154,19 +154,33 @@ function CustomerServicePage() {
           <h2 className="text-lg font-bold mb-3" style={{ color: "var(--text-primary)" }}>
             About ShopApp.in
           </h2>
+
+          {/* Paragraph 1 */}
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            <strong style={{ color: "var(--text-primary)" }}>ShopApp.in</strong> is a full-stack e-commerce
-            platform built with{" "}
-            <span className="font-medium" style={{ color: "var(--accent)" }}>React.js</span> on the frontend and{" "}
-            <span className="font-medium" style={{ color: "var(--accent)" }}>Spring Boot + MongoDB</span> on the
-            backend. It supports user authentication (including Google OAuth2), product browsing by category &amp;
-            subcategory, cart management, order placement, and admin-level product management.
+            <strong style={{ color: "var(--text-primary)" }}>ShopApp.in</strong> is a modern full-stack eCommerce
+            platform built to deliver a fast, secure, and seamless online shopping experience. Customers can browse
+            products by category and subcategory, search for items, manage wishlists and carts, place orders
+            securely, and track their purchases through an intuitive interface.
           </p>
+
+          {/* Paragraph 2 */}
           <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            This project was designed and developed by{" "}
-            <strong style={{ color: "var(--text-primary)" }}>Aditya Singh</strong> as a production-grade learning
-            project covering the complete software development lifecycle — from REST API design to React state
-            management and responsive UI.
+            The platform is powered by a{" "}
+            <span className="font-medium" style={{ color: "var(--accent)" }}>React.js</span> frontend and a{" "}
+            <span className="font-medium" style={{ color: "var(--accent)" }}>Spring Boot + MongoDB</span> backend,
+            featuring{" "}
+            <span className="font-medium" style={{ color: "var(--accent)" }}>JWT Authentication</span>,{" "}
+            <span className="font-medium" style={{ color: "var(--accent)" }}>Google OAuth2 Login</span>,{" "}
+            RESTful APIs, secure user authentication, responsive design, and optimized performance. Every component
+            has been designed with scalability, maintainability, and real-world production practices in mind.
+          </p>
+
+          {/* Paragraph 3 */}
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            ShopApp.in was designed and developed by{" "}
+            <strong style={{ color: "var(--text-primary)" }}>Aditya Singh</strong> as a production-grade full-stack
+            project showcasing modern web development, clean architecture, secure backend development, and responsive
+            user experience.
           </p>
 
           {/* ── Technologies Used ──────────────────────────────────────── */}
@@ -379,7 +393,7 @@ function CustomerServicePage() {
               color: "var(--button-primary-text)",
             }}
           >
-            \u2190 Back to Shopping
+            Back to Shopping
           </Link>
         </div>
       </div>
