@@ -113,12 +113,42 @@ const PurchaseCard = ({
         ) : outOfStock ? "UNAVAILABLE" : "BUY NOW"}
       </button>
 
+      {/* ── Secure Checkout ── redesigned: orange lock icon + two-line text */}
       <div
-        className="mt-3 flex items-center gap-2 text-sm"
-        style={{ color: "var(--text-secondary)" }}
+        className="mt-3 flex items-center gap-3"
+        style={{
+          borderTop: "1px solid var(--border-color)",
+          paddingTop: "10px",
+        }}
       >
-        <span aria-hidden="true">Secure</span>
-        <span>Secure checkout</span>
+        {/* Orange filled lock icon */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="#fb8c00"
+          aria-hidden="true"
+          style={{ flexShrink: 0 }}
+        >
+          <path d="M12 1C9.24 1 7 3.24 7 6v2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3zm0 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+        </svg>
+
+        {/* Two-line text block */}
+        <div style={{ lineHeight: 1.35 }}>
+          <p
+            className="text-sm font-semibold"
+            style={{ color: "var(--text-primary)", marginBottom: "2px" }}
+          >
+            Secure checkout
+          </p>
+          <p
+            className="text-xs"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            Your payment information is safe with us.
+          </p>
+        </div>
       </div>
     </div>
   );
