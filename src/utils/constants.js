@@ -1,6 +1,11 @@
 // API Base URL
-export const API_BASE_URL =
-  `${import.meta.env.VITE_API_URL}/api`;
+export const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+
+// TEMPORARY DEBUG (remove after verifying)
+console.log("import.meta.env =", import.meta.env);
+console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
+console.log("API_BASE_URL =", API_BASE_URL);
+
 // NOTE: API_ENDPOINTS and ADDRESSES are defined in src/api/apiEndpoints.js
 // Do NOT duplicate them here. Import from '@/api/apiEndpoints' in services.
 
@@ -41,7 +46,7 @@ export const ORDER_STATUS_COLORS = {
   [ORDER_STATUS.CANCELLED]: "bg-red-100 text-red-800",
 };
 
-// Product categories - keep in sync with your backend seed data
+// Product categories
 export const PRODUCT_CATEGORIES = [
   "Electronics",
   "Clothing",
@@ -64,7 +69,7 @@ export const DEFAULT_PAGE_SIZE = 12;
 export const MAX_CART_QUANTITY = 99;
 export const MIN_CART_QUANTITY = 1;
 
-// App routes - single source of truth for all <Link to="..." />
+// App routes
 export const ROUTES = {
   HOME: "/",
   LOGIN: "/login",
@@ -79,7 +84,7 @@ export const ROUTES = {
   ADMIN: "/admin",
 };
 
-// Helper to build dynamic routes without template literals scattered in the code
+// Helper to build dynamic routes
 export const buildRoute = {
   productDetail: (id) => `/products/${id}`,
   orderDetail: (id) => `/orders/${id}`,
