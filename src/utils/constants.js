@@ -1,6 +1,6 @@
 // API Base URL
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
-
+export const API_BASE_URL =
+  `${import.meta.env.VITE_API_URL}/api`;
 // NOTE: API_ENDPOINTS and ADDRESSES are defined in src/api/apiEndpoints.js
 // Do NOT duplicate them here. Import from '@/api/apiEndpoints' in services.
 
