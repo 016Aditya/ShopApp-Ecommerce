@@ -1,9 +1,10 @@
 // API Base URL
-export const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
-// TEMPORARY DEBUG (remove after verifying)
+// TEMPORARY DEBUG (Remove after deployment is verified)
 console.log("import.meta.env =", import.meta.env);
-console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
+console.log("VITE_API_BASE_URL =", import.meta.env.VITE_API_BASE_URL);
 console.log("API_BASE_URL =", API_BASE_URL);
 
 // NOTE: API_ENDPOINTS and ADDRESSES are defined in src/api/apiEndpoints.js
@@ -37,7 +38,7 @@ export const ORDER_STATUS_LABELS = {
   [ORDER_STATUS.CANCELLED]: "Cancelled",
 };
 
-// Color classes (Tailwind) per status - use in badges/chips
+// Color classes (Tailwind) per status
 export const ORDER_STATUS_COLORS = {
   [ORDER_STATUS.PENDING]: "bg-yellow-100 text-yellow-800",
   [ORDER_STATUS.CONFIRMED]: "bg-blue-100 text-blue-800",
